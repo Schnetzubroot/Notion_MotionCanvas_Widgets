@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rechenblatt</title>
+<link rel="stylesheet" href="../lib/core.css">
+<style>
+  .wrap.wide { max-width: 1200px; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 14px; align-items: start; }
+  @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } .sticky { position: static !important; } }
+  .sticky { position: sticky; top: 8px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .card h2 { font-size: 13px; margin: 0 0 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  textarea { width: 100%; box-sizing: border-box; min-height: 230px; resize: vertical; font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); tab-size: 2; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: 6px 0; }
+  .res { display: flex; flex-direction: column; gap: 3px; }
+  .ln { display: grid; grid-template-columns: 22px 16px minmax(0, 1fr); gap: 6px; align-items: baseline; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 3px 6px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); }
+  .ln .no { color: var(--muted); text-align: right; }
+  .ln .sw { width: 12px; height: 12px; border-radius: 3px; border: 0; padding: 0; cursor: pointer; align-self: center; }
+  .ln .sw.off { opacity: .25; }
+  .ln .v { overflow-wrap: anywhere; }
+  .ln .v b { font-weight: 600; }
+  .ln.err { border-color: var(--warn); } .ln.err .v { color: var(--warn); }
+  .sliders .sl { margin: 2px 0; }
+  .help { font-size: 13px; }
+  .help code { font-size: 12px; }
+  .help table { border-collapse: collapse; width: 100%; }
+  .help td { padding: 3px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+  .help td:first-child { width: 42%; overflow-wrap: anywhere; }
+  details summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+  .ops button { font-family: ui-monospace, monospace; min-width: 30px; }
+</style>
+</head>
+<body>
+<div class="wrap wide">
+  <h1>Rechenblatt</h1>
+  <p class="sub">Eigene Rechnungen wie in GeoGebra: eine Zeile pro Definition, z. B. <code>ω = (0, 1, 1)</code> oder <code>v_E = v_A + ω × AE</code>. Alles wird sofort berechnet; Vektoren, Punkte, Geraden und Ebenen erscheinen in 3D. Zurück zum <a href="vektorrechner.html">Vektorrechner</a>.</p>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h2>Beispiel laden</h2>
+        <select id="ex" style="width:100%"></select>
+      </div>
+      <div class="card">
+        <h2>Eingabe</h2>
+        <div class="row ops" id="ops"></div>
+        <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+        <div class="row"><button id="share">Link mit dieser Rechnung kopieren</button><span class="help" id="shareMsg"></span></div>
+        <div class="sliders" id="sliders"></div>
+      </div>
+      <div class="card">
+        <h2>Ergebnisse</h2>
+        <div class="res" id="res"></div>
+      </div>
+      <div class="card help">
+        <details open>
+          <summary>Syntax und Funktionen</summary>
+          <table>
+            <tr><td><code>a = (1, 2, 3)</code></td><td>Vektor (auch <code>[1, 2, 3]</code>; zwei Komponenten → z = 0)</td></tr>
+            <tr><td><code>+ − * /</code>, <code>^</code></td><td>Rechnen; <code>a * b</code> zwischen Vektoren = Skalarprodukt</td></tr>
+            <tr><td><code>a × b</code>, <code>a · b</code></td><td>Kreuzprodukt, Skalarprodukt (auch <code>cross(a,b)</code>, <code>dot(a,b)</code>)</td></tr>
+            <tr><td><code>norm(a)</code>, <code>unit(a)</code></td><td>Betrag (auch <code>|a|</code>, <code>betrag</code>), Einheitsvektor</td></tr>
+            <tr><td><code>winkel(a, b)</code></td><td>Winkel in rad; <code>grad(x)</code> rechnet in Grad um, <code>rad(x)</code> zurück</td></tr>
+            <tr><td><code>proj(a, b)</code></td><td>Projektion von a auf b (Vektor); <code>spat(a,b,c)</code> Spatprodukt</td></tr>
+            <tr><td><code>x(a)</code>, <code>y(a)</code>, <code>z(a)</code></td><td>Komponenten; <code>vec(x,y,z)</code> baut einen Vektor</td></tr>
+            <tr><td><code>zyl(ρ, φ, z)</code>, <code>sph(r, θ, ψ)</code></td><td>Ortsvektor aus zylindrischen bzw. sphärischen Koordinaten (θ ab der z-Achse)</td></tr>
+            <tr><td><code>e_rho(φ)</code>, <code>e_phi(φ)</code></td><td>zylindrische Basis; <code>e_r(θ,ψ)</code>, <code>e_theta(θ,ψ)</code>, <code>e_psi(ψ)</code> sphärische Basis</td></tr>
+            <tr><td><code>sin cos tan asin acos atan atan2 sqrt exp ln abs min max</code></td><td>Standardfunktionen; Konstanten <code>pi</code> (π), <code>e</code></td></tr>
+            <tr><td><code>t = regler(0, 2pi)</code></td><td>Schieberegler (optional Startwert: <code>regler(0, 2pi, 1)</code>)</td></tr>
+            <tr><td><code>punkt(P)</code></td><td>zeichnet P als Punkt statt als Pfeil</td></tr>
+            <tr><td><code>pfeil(A, v)</code></td><td>zeichnet v mit Fusspunkt A (z. B. Geschwindigkeit im Punkt)</td></tr>
+            <tr><td><code>gerade(A, v)</code>, <code>ebene(A, n)</code></td><td>Gerade durch A mit Richtung v; Ebene durch A mit Normale n</td></tr>
+            <tr><td><code># Kommentar</code></td><td>wird ignoriert; Zeilen ohne <code>=</code> werden nur ausgewertet</td></tr>
+          </table>
+          <p class="help">Implizite Multiplikation geht nach Zahlen: <code>2pi</code>, <code>3(1,0,0)</code>. Namen dürfen griechische Buchstaben, Ziffern und <code>_</code> enthalten (<code>v_A</code>, <code>ω</code>, <code>r_BZ</code>). Später definierte Zeilen dürfen frühere benutzen.</p>
+        </details>
+      </div>
+    </div>
+    <div class="sticky">
+      <div class="stage"><canvas id="cv" style="height:520px"></canvas><div class="hint">Ziehen zum Drehen · Mausrad zum Zoomen · Farbfeld in den Ergebnissen blendet aus</div></div>
+      <div class="row"><button id="reset">Ansicht zurücksetzen</button><label class="help"><input type="checkbox" id="grid" checked> Bodengitter</label></div>
+    </div>
+  </div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V } = MW, PI = Math.PI;
+  const PALETTE = ['--c2', '--c1', '--c3', '--c4', '--c5'];
+  const fmt = x => MW.fmt(x, 4);
+  const isV = v => Array.isArray(v), isN = v => typeof v === 'number', isD = v => v && v.draw;
+  const showVal = v => isN(v) ? fmt(v) : isV(v) ? '(' + v.map(fmt).join(', ') + ')' : isD(v) ? v.desc : String(v);
+  class E extends Error {}
+
+  // ---------- tokenizer ----------
+  const ID0 = /[A-Za-z_À-ÖØ-öø-ɏͰ-Ͽ]/, ID = /[A-Za-z0-9_'À-ÖØ-öø-ɏͰ-Ͽ̀-ͯ]/;
+  function lex(s) {
+    const t = []; let i = 0;
+    while (i < s.length) {
+      const c = s[i];
+      if (/\s/.test(c)) { i++; continue; }
+      if (c === '#') break;
+      if (/[0-9.]/.test(c)) { let j = i; while (j < s.length && /[0-9.]/.test(s[j])) j++;
+        if (s[j] === 'e' && /[-+0-9]/.test(s[j + 1] || '') && /[0-9]/.test(s[j + 1] === '-' || s[j + 1] === '+' ? s[j + 2] || '' : s[j + 1])) { j += 2; while (/[0-9]/.test(s[j] || '')) j++; }
+        const n = Number(s.slice(i, j)); if (!isFinite(n)) throw new E('Zahl „' + s.slice(i, j) + '“ unlesbar'); t.push({ k: 'n', v: n }); i = j; continue; }
+      if (ID0.test(c)) { let j = i + 1; while (j < s.length && ID.test(s[j])) j++; t.push({ k: 'id', v: s.slice(i, j) }); i = j; continue; }
+      const map = { '−': '-', '⋅': '·', '•': '·', '∗': '*', '÷': '/', '√': 'sqrt', '²': '^2', '³': '^3' };
+      if (c === '√') { t.push({ k: 'op', v: '√' }); i++; continue; }
+      if (c === '²' || c === '³') { t.push({ k: 'op', v: '^' }); t.push({ k: 'n', v: c === '²' ? 2 : 3 }); i++; continue; }
+      const o = map[c] || c;
+      if ('+-*/^×·(),[]=|'.includes(o)) { t.push({ k: 'op', v: o }); i++; continue; }
+      throw new E('Zeichen „' + c + '“ unbekannt');
+    }
+    return t;
+  }
+
+  // ---------- parser (Pratt) -> AST ----------
+  function parse(tokens) {
+    let p = 0;
+    const peek = () => tokens[p], next = () => tokens[p++];
+    const isOp = (v) => peek() && peek().k === 'op' && peek().v === v;
+    const expect = v => { if (!isOp(v)) throw new E('„' + v + '“ erwartet'); p++; };
+    const BIN = { '+': 1, '-': 1, '*': 2, '/': 2, '×': 2, '·': 2 };
+    function expr(minP = 0, inAbs = false) {
+      let left = unary(inAbs);
+      for (;;) {
+        const t = peek(); if (!t) break;
+        let op = null, consume = false;
+        if (t.k === 'op' && BIN[t.v]) { op = t.v; consume = true; }
+        else if (left.implicit && (t.k === 'id' || (t.k === 'op' && (t.v === '(' || t.v === '[')))) op = '*';
+        if (!op || BIN[op] < minP) break;
+        if (consume) p++;
+        left = { t: 'bin', op, a: left, b: expr(BIN[op] + 1, inAbs) };
+      }
+      return left;
+    }
+    function unary(inAbs) {
+      if (isOp('-')) { p++; return { t: 'neg', a: expr(2, inAbs) }; }
+      if (isOp('+')) { p++; return expr(2, inAbs); }
+      if (isOp('√')) { p++; return { t: 'call', f: 'sqrt', args: [power(inAbs)] }; }
+      return power(inAbs);
+    }
+    function power(inAbs) {
+      const base = atom(inAbs);
+      if (isOp('^')) { p++; const ex = unary(inAbs); const n = { t: 'bin', op: '^', a: base, b: ex }; return n; }
+      return base;
+    }
+    function list(close) { const items = []; if (isOp(close)) { p++; return items; }
+      for (;;) { items.push(expr()); if (isOp(',')) { p++; continue; } expect(close); return items; } }
+    function atom(inAbs) {
+      const t = next(); if (!t) throw new E('Ausdruck unvollständig');
+      if (t.k === 'n') { const n = { t: 'num', v: t.v, implicit: true }; return n; }
+      if (t.k === 'id') {
+        if (isOp('(') && FUN[t.v]) { p++; return { t: 'call', f: t.v, args: list(')') }; }
+        return { t: 'var', v: t.v };
+      }
+      if (t.v === '(') { const it = list(')'); if (it.length === 1) return { ...it[0], implicit: true }; if (it.length === 2 || it.length === 3) return { t: 'vec', items: it }; throw new E('Vektor braucht 2 oder 3 Komponenten'); }
+      if (t.v === '[') { const it = list(']'); if (it.length === 2 || it.length === 3) return { t: 'vec', items: it }; throw new E('Vektor braucht 2 oder 3 Komponenten'); }
+      if (t.v === '|' && !inAbs) { const a = expr(0, true); expect('|'); return { t: 'call', f: 'norm', args: [a] }; }
+      throw new E('„' + t.v + '“ an dieser Stelle unerwartet');
+    }
+    const ast = expr();
+    if (p < tokens.length) throw new E('„' + tokens[p].v + '“ an dieser Stelle unerwartet');
+    return ast;
+  }
+
+  // ---------- functions ----------
+  const nn = (x, f) => { if (!isN(x)) throw new E(f + '() erwartet eine Zahl'); return x; };
+  const vv = (x, f) => { if (!isV(x)) throw new E(f + '() erwartet einen Vektor'); return x; };
+  const sc = (f, g) => [1, (a) => g(nn(a, f))];
+  const FUN = {
+    sin: sc('sin', Math.sin), cos: sc('cos', Math.cos), tan: sc('tan', Math.tan), asin: sc('asin', Math.asin), acos: sc('acos', Math.acos), atan: sc('atan', Math.atan),
+    arcsin: sc('arcsin', Math.asin), arccos: sc('arccos', Math.acos), arctan: sc('arctan', Math.atan),
+    sqrt: sc('sqrt', Math.sqrt), wurzel: sc('wurzel', Math.sqrt), exp: sc('exp', Math.exp), ln: sc('ln', Math.log), log: sc('log', Math.log10),
+    sinh: sc('sinh', Math.sinh), cosh: sc('cosh', Math.cosh), tanh: sc('tanh', Math.tanh),
+    grad: sc('grad', x => x * 180 / PI), deg: sc('deg', x => x * 180 / PI), rad: sc('rad', x => x * PI / 180), sign: sc('sign', Math.sign),
+    atan2: [2, (y, x) => Math.atan2(nn(y, 'atan2'), nn(x, 'atan2'))],
+    min: [-1, (...a) => Math.min(...a.map(x => nn(x, 'min')))], max: [-1, (...a) => Math.max(...a.map(x => nn(x, 'max')))],
+    abs: [1, a => isV(a) ? V.norm(a) : Math.abs(a)], norm: [1, a => isV(a) ? V.norm(a) : Math.abs(a)], betrag: [1, a => isV(a) ? V.norm(a) : Math.abs(a)],
+    unit: [1, a => { vv(a, 'unit'); const n = V.norm(a); if (n < 1e-12) throw new E('Nullvektor hat keine Richtung'); return V.mul(a, 1 / n); }],
+    einheit: [1, a => FUN.unit[1](a)],
+    dot: [2, (a, b) => V.dot(vv(a, 'dot'), vv(b, 'dot'))], skalar: [2, (a, b) => V.dot(vv(a, 'skalar'), vv(b, 'skalar'))],
+    cross: [2, (a, b) => V.cross(vv(a, 'cross'), vv(b, 'cross'))], kreuz: [2, (a, b) => V.cross(vv(a, 'kreuz'), vv(b, 'kreuz'))],
+    spat: [3, (a, b, c) => V.dot(vv(a, 'spat'), V.cross(vv(b, 'spat'), vv(c, 'spat')))],
+    winkel: [2, (a, b) => { vv(a, 'winkel'); vv(b, 'winkel'); const d = V.norm(a) * V.norm(b); if (d < 1e-12) throw new E('Winkel mit Nullvektor undefiniert'); return Math.acos(Math.max(-1, Math.min(1, V.dot(a, b) / d))); }],
+    angle: [2, (a, b) => FUN.winkel[1](a, b)],
+    proj: [2, (a, b) => { vv(a, 'proj'); vv(b, 'proj'); const q = V.dot(b, b); if (q < 1e-12) throw new E('Projektion auf Nullvektor'); return V.mul(b, V.dot(a, b) / q); }],
+    x: [1, a => vv(a, 'x')[0]], y: [1, a => vv(a, 'y')[1]], z: [1, a => vv(a, 'z')[2]],
+    vec: [3, (a, b, c) => [nn(a, 'vec'), nn(b, 'vec'), nn(c, 'vec')]],
+    zyl: [3, (r, f, z) => [r * Math.cos(f), r * Math.sin(f), z]], cyl: [3, (r, f, z) => [r * Math.cos(f), r * Math.sin(f), z]],
+    sph: [3, (r, t, s) => [r * Math.sin(t) * Math.cos(s), r * Math.sin(t) * Math.sin(s), r * Math.cos(t)]],
+    e_rho: [1, f => [Math.cos(f), Math.sin(f), 0]], e_phi: [1, f => [-Math.sin(f), Math.cos(f), 0]], e_z: [0, () => [0, 0, 1]],
+    e_r: [2, (t, s) => [Math.sin(t) * Math.cos(s), Math.sin(t) * Math.sin(s), Math.cos(t)]],
+    e_theta: [2, (t, s) => [Math.cos(t) * Math.cos(s), Math.cos(t) * Math.sin(s), -Math.sin(t)]], e_psi: [1, s => [-Math.sin(s), Math.cos(s), 0]],
+    punkt: [1, P => ({ draw: 'point', P: vv(P, 'punkt'), desc: 'Punkt (' + P.map(fmt).join(', ') + ')' })],
+    point: [1, P => FUN.punkt[1](P)],
+    pfeil: [2, (A, v) => ({ draw: 'arrow', A: vv(A, 'pfeil'), v: vv(v, 'pfeil'), desc: 'Pfeil (' + v.map(fmt).join(', ') + ') ab (' + A.map(fmt).join(', ') + ')' })],
+    arrow: [2, (A, v) => FUN.pfeil[1](A, v)],
+    gerade: [2, (A, v) => { vv(A, 'gerade'); vv(v, 'gerade'); if (V.norm(v) < 1e-12) throw new E('Richtung ist der Nullvektor'); return { draw: 'line', A, v, desc: 'Gerade (' + A.map(fmt).join(', ') + ') + λ(' + v.map(fmt).join(', ') + ')' }; }],
+    line: [2, (A, v) => FUN.gerade[1](A, v)],
+    ebene: [2, (A, n) => { vv(A, 'ebene'); vv(n, 'ebene'); if (V.norm(n) < 1e-12) throw new E('Normale ist der Nullvektor'); const d = V.dot(n, A);
+      return { draw: 'plane', A, n, desc: `Ebene ${fmt(n[0])}x + ${fmt(n[1])}y + ${fmt(n[2])}z = ${fmt(d)}`.replace(/\+ -/g, '− ') }; }],
+    plane: [2, (A, n) => FUN.ebene[1](A, n)],
+    regler: [-1, () => { throw new E('regler() nur als eigene Zeile: t = regler(0, 2pi)'); }],
+    slider: [-1, () => { throw new E('slider() nur als eigene Zeile: t = slider(0, 2pi)'); }],
+  };
+  const CONST = { pi: PI, π: PI, e: Math.E };
+  // arguments that get drawn by the call itself; the plain vector arrow is then hidden by default
+  const POS = { punkt: [0], point: [0], pfeil: [0, 1], arrow: [0, 1], gerade: [0], line: [0], ebene: [0], plane: [0] };
+  let consumed = new Set();
+
+  function ev(n, env) {
+    switch (n.t) {
+      case 'num': return n.v;
+      case 'var': if (n.v in env) return env[n.v]; if (n.v in CONST) return CONST[n.v];
+        if (FUN[n.v]) throw new E(n.v + ' ist eine Funktion: ' + n.v + '(…)'); throw new E('„' + n.v + '“ ist nicht definiert');
+      case 'vec': { const it = n.items.map(x => ev(x, env)); if (!it.every(isN)) throw new E('Vektorkomponenten müssen Zahlen sein'); return it.length === 2 ? [...it, 0] : it; }
+      case 'neg': { const a = ev(n.a, env); if (isN(a)) return -a; if (isV(a)) return V.mul(a, -1); throw new E('kann nicht negiert werden'); }
+      case 'call': { const [ar, f] = FUN[n.f];
+        if (POS[n.f]) POS[n.f].forEach(k => { const g = n.args[k]; if (g && g.t === 'var') consumed.add(g.v); }); const a = n.args.map(x => ev(x, env));
+        if (ar >= 0 && a.length !== ar) throw new E(n.f + '() braucht ' + ar + ' Argument' + (ar === 1 ? '' : 'e'));
+        if (a.some(isD)) throw new E('Zeichenobjekte können nicht weiterverrechnet werden');
+        const r = f(...a); if (isN(r) && !isFinite(r)) throw new E(n.f + '(): Ergebnis undefiniert'); return r; }
+      case 'bin': {
+        const a = ev(n.a, env), b = ev(n.b, env);
+        if (isD(a) || isD(b)) throw new E('Zeichenobjekte können nicht weiterverrechnet werden');
+        const op = n.op;
+        if (isN(a) && isN(b)) { if (op === '×' || op === '·') throw new E('„' + op + '“ ist für Vektoren; für Zahlen * nehmen');
+          const r = op === '+' ? a + b : op === '-' ? a - b : op === '*' ? a * b : op === '/' ? a / b : Math.pow(a, b);
+          if (!isFinite(r)) throw new E(op === '/' ? 'Division durch 0' : 'Ergebnis undefiniert'); return r; }
+        if (isV(a) && isV(b)) { if (op === '+') return V.add(a, b); if (op === '-') return V.sub(a, b); if (op === '×') return V.cross(a, b);
+          if (op === '·' || op === '*') return V.dot(a, b); throw new E('„' + op + '“ geht nicht zwischen zwei Vektoren'); }
+        if (op === '*' && isN(a) && isV(b)) return V.mul(b, a);
+        if ((op === '*') && isV(a) && isN(b)) return V.mul(a, b);
+        if (op === '/' && isV(a) && isN(b)) { if (b === 0) throw new E('Division durch 0'); return V.mul(a, 1 / b); }
+        if (op === '^') throw new E('Potenzen nur für Zahlen; für |a|² schreibe norm(a)^2 oder a · a');
+        throw new E('„' + op + '“ geht nicht zwischen Zahl und Vektor');
+      }
+    }
+  }
+
+  // ---------- run ----------
+  const sliders = {}; // name -> {min,max,value}
+  let results = [], hidden = new Set(), forced = new Set();
+  const visible = r => r.auto ? forced.has(r.key) : !hidden.has(r.key);
+  function run(src) {
+    const env = {}, out = [], used = new Set(); consumed = new Set();
+    src.split('\n').forEach((raw, i) => {
+      const line = raw.replace(/#.*$/, '').trim(); if (!line) return;
+      const r = { line: i + 1, src: line };
+      try {
+        let name = null, rhs = line; const m = line.match(/^([A-Za-z_À-ÖØ-öø-ɏͰ-Ͽ][A-Za-z0-9_'À-ÖØ-öø-ɏͰ-Ͽ̀-ͯ]*)\s*=(?!=)(.*)$/);
+        if (m) { name = m[1]; rhs = m[2]; if (!rhs.trim()) throw new E('rechte Seite fehlt'); if (FUN[name]) throw new E('„' + name + '“ ist ein Funktionsname'); if (name in CONST && name !== 'e') throw new E('„' + name + '“ ist eine Konstante'); }
+        const sm = rhs.match(/^\s*(regler|slider)\s*\((.*)\)\s*$/);
+        if (sm) { if (!name) throw new E('Regler braucht einen Namen: t = regler(0, 1)');
+          const args = sm[2].split(',').map(x => ev(parse(lex(x)), env)); if (args.length < 2 || args.length > 3 || !args.every(isN) || args[1] <= args[0]) throw new E('regler(min, max) mit min < max');
+          let s = sliders[name]; if (!s) s = sliders[name] = { min: args[0], max: args[1], value: args.length === 3 ? args[2] : args[0] };
+          s.min = args[0]; s.max = args[1]; s.value = Math.min(Math.max(s.value, s.min), s.max);
+          used.add(name); env[name] = s.value; r.name = name; r.val = s.value; r.slider = true; out.push(r); return; }
+        const v = ev(parse(lex(rhs)), env);
+        if (name) env[name] = v; r.name = name; r.val = v;
+      } catch (e) { r.err = e instanceof E ? e.message : 'Fehler: ' + e.message; }
+      out.push(r);
+    });
+    for (const k of Object.keys(sliders)) if (!used.has(k)) delete sliders[k];
+    return out;
+  }
+
+  // ---------- UI ----------
+  const srcEl = document.getElementById('src'), resEl = document.getElementById('res'), slEl = document.getElementById('sliders');
+  let sliderKey = '';
+  function colorOf(r, k) { return MW.css(PALETTE[k % PALETTE.length]); }
+  function render() {
+    results = run(srcEl.value);
+    results.forEach(r => { r.auto = !!r.name && consumed.has(r.name) && isV(r.val); });
+    let k = 0; results.forEach(r => { r.key = r.name || ('#' + r.line); if (!r.err && (isV(r.val) || isD(r.val))) { r.col = colorOf(r, k); r.pal = PALETTE[k % PALETTE.length]; k++; } });
+    resEl.innerHTML = '';
+    results.forEach(r => {
+      const d = document.createElement('div'); d.className = 'ln' + (r.err ? ' err' : '');
+      const no = document.createElement('span'); no.className = 'no'; no.textContent = r.line; d.appendChild(no);
+      const sw = document.createElement(r.col ? 'button' : 'span'); d.appendChild(sw);
+      if (r.col) { sw.className = 'sw' + (visible(r) ? '' : ' off'); sw.style.background = `var(${r.pal})`; sw.title = 'ein-/ausblenden';
+        sw.addEventListener('click', () => { const set = r.auto ? forced : hidden; set.has(r.key) ? set.delete(r.key) : set.add(r.key); sw.classList.toggle('off', !visible(r)); view.redraw(); }); }
+      const v = document.createElement('span'); v.className = 'v';
+      if (r.err) v.textContent = r.src + '  →  ' + r.err;
+      else { const nm = document.createElement('b'); nm.textContent = r.name ? r.name + ' = ' : ''; v.appendChild(nm); v.appendChild(document.createTextNode(showVal(r.val)));
+        if (isV(r.val)) v.appendChild(document.createTextNode('   |…| = ' + fmt(V.norm(r.val)))); }
+      d.appendChild(v); resEl.appendChild(d);
+    });
+    // sliders UI (rebuild only when set/range changes)
+    const key = Object.entries(sliders).map(([n, s]) => n + s.min + ':' + s.max).join('|');
+    if (key !== sliderKey) { sliderKey = key; slEl.innerHTML = '';
+      for (const [n, s] of Object.entries(sliders)) MW.slider(slEl, { label: n, min: s.min, max: s.max, step: 'any', value: s.value, onInput: x => { s.value = x; renderSoft(); } }); }
+    save(); view.redraw();
+  }
+  let pending = 0; function renderSoft() { cancelAnimationFrame(pending); pending = requestAnimationFrame(render); }
+  srcEl.addEventListener('input', () => { clearTimeout(srcEl._t); srcEl._t = setTimeout(render, 120); });
+
+  // operator buttons
+  const ops = document.getElementById('ops');
+  [['×', ' × '], ['·', ' · '], ['π', 'pi'], ['ω', 'ω'], ['φ', 'φ'], ['θ', 'θ'], ['ψ', 'ψ'], ['ρ', 'ρ'], ['√', 'sqrt('], ['|a|', 'norm(']].forEach(([l, ins]) =>
+    MW.button(ops, l, () => { const s = srcEl.selectionStart, e = srcEl.selectionEnd; srcEl.setRangeText(ins, s, e, 'end'); srcEl.focus(); render(); }));
+
+  // ---------- 3D ----------
+  let ext = 2;
+  const view = MW.View3D(document.getElementById('cv'), { extent: 2, yaw: 25, pitch: 22 }, v => {
+    const C = v.C, shown = results.filter(r => r.col && visible(r));
+    // extent from content
+    let m = 1.2; const grow = p => { for (const c of p) m = Math.max(m, Math.abs(c)); };
+    shown.forEach(r => { const x = r.val; if (isV(x)) grow(x); else if (x.draw === 'point') grow(x.P); else if (x.draw === 'arrow') { grow(x.A); grow(V.add(x.A, x.v)); } else grow(x.A); });
+    const want = m * 1.2; if (Math.abs(want - ext) > 1e-9) { ext = want; v.extent = ext; v.layout(); }
+    const L = Math.max(1.5, Math.ceil(m * 1.1));
+    if (document.getElementById('grid').checked) v.floor(Math.min(L, 12), 0);
+    v.axes(L * 1.05);
+    shown.forEach(r => { const x = r.val, c = r.col, lab = r.name || '';
+      if (isV(x)) { if (V.norm(x) > 1e-9) v.arrow([0, 0, 0], x, c, 2.6, 10); else v.dot([0, 0, 0], c, 4); v.text(x, lab, c, 6, -6, 13, true); }
+      else if (x.draw === 'point') { v.line([x.P[0], x.P[1], 0], x.P, C.grid, 1, [3, 3]); v.dot(x.P, c, 5.5); v.text(x.P, lab, c, 7, -7, 13, true); }
+      else if (x.draw === 'arrow') { v.dot(x.A, c, 3); v.arrow(x.A, x.v, c, 2.6, 10); v.text(V.add(x.A, x.v), lab, c, 6, -6, 13, true); }
+      else if (x.draw === 'line') { const u = V.unit(x.v), s = L * 2.2; v.line(V.sub(x.A, V.mul(u, s)), V.add(x.A, V.mul(u, s)), c, 2, [7, 4]); v.dot(x.A, c, 3.5); v.text(V.add(x.A, V.mul(u, L * 0.8)), lab, c, 6, -6, 13, true); }
+      else if (x.draw === 'plane') { const n = V.unit(x.n), e1 = V.unit(Math.abs(n[2]) < 0.9 ? V.cross([0, 0, 1], n) : V.cross([1, 0, 0], n)), e2 = V.cross(n, e1), s = Math.max(1, m * 0.75);
+        const q = (a, b) => V.add(x.A, V.add(V.mul(e1, a * s), V.mul(e2, b * s)));
+        const h = c.startsWith('#') && c.length === 7 ? c + '22' : c;
+        v.poly([q(-1, -1), q(1, -1), q(1, 1), q(-1, 1)], c, 1.4, null, true, h);
+        for (const t of [-0.5, 0, 0.5]) { v.line(q(-1, t), q(1, t), c, 0.6, [3, 3]); v.line(q(t, -1), q(t, 1), c, 0.6, [3, 3]); }
+        v.arrow(x.A, V.mul(n, L * 0.35), c, 1.8, 8); v.text(q(1, 1), lab, c, 4, -4, 13, true); }
+    });
+  });
+  document.getElementById('reset').addEventListener('click', () => view.resetView());
+  document.getElementById('grid').addEventListener('change', () => view.redraw());
+
+  // ---------- examples ----------
+  const EX = [
+    ['Erste Schritte', `# Vektoren definieren und verrechnen
+a = (2, 1, 0)
+b = (0, 1, 2)
+s = a + b
+d = a · b          # Skalarprodukt
+n = a × b          # Kreuzprodukt, steht senkrecht auf a und b
+check = n · a      # = 0
+φ_ab = grad(winkel(a, b))
+A = norm(n)        # Fläche des Parallelogramms`],
+    ['ZP1 2023: Zentralachse', `# Kinemate in A (A im Ursprung): ω und v_A gegeben
+ω = (0, 1, 1)
+v_A = (3, 1, 1)
+I2 = v_A · ω / norm(ω)        # zweite Invariante (Skalar)
+v_ω = proj(v_A, ω)            # Anteil parallel zu ω
+r_AZ = ω × v_A / norm(ω)^2    # Ortsvektor A → Zentralachse
+Z = punkt(r_AZ)
+achse = gerade(r_AZ, ω)
+check = v_A + ω × r_AZ        # muss = v_ω sein`],
+    ['Starrkörper: v_E = v_A + ω × AE', `ω = (-1, 0, 0)
+A = (1, 0, 0)
+E = (1/2, sqrt(3)/2, 0)
+v_A = (1, 0, 2)
+AE = E - A
+v_E = v_A + ω × AE
+pA = pfeil(A, v_A)
+pE = pfeil(E, v_E)
+I1 = v_A · ω      # gleich wie v_E · ω (erste Invariante)
+I1E = v_E · ω`],
+    ['Kreisbahn mit Regler', `# M auf einem Kreis: Ort, Geschwindigkeit und zylindrische Basis
+t = regler(0, 2pi, 1)
+R = 1.5
+φ = t
+M = zyl(R, φ, 0.5)
+P = punkt(M)
+v = pfeil(M, R * e_phi(φ))      # v = ρ φ̇ e_φ mit φ̇ = 1
+er = pfeil(M, e_rho(φ))`],
+    ['ZP1 2025 A1: Punkt auf der Kugel', `# r = R, θ = 2π/3 (1 − cos t), ψ = t
+t = regler(0, 2pi, pi/3)
+θ = 2pi/3 * (1 - cos(t))
+ψ = t
+M = sph(1, θ, ψ)
+P = punkt(M)
+z_M = z(M)           # bei t = π/3 gleich 1/2
+Ebene = ebene((0,0,1/2), (0,0,1))
+er = pfeil(M, e_r(θ, ψ))
+eθ = pfeil(M, e_theta(θ, ψ))
+eψ = pfeil(M, e_psi(ψ))`],
+    ['Ebene und Abstand', `A = (1, 0, 0)
+B = (0, 2, 0)
+C = (0, 0, 1)
+n = (B - A) × (C - A)
+E = ebene(A, n)
+P = (2, 2, 2)
+abstand = (P - A) · unit(n)
+F = P - abstand * unit(n)    # Lotfusspunkt
+pP = punkt(P)
+pF = punkt(F)`],
+    ['Leeres Blatt', ``],
+  ];
+  const exSel = document.getElementById('ex');
+  const o0 = document.createElement('option'); o0.textContent = '– Beispiel wählen –'; o0.value = ''; exSel.appendChild(o0);
+  EX.forEach(([n], i) => { const o = document.createElement('option'); o.value = i; o.textContent = n; exSel.appendChild(o); });
+  exSel.addEventListener('change', () => { if (exSel.value === '') return; srcEl.value = EX[+exSel.value][1]; for (const k in sliders) delete sliders[k]; hidden.clear(); forced.clear(); view.resetView(); render(); });
+
+  // ---------- persistence & sharing ----------
+  const enc = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const dec = s => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
+  function save() { try { localStorage.setItem('rechenblatt-src', srcEl.value); } catch (e) {} }
+  document.getElementById('share').addEventListener('click', async () => {
+    const url = location.href.split('#')[0].split('?')[0] + '#r=' + enc(srcEl.value); const msg = document.getElementById('shareMsg');
+    try { await navigator.clipboard.writeText(url); msg.textContent = 'Kopiert. In Notion einfügen, um diese Rechnung zu öffnen.'; }
+    catch (e) { history.replaceState(null, '', url); msg.textContent = 'Link steht jetzt in der Adresszeile.'; }
+  });
+  let start = null;
+  const h = location.hash.match(/#r=([\w-]+)/); if (h) { try { start = dec(h[1]); } catch (e) {} }
+  const q = new URLSearchParams(location.search).get('beispiel');
+  if (start === null && q !== null && EX[+q]) { start = EX[+q][1]; exSel.value = q; }
+  if (start === null) { try { start = localStorage.getItem('rechenblatt-src'); } catch (e) {} }
+  if (start === null || start === '') { start = EX[0][1]; exSel.value = '0'; }
+  srcEl.value = start;
+  window.getResults = () => results.map(r => [r.line, r.name, r.err || showVal(r.val)]);
+  window.setSrc = s => { srcEl.value = s; render(); };
+  render();
+})();
+</script>
+</body>
+</html>
