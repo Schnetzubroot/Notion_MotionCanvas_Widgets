@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kartesische Koordinatenlinien</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Kartesische Koordinatenlinien</h1>
+  <p class="sub">Hält man zwei Koordinaten fest und ändert die dritte, läuft der Punkt auf einer Geraden parallel zur Achse dieser Koordinate.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>x-Linie (y, z fest)</div><div><span class="sw" style="background:var(--c3)"></span>y-Linie (x, z fest)</div><div><span class="sw" style="background:var(--c2)"></span>z-Linie (x, y fest)</div></div>
+    <div class="hint">Ziehen zum Drehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const s = { x: 1.5, y: 1.5, z: 1 };
+  const view = MW.View3D(cv, { extent: 3.2 }, v => {
+    const C = v.C, M = [s.x, s.y, s.z];
+    v.floor(3); v.axes(3.2);
+    v.line([-3, s.y, s.z], [3, s.y, s.z], C.c1, 2.5); v.line([s.x, -3, s.z], [s.x, 3, s.z], C.c3, 2.5); v.line([s.x, s.y, -2.5], [s.x, s.y, 2.5], C.c2, 2.5);
+    v.dot(M, C.fg, 6); v.text(M, 'M', C.fg, 8, -8);
+    MW.info(infoEl, 'Drei Geraden, paarweise senkrecht', [['M', fv(M)]],
+      'Kartesische Koordinaten sind geradlinig orthogonal: Alle drei Koordinatenlinien sind Geraden und stehen in M senkrecht aufeinander.');
+  });
+  ['x', 'y', 'z'].forEach(k => MW.slider(ctl, { label: k, min: -2.5, max: 2.5, step: 0.1, value: s[k], onInput: val => { s[k] = val; view.redraw(); } }));
+
+})();
+</script>
+</body>
+</html>

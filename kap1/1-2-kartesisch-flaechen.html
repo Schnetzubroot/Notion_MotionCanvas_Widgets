@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kartesische Koordinatenfläche</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Kartesische Koordinatenfläche</h1>
+  <p class="sub">Hält man nur eine Koordinate fest, kann sich der Punkt in einer Ebene bewegen, die parallel zu einer Koordinatenebene ist.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="hint">Ziehen zum Drehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const s = { x: 1.5, y: 1, z: 1 }; let keep = 'z';
+  const view = MW.View3D(cv, { extent: 3.2 }, v => {
+    const C = v.C, M = [s.x, s.y, s.z], L = 2.6;
+    v.floor(3); v.axes(3.2);
+    let q;
+    if (keep === 'z') q = [[-L, -L, s.z], [L, -L, s.z], [L, L, s.z], [-L, L, s.z]];
+    if (keep === 'x') q = [[s.x, -L, -L], [s.x, L, -L], [s.x, L, L], [s.x, -L, L]];
+    if (keep === 'y') q = [[-L, s.y, -L], [L, s.y, -L], [L, s.y, L], [-L, s.y, L]];
+    v.poly(q, C.c2, 1.5, null, true, C.fill);
+    v.dot(M, C.fg, 6); v.text(M, 'M', C.fg, 8, -8);
+    const name = { z: 'parallel zu Oxy', x: 'parallel zu Oyz', y: 'parallel zu Ozx' }[keep];
+    MW.info(infoEl, keep + ' = ' + fmt(s[keep]) + ': Ebene ' + name, [['M', fv(M)]], 'Die drei kartesischen Koordinatenflächen durch M sind Ebenen und stehen senkrecht aufeinander.');
+  });
+  MW.select(ctl, 'Fest halten:', [['z', 'z = konst.'], ['x', 'x = konst.'], ['y', 'y = konst.']], k => { keep = k; view.redraw(); });
+  ['x', 'y', 'z'].forEach(k => MW.slider(ctl, { label: k, min: -2.5, max: 2.5, step: 0.1, value: s[k], onInput: val => { s[k] = val; view.redraw(); } }));
+
+})();
+</script>
+</body>
+</html>

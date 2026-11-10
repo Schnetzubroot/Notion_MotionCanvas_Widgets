@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zylindrische Komponenten: Elektron (Buchbeispiel)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Zylindrische Komponenten: Elektron (Buchbeispiel)</h1>
+  <p class="sub">ρ = R₁ + a t, φ = b t, z = a t ergibt v = a e<sub>ρ</sub> + b(R₁ + a t) e<sub>φ</sub> + a e<sub>z</sub>. Nur die φ-Komponente wächst, weil ρ wächst.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>ρ̇ e_ρ = a e_ρ</div><div><span class="sw" style="background:var(--c3)"></span>ρφ̇ e_φ</div><div><span class="sw" style="background:var(--c2)"></span>ż e_z = a e_z</div><div><span class="sw" style="background:var(--fg)"></span>v</div></div>
+    <div class="hint">Abspielen. Ziehen im Bild dreht die Ansicht.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const R1 = 0.6, R2 = 2.4, a = 1, b = 2.5, t2 = (R2 - R1) / a, k = 0.4; let t = 0.4;
+  const r = tt => [(R1 + a * tt) * Math.cos(b * tt), (R1 + a * tt) * Math.sin(b * tt), a * tt];
+  const view = MW.View3D(cv, { extent: 2.8, yaw: 25, pitch: 20, center: [0, 0, 0.9] }, v => {
+    const C = v.C; v.axes(2.6);
+    const pts = []; for (let i = 0; i <= 150; i++) pts.push(r(t2 * i / 150)); v.poly(pts, C.field, 1.5);
+    const M = r(t), ph = b * t, er = [Math.cos(ph), Math.sin(ph), 0], ep = [-Math.sin(ph), Math.cos(ph), 0], rho = R1 + a * t;
+    const c1 = V.mul(er, a * k), c2 = V.mul(ep, b * rho * k), c3 = [0, 0, a * k];
+    v.arrow(M, c1, C.c1, 2.5); v.arrow(V.add(M, c1), c2, C.c3, 2.5); v.arrow(V.add(V.add(M, c1), c2), c3, C.c2, 2.5);
+    v.arrow(M, V.add(V.add(c1, c2), c3), C.fg, 3);
+    v.dot(M, C.fg, 6); v.text(M, 'M', C.fg, -16, 14);
+    MW.info(infoEl, 't = ' + fmt(t), [['ρ̇ = a', fmt(a)], ['ρφ̇ = bρ', fmt(b * rho)], ['ż = a', fmt(a)], ['|v| = √(2a² + b²ρ²)', fmt(Math.sqrt(2 * a * a + b * b * rho * rho))]],
+      'Zur Zeit t = 0 ist v = a e_ρ + bR₁ e_φ + a e_z, beim Auftreffen auf die Anode v = a e_ρ + bR₂ e_φ + a e_z. (Pfeile mit 0,4 skaliert.)');
+  });
+  MW.player(ctl, { t0: 0, t1: t2, duration: 6, value: 0.4, onTime: x => { t = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bahnkurve: Stabspitze (Buchbeispiel Fig. 1.6)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Bahnkurve: Stabspitze (Buchbeispiel Fig. 1.6)</h1>
+  <p class="sub">x = 3 cos(3πt), y = 4 cos(3πt), z = sin(3πt) in cm, t ∈ [0, 1] s. Die Bahnkurve ist eine Ellipse in der Ebene y = 4x/3.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>Bahnkurve</div><div><span class="sw" style="background:var(--c2)"></span>Ebene y = 4x/3</div></div>
+    <div class="hint">Abspielen oder t ziehen. Ziehen im Bild dreht die Ansicht.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let t = 0.45;
+  const r = tt => [3 * Math.cos(3 * Math.PI * tt), 4 * Math.cos(3 * Math.PI * tt), Math.sin(3 * Math.PI * tt)];
+  const view = MW.View3D(cv, { extent: 4.2, yaw: -40, pitch: 20 }, v => {
+    const C = v.C; v.axes(4.5);
+    v.poly([[-3.6, -4.8, -1.4], [3.6, 4.8, -1.4], [3.6, 4.8, 1.4], [-3.6, -4.8, 1.4]], null, 1, null, true, C.fill);
+    const all = []; for (let i = 0; i <= 120; i++) all.push(r(i / 120 * (2 / 3)));
+    v.poly(all, C.line, 1, [4, 4]);
+    const tr = []; for (let i = 0; i <= 120; i++) tr.push(r(t * i / 120));
+    v.poly(tr, C.c1, 2.5);
+    v.dot(r(0), C.muted, 4); v.text(r(0), 'M(0)', C.muted, 6, 14, 12, false);
+    v.dot(r(1), C.muted, 4); v.text(r(1), 'M(1)', C.muted, 6, 14, 12, false);
+    const M = r(t); v.dot(M, C.fg, 6); v.text(M, 'M(t)', C.fg, 8, -8);
+    MW.info(infoEl, 't = ' + fmt(t) + ' s', [['x', fmt(M[0]) + ' cm'], ['y', fmt(M[1]) + ' cm'], ['z', fmt(M[2]) + ' cm'], ['y − 4x/3', fmt(M[1] - 4 * M[0] / 3)]],
+      'Drei Funktionen x(t), y(t), z(t) beschreiben die Bewegung. Zusammen sind sie die Parameterdarstellung der Bahnkurve. y − 4x/3 ist immer 0: Die Kurve liegt in einer Ebene.');
+  });
+  MW.player(ctl, { t0: 0, t1: 1, duration: 6, value: 0.45, onTime: x => { t = x; view.redraw(); }, fmt: x => fmt(x) + ' s' });
+
+})();
+</script>
+</body>
+</html>

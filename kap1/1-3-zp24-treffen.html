@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZP1 2024 A1.2: Wann treffen sich M₁ und M₂?</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>ZP1 2024 A1.2: Wann treffen sich M₁ und M₂?</h1>
+  <p class="sub">M₁: ρ = R, φ = (2π/3) sin(μt), z = 2Rt/T − R/2.  M₂: x = Rt/T, y = √3 Rt/T, z = R(t²/T² + 1/4).  Mit R = T = 1.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>M₁ (zylindrisch)</div><div><span class="sw" style="background:var(--c2)"></span>M₂ (kartesisch)</div></div>
+    <div class="hint">μ wählen, dann abspielen. Ziehen im Bild dreht die Ansicht.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let mu = Math.PI / 3, t = 0.5;
+  const m1 = tt => { const p = 2 * Math.PI / 3 * Math.sin(mu * tt); return [Math.cos(p), Math.sin(p), 2 * tt - 0.5]; };
+  const m2 = tt => [tt, Math.sqrt(3) * tt, tt * tt + 0.25];
+  const view = MW.View3D(cv, { extent: 1.8, yaw: 20, pitch: 18, center: [0, 0.4, 0.4] }, v => {
+    const C = v.C; v.axes(1.6);
+    for (const zz of [-0.5, 0.5, 1.5]) v.poly(v.circlePts([0, 0, zz], [0, 0, 1], 1, 0, 2 * Math.PI, 72, [1, 0, 0]), C.line, 1);
+    const p1 = [], p2 = []; for (let i = 0; i <= 100; i++) { const tt = t * i / 100; p1.push(m1(tt)); p2.push(m2(tt)); }
+    v.poly(p1, C.c1, 2.5); v.poly(p2, C.c2, 2.5);
+    const A = m1(t), B = m2(t); v.dot(A, C.c1, 6); v.dot(B, C.c2, 6); v.text(A, 'M₁', C.c1, 8, -6); v.text(B, 'M₂', C.c2, 8, 14);
+    const d = V.norm(V.sub(A, B));
+    MW.info(infoEl, d < 0.02 ? 'Die Punkte treffen sich!' : 'Abstand |M₁M₂| = ' + fmt(d),
+      [['t / T', fmt(t)], ['μ T', fmt(mu)], ['ρ₂ = 2Rt/T', fmt(2 * t)], ['φ₁', fmt(2 * Math.PI / 3 * Math.sin(mu * t))]],
+      'ρ₂ = R nur bei t = T/2. Dann stimmt auch z (beide R/2). φ₂ = π/3 erfordert sin(μT/2) = 1/2, also μ = π/(3T) (oder 5π/(3T)).');
+  });
+  MW.select(ctl, 'μT =', [[String(Math.PI / 3), 'π/3 (Lösung f)'], [String(Math.PI / 6), 'π/6 (Falle d)'], [String(5 * Math.PI / 6), '5π/6 (Falle b)'], [String(5 * Math.PI / 3), '5π/3 (zweite Lösung)']], x => { mu = +x; view.redraw(); });
+  MW.player(ctl, { t0: 0, t1: 1, duration: 5, loop: false, value: 0.5, onTime: x => { t = x; view.redraw(); }, label: 't/T' });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bewegung hängt vom Bezugskörper ab</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Bewegung hängt vom Bezugskörper ab</h1>
+  <p class="sub">Ein Ball fällt im fahrenden Zug aus der Hand. Wähle, von welchem Bezugskörper aus du die Bewegung beschreibst.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>Bahnkurve des Balls</div></div>
+    <div class="hint">Abspielen und Bezugskörper wechseln.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const u = 2.5, g = 9.81, h = 2, T = Math.sqrt(2 * h / g);
+  let frame = 'zug', t = 0.75 * T;
+  const view = MW.View2D(cv, { xmin: -1.2, xmax: 3.6, ymin: -0.4, ymax: 2.6 }, v => {
+    const C = v.C, sh = frame === 'zug' ? 0 : u * t;          // Verschiebung des Zuges im gewählten System
+    const gshift = frame === 'zug' ? -u * t : 0;               // Verschiebung des Bodens
+    for (let x = -3; x < 8; x += 0.4) v.line([x + (gshift % 0.4), 0], [x + (gshift % 0.4) - 0.15, -0.15], C.muted, 1);
+    v.line([-2, 0], [6, 0], C.muted, 2);
+    v.poly([[sh - 0.6, 0.1], [sh + 1.6, 0.1], [sh + 1.6, 2.4], [sh - 0.6, 2.4]], C.line, 2, null, true, C.fill);
+    v.text([sh - 0.55, 2.25], 'Zug', C.muted, 0, 0, 12, false);
+    const ball = tt => [0.5 + (frame === 'zug' ? 0 : u * tt), h - g * tt * tt / 2];
+    const pts = []; for (let i = 0; i <= 60; i++) pts.push(ball(t * i / 60));
+    v.poly(pts, C.c1, 2.5);
+    v.dot(ball(t), C.c1, 7);
+    v.text([-1.1, 2.45], 'Bezugskörper: ' + (frame === 'zug' ? 'Zug (Boden bewegt sich)' : 'Boden (Zug bewegt sich)'), C.fg, 0, 0, 13);
+    MW.info(infoEl, frame === 'zug' ? 'Im Zug: senkrechte Gerade' : 'Vom Boden aus: Parabel',
+      [['Zeit t', fmt(t) + ' s'], ['Zuggeschwindigkeit', u + ' m/s']],
+      'Dieselbe Bewegung hat je nach Bezugskörper eine andere Bahnkurve. Deshalb muss man immer zuerst den Bezugskörper festlegen.');
+  });
+  MW.select(ctl, 'Bezugskörper:', [['zug', 'Zug'], ['boden', 'Boden']], f => { frame = f; view.redraw(); });
+  MW.player(ctl, { t0: 0, t1: T, duration: 3, value: 0.75 * T, onTime: x => { t = x; view.redraw(); }, fmt: x => fmt(x) + ' s' });
+
+})();
+</script>
+</body>
+</html>

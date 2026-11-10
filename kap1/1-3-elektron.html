@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elektron zwischen Kathode und Anode (Buchbeispiel Fig. 1.9)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Elektron zwischen Kathode und Anode (Buchbeispiel Fig. 1.9)</h1>
+  <p class="sub">ρ = R₁ + a t, φ = b t, z = a t. Das Elektron startet auf der Kathode (ρ = R₁) und erreicht die Anode (ρ = R₂) zur Zeit t₂ = (R₂ − R₁)/a.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>Bahnkurve</div><div><span class="sw" style="background:var(--line)"></span>Kathode R₁, Anode R₂</div></div>
+    <div class="hint">Abspielen. Ziehen im Bild dreht die Ansicht.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const R1 = 0.6, R2 = 2.4, a = 1, b = 4.5, t2 = (R2 - R1) / a; let t = 1.2;
+  const r = tt => [(R1 + a * tt) * Math.cos(b * tt), (R1 + a * tt) * Math.sin(b * tt), a * tt];
+  const view = MW.View3D(cv, { extent: 3, yaw: 30, pitch: 18, center: [0, 0, 0.9] }, v => {
+    const C = v.C; v.axes(2.8);
+    for (const R of [R1, R2]) for (const zz of [0, t2 * a]) v.poly(v.circlePts([0, 0, zz], [0, 0, 1], R, 0, 2 * Math.PI, 72, [1, 0, 0]), C.line, 1);
+    for (const R of [R1, R2]) for (let k = 0; k < 8; k++) { const q = k * Math.PI / 4; v.line([R * Math.cos(q), R * Math.sin(q), 0], [R * Math.cos(q), R * Math.sin(q), t2 * a], C.line, 1); }
+    const pts = []; for (let i = 0; i <= 200; i++) pts.push(r(t * i / 200));
+    v.poly(pts, C.c1, 2.5);
+    const M = r(t); v.dot(M, C.fg, 6); v.text(M, 'M', C.fg, 8, -8);
+    const rho = R1 + a * t;
+    MW.info(infoEl, 't = ' + fmt(t) + (t >= t2 - 1e-6 ? ' = t₂: Elektron trifft die Anode' : ''),
+      [['ρ', fmt(rho)], ['φ', fmt(b * t)], ['z', fmt(a * t)], ['ρ − z', fmt(rho - a * t) + ' = R₁']],
+      'ρ − z ist immer R₁: Die Bahn liegt auf einem Kegel mit halbem Öffnungswinkel π/4 um die z-Achse („Schraubenlinie auf einem Kegel“).');
+  });
+  MW.player(ctl, { t0: 0, t1: t2, duration: 5, loop: false, value: 1.2, onTime: x => { t = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

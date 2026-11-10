@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zylindrische Koordinatenlinien</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Zylindrische Koordinatenlinien</h1>
+  <p class="sub">Durch M gehen drei Koordinatenlinien: eine radiale Halbgerade (φ, z fest), ein Parallelkreis (ρ, z fest) und eine axiale Gerade (ρ, φ fest).</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>ρ-Linie: Halbgerade</div><div><span class="sw" style="background:var(--c3)"></span>φ-Linie: Kreis</div><div><span class="sw" style="background:var(--c2)"></span>z-Linie: Gerade</div></div>
+    <div class="hint">Ziehen zum Drehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const s = { rho: 1.8, phi: 1.1, z: 1 };
+  const view = MW.View3D(cv, { extent: 3.2 }, v => {
+    const C = v.C, c = Math.cos(s.phi), sn = Math.sin(s.phi), M = [s.rho * c, s.rho * sn, s.z];
+    v.floor(3); v.axes(3.2);
+    v.line([0, 0, s.z], [3.2 * c, 3.2 * sn, s.z], C.c1, 2.5); v.dot([0, 0, s.z], C.c1, 3);
+    v.poly(v.circlePts([0, 0, s.z], [0, 0, 1], s.rho, 0, 2 * Math.PI, 90, [1, 0, 0]), C.c3, 2.5);
+    v.line([M[0], M[1], -2.5], [M[0], M[1], 2.8], C.c2, 2.5);
+    v.dot(M, C.fg, 6); v.text(M, 'M', C.fg, 8, -8);
+    MW.info(infoEl, 'Krummlinig orthogonal', [['(ρ, φ, z)', '(' + fmt(s.rho) + ', ' + fmt(s.phi) + ', ' + fmt(s.z) + ')']],
+      'Die drei Linien stehen in M senkrecht aufeinander, aber die φ-Linie ist ein Kreis. Die ρ-Linie beginnt auf der z-Achse und ist nur eine Halbgerade, weil ρ ≥ 0.');
+  });
+  MW.slider(ctl, { label: 'ρ', min: 0.3, max: 2.8, step: 0.05, value: s.rho, onInput: x => { s.rho = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'φ', min: 0, max: 6.28, step: 0.01, value: s.phi, onInput: x => { s.phi = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'z', min: -2, max: 2.5, step: 0.05, value: s.z, onInput: x => { s.z = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

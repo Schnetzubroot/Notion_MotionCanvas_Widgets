@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kreisbewegung: harmonische Schwingung eines Kreispendels</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Kreisbewegung: harmonische Schwingung eines Kreispendels</h1>
+  <p class="sub">ρ = R ist konstant, die Bewegung steckt ganz im Drehwinkel φ(t) = φ₀ sin(2πt/T). Die Bogenlänge s = Rφ kann ebenfalls als Parameter dienen.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c3)"></span>Winkel φ</div><div><span class="sw" style="background:var(--c1)"></span>Bogenlänge s = Rφ</div></div>
+    <div class="hint">Abspielen, φ₀ ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const R = 2; let t = 0.15, phi0 = 0.6;
+  const view = MW.View2D(cv, { xmin: -2.8, xmax: 2.8, ymin: -2.6, ymax: 0.5 }, v => {
+    const C = v.C, phi = phi0 * Math.sin(2 * Math.PI * t), down = -Math.PI / 2;
+    v.line([-0.6, 0], [0.6, 0], C.muted, 3);
+    v.arc([0, 0], R, down - phi0, down + phi0, C.line, 1, [4, 4]);
+    v.line([0, 0], [0, -R - 0.2], C.muted, 1, [4, 4]);
+    const M = [R * Math.cos(down + phi), R * Math.sin(down + phi)];
+    v.arc([0, 0], R, down, down + phi, C.c1, 4);
+    v.arc([0, 0], 0.5, down, down + phi, C.c3, 2.5);
+    v.line([0, 0], M, C.fg, 2); v.dot(M, C.fg, 9); v.dot([0, 0], C.fg, 4); v.text([0, 0], 'O', C.fg, 6, -6);
+    MW.info(infoEl, 'φ = ' + fmt(phi) + ' rad = ' + fmt(phi * 180 / Math.PI, 1) + '°',
+      [['t / T', fmt(t)], ['s = R φ', fmt(R * phi)], ['Amplitude φ₀', fmt(phi0)], ['R', fmt(R)]],
+      'Bogenlänge s = Rφ gilt nur mit φ im Bogenmaß.');
+  });
+  MW.player(ctl, { t0: 0, t1: 1, duration: 3, value: 0.15, onTime: x => { t = x; view.redraw(); }, label: 't/T' });
+  MW.slider(ctl, { label: 'φ₀', min: 0.1, max: 1.4, step: 0.05, value: phi0, onInput: x => { phi0 = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

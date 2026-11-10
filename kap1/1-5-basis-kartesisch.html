@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kartesische Basis: konstante Einheitsvektoren</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Kartesische Basis: konstante Einheitsvektoren</h1>
+  <p class="sub">r = x e<sub>x</sub> + y e<sub>y</sub> + z e<sub>z</sub>. Egal wo M ist: e<sub>x</sub>, e<sub>y</sub>, e<sub>z</sub> zeigen immer gleich.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>e_x</div><div><span class="sw" style="background:var(--c3)"></span>e_y</div><div><span class="sw" style="background:var(--c2)"></span>e_z</div><div><span class="sw" style="background:var(--fg)"></span>r</div></div>
+    <div class="hint">Abspielen: M bewegt sich, die Basis bleibt gleich. Ziehen dreht die Ansicht.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let t = 0.15;
+  const M = tt => [2 * Math.cos(2 * Math.PI * tt), 1.6 * Math.sin(2 * Math.PI * tt), 1 + 0.6 * Math.sin(4 * Math.PI * tt)];
+  const view = MW.View3D(cv, { extent: 3 }, v => {
+    const C = v.C, P = M(t); v.floor(3); v.axes(3);
+    const pts = []; for (let i = 0; i <= 100; i++) pts.push(M(i / 100)); v.poly(pts, C.line, 1, [4, 4]);
+    v.line([0, 0, 0], [P[0], 0, 0], C.c1, 1.5, [3, 3]); v.line([P[0], 0, 0], [P[0], P[1], 0], C.c3, 1.5, [3, 3]); v.line([P[0], P[1], 0], P, C.c2, 1.5, [3, 3]);
+    v.arrow([0, 0, 0], P, C.fg, 2.5); v.text(V.mul(P, 0.5), 'r', C.fg, 6, -4);
+    v.arrow(P, [0.8, 0, 0], C.c1, 3); v.arrow(P, [0, 0.8, 0], C.c3, 3); v.arrow(P, [0, 0, 0.8], C.c2, 3);
+    v.dot(P, C.fg, 5); v.text(P, 'M', C.fg, -16, 14);
+    MW.info(infoEl, 'r = ' + fmt(P[0]) + ' e_x + ' + fmt(P[1]) + ' e_y + ' + fmt(P[2]) + ' e_z', [],
+      'Die kartesischen Einheitsvektoren haben festen Betrag und feste Richtung. Darum gilt beim Ableiten ė_x = ė_y = ė_z = 0.');
+  });
+  MW.player(ctl, { t0: 0, t1: 1, duration: 8, value: 0.15, onTime: x => { t = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

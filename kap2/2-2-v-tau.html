@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geschwindigkeit v = ṡ τ</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Geschwindigkeit v = ṡ τ</h1>
+  <p class="sub">τ ist der Einheitsvektor tangential zur Bahn in Richtung wachsender s. Bei ṡ > 0 zeigt v wie τ, bei ṡ < 0 entgegen.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>τ (Betrag 1)</div><div><span class="sw" style="background:var(--c1)"></span>v = ṡ τ</div></div>
+    <div class="hint">ṡ ändern, M auf der Kurve verschieben.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  function arcCurve(f, a, b, N = 600) {
+    const P = [], L = [0];
+    for (let i = 0; i <= N; i++) P.push(f(a + (b - a) * i / N));
+    for (let i = 1; i <= N; i++) L.push(L[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+    const total = L[N];
+    const at = s => { s = Math.max(0, Math.min(total, s)); let i = 1; while (i < N && L[i] < s) i++;
+      const u = (s - L[i - 1]) / (L[i] - L[i - 1] || 1), p = [P[i - 1][0] + u * (P[i][0] - P[i - 1][0]), P[i - 1][1] + u * (P[i][1] - P[i - 1][1])];
+      const tau = V.unit([P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]]); return { p, tau }; };
+    return { P, total, at };
+  }
+
+  const cur = arcCurve(x => [x, 0.4 * Math.sin(1.3 * x) + 0.1 * x], -2.8, 2.8);
+  let sd = 1.2, pos = 0.45;
+  const view = MW.View2D(cv, { xmin: -3, xmax: 3, ymin: -1.6, ymax: 1.6 }, v => {
+    const C = v.C; v.poly(cur.P, C.line, 2.5);
+    v.arrow(cur.P[560], V.sub(cur.P[600], cur.P[560]), C.muted, 1.5, 8); v.text(cur.P[580], '+s', C.muted, 0, -10, 12, false);
+    const P = cur.at(pos * cur.total);
+    v.arrow(P.p, P.tau, C.c2, 2.5); v.text(V.add(P.p, P.tau), 'τ', C.c2, 4, -4);
+    v.arrow(P.p, V.mul(P.tau, sd), C.c1, 3.5, 12); v.text(V.add(P.p, V.mul(P.tau, sd)), 'v', C.c1, 4, 16);
+    v.dot(P.p, C.fg, 6); v.text(P.p, 'M', C.fg, -16, -8);
+    MW.info(infoEl, 'ṡ = ' + fmt(sd) + (sd < 0 ? ': v zeigt entgegen τ' : sd > 0 ? ': v zeigt wie τ' : ': v = 0'),
+      [['|v|', fmt(Math.abs(sd))], ['τ', fv(P.tau)]], 'Die Geschwindigkeit ist immer tangential zur Bahnkurve. Ihr Betrag ist |ṡ|.');
+  });
+  MW.slider(ctl, { label: 'ṡ', min: -2, max: 2, step: 0.05, value: sd, onInput: x => { sd = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'Lage', min: 0.05, max: 0.95, step: 0.005, value: pos, onInput: x => { pos = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

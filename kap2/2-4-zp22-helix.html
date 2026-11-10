@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZP1 2022 A1: Schraubenlinie mit abnehmender Geschwindigkeit</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>ZP1 2022 A1: Schraubenlinie mit abnehmender Geschwindigkeit</h1>
+  <p class="sub">ρ = R, z = Rφ tan α, v<sub>φ</sub> und v<sub>z</sub> proportional zu e<sup>kt</sup>, v(0) = v₀(e<sub>φ</sub> + e<sub>z</sub>), z(t₁) = 2R bei v(t₁) = v₀/2 · (e<sub>φ</sub> + e<sub>z</sub>). Hier R = v₀ = 1.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c3)"></span>v_φ e_φ</div><div><span class="sw" style="background:var(--c2)"></span>v_z e_z</div><div><span class="sw" style="background:var(--c1)"></span>v</div></div>
+    <div class="hint">Abspielen. Ziehen im Bild dreht die Ansicht.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const k = -0.25, t1 = 4 * Math.log(2); let t = 1;
+  const phi = tt => (1 / k) * (Math.exp(k * tt) - 1);
+  const P = tt => [Math.cos(phi(tt)), Math.sin(phi(tt)), phi(tt)];
+  const view = MW.View3D(cv, { extent: 2.6, yaw: 20, pitch: 18, center: [0, 0, 1.8] }, v => {
+    const C = v.C; v.axes(1.6);
+    for (const zz of [0, 2, 4]) v.poly(v.circlePts([0, 0, zz], [0, 0, 1], 1, 0, 2 * Math.PI, 72, [1, 0, 0]), C.line, 1, zz === 2 ? null : [3, 3]);
+    v.text([1, 0, 2], 'z = 2R', C.muted, 6, 0, 12, false); v.text([1, 0, 4], 'Grenze z → 4R', C.muted, 6, 0, 12, false);
+    const pts = []; for (let i = 0; i <= 200; i++) pts.push(P(12 * i / 200)); v.poly(pts, C.field, 1.5);
+    const M = P(t), f = phi(t), ep = [-Math.sin(f), Math.cos(f), 0], s = Math.exp(k * t);
+    v.arrow(M, V.mul(ep, s), C.c3, 2.5); v.arrow(V.add(M, V.mul(ep, s)), [0, 0, s], C.c2, 2.5); v.arrow(M, V.add(V.mul(ep, s), [0, 0, s]), C.c1, 3);
+    v.dot(M, C.fg, 6); v.text(M, 'M', C.fg, 8, 14);
+    MW.info(infoEl, Math.abs(t - t1) < 0.05 ? 't = t₁: z = 2R und v halbiert' : 't = ' + fmt(t),
+      [['e^{kt}', fmt(s, 3)], ['φ(t) = (v₀/kR)(e^{kt} − 1)', fmt(f, 3)], ['z = Rφ', fmt(f, 3)], ['v = v₀ e^{kt} (e_φ + e_z)', fmt(s, 3) + ' · (e_φ + e_z)']],
+      'tan α = v_z/v_φ = 1. Aus e^{kt₁} = 1/2 und φ(t₁) = 2 folgt k = −v₀/(4R). Bei t = 0 gilt e_φ = e_y, also v(0) = v₀(e_y + e_z).');
+  });
+  MW.player(ctl, { t0: 0, t1: 12, duration: 10, value: 1, onTime: x => { t = x; view.redraw(); } });
+  MW.button(ctl, 't = t₁', () => { t = t1; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Differential dr = ṙ dt als lineare Näherung</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Differential dr = ṙ dt als lineare Näherung</h1>
+  <p class="sub">Die echte Änderung ist Δr = ṙ Δt + u Δt. Der Fehler u Δt wird schneller klein als Δt, weil u → 0 für Δt → 0.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c3)"></span>Δr (echt)</div><div><span class="sw" style="background:var(--c1)"></span>ṙ Δt (Differential)</div><div><span class="sw" style="background:var(--c5)"></span>u Δt (Fehler)</div></div>
+    <div class="hint">Δt verkleinern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const r = t => [-2.6 + 1.3 * t, 0.3 + 1.6 * Math.sin(0.9 * t)];
+  const rd = t => [1.3, 1.44 * Math.cos(0.9 * t)];
+  const curve = []; for (let i = 0; i <= 160; i++) curve.push(r(4 * i / 160));
+
+  let t = 1.2, dt = 1.2;
+  const view = MW.View2D(cv, { xmin: -3.2, xmax: 3.4, ymin: -0.6, ymax: 3 }, v => {
+    const C = v.C; v.grid(1, true, false);
+    v.poly(curve, C.line, 2);
+    const M = r(t), M2 = r(t + dt), dr = V.sub(M2, M), lin = V.mul(rd(t), dt), err = V.sub(dr, lin);
+    v.line(V.sub(M, V.mul(rd(t), 1.2)), V.add(M, V.mul(rd(t), 1.8)), C.line, 1, [4, 4]);
+    v.arrow(M, dr, C.c3, 3); v.arrow(M, lin, C.c1, 2.5); v.arrow(V.add(M, lin), err, C.c5, 2.5);
+    v.dot(M, C.fg, 5); v.dot(M2, C.fg, 4); v.text(M, 'M(t)', C.fg, -10, 18, 12); v.text(M2, 'M(t+Δt)', C.fg, 6, -6, 12);
+    MW.info(infoEl, 'Δt = ' + fmt(dt), [['|Δr|', fmt(V.norm(dr), 3)], ['|ṙ Δt|', fmt(V.norm(lin), 3)], ['|u| = |Δr/Δt − ṙ|', fmt(V.norm(err) / dt, 3)], ['|u Δt| / Δt', fmt(V.norm(err) / dt, 3)]],
+      'Das Differential dr = ṙ dt liegt immer auf der Tangente (gestrichelt). Je kleiner Δt, desto kleiner wird der violette Fehler im Verhältnis zu Δt.');
+  });
+  MW.slider(ctl, { label: 'Δt', min: 0.02, max: 1.6, step: 0.01, value: dt, onInput: x => { dt = x; view.redraw(); } });
+  MW.slider(ctl, { label: 't', min: 0.2, max: 2.3, step: 0.01, value: t, onInput: x => { t = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

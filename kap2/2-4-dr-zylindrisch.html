@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Herleitung: dr = dρ eρ + ρ dφ eφ + dz ez</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Herleitung: dr = dρ e<sub>ρ</sub> + ρ dφ e<sub>φ</sub> + dz e<sub>z</sub></h1>
+  <p class="sub">Draufsicht. Ändert sich ρ um dρ, bewegt sich M radial um dρ. Ändert sich φ um dφ, läuft M auf einem Kreis mit Radius ρ: der Weg ist ρ dφ, nicht dφ.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>dρ e_ρ</div><div><span class="sw" style="background:var(--c3)"></span>ρ dφ e_φ</div><div><span class="sw" style="background:var(--fg)"></span>dr</div></div>
+    <div class="hint">dρ und dφ einstellen, ρ vergrössern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let rho = 2, phi = 0.5, drho = 0.5, dphi = 0.35;
+  const view = MW.View2D(cv, { xmin: -0.6, xmax: 3.8, ymin: -0.4, ymax: 3.2 }, v => {
+    const C = v.C; v.grid(1);
+    const er = [Math.cos(phi), Math.sin(phi)], ep = [-Math.sin(phi), Math.cos(phi)], M = V.mul(er, rho);
+    const M2 = V.mul([Math.cos(phi + dphi), Math.sin(phi + dphi)], rho + drho);
+    v.line([0, 0], M, C.line, 1, [4, 4]); v.arc([0, 0], rho, 0, phi + dphi + 0.3, C.line, 1, [4, 4]);
+    v.arc([0, 0], 0.5, phi, phi + dphi, C.muted, 1.5); v.text([0.6 * Math.cos(phi + dphi / 2), 0.6 * Math.sin(phi + dphi / 2)], 'dφ', C.muted, 2, 4, 12);
+    v.arc([0, 0], rho, phi, phi + dphi, C.c3, 4);
+    v.arrow(M, V.mul(er, drho), C.c1, 3); v.arrow(V.add(M, V.mul(er, drho)), V.mul(ep, rho * dphi), C.c3, 3);
+    v.arrow(M, V.sub(M2, M), C.fg, 2, 9);
+    v.dot(M, C.fg, 5); v.text(M, 'M', C.fg, 6, 16); v.dot(M2, C.fg, 4); v.text(M2, "M'", C.fg, 6, -6);
+    MW.info(infoEl, 'Weg in φ-Richtung: ρ dφ = ' + fmt(rho * dphi, 3), [['dρ', fmt(drho, 3)], ['dφ (Winkel!)', fmt(dphi, 3)], ['ρ', fmt(rho)], ['|dr| (für kleine dρ, dφ)', fmt(Math.hypot(drho, rho * dphi), 3)]],
+      'Durch dt teilen: v = ρ̇ e_ρ + ρφ̇ e_φ + ż e_z. Der Faktor ρ im mittleren Term kommt genau von diesem Kreisbogen.');
+  });
+  MW.slider(ctl, { label: 'dρ', min: 0, max: 0.8, step: 0.01, value: drho, onInput: x => { drho = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'dφ', min: 0, max: 0.6, step: 0.01, value: dphi, onInput: x => { dphi = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'ρ', min: 0.5, max: 2.6, step: 0.05, value: rho, onInput: x => { rho = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

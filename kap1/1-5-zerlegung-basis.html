@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zerlegung eines Vektors in einer Basis</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Zerlegung eines Vektors in einer Basis</h1>
+  <p class="sub">r = r₁ b₁ + r₂ b₂ nach der Parallelogrammregel. Die Basisvektoren müssen weder senkrecht noch Einheitsvektoren sein (hier eben gezeichnet).</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>r</div><div><span class="sw" style="background:var(--c2)"></span>b₁, r₁ b₁</div><div><span class="sw" style="background:var(--c3)"></span>b₂, r₂ b₂</div></div>
+    <div class="hint">Ziehe die Spitzen von b₁, b₂ und r.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let b1 = [1.2, 0], b2 = [0.5, 1], r = [2.6, 1.8];
+  const view = MW.View2D(cv, { xmin: -1, xmax: 4.2, ymin: -0.6, ymax: 2.8 }, v => {
+    const C = v.C; v.grid(1, true, false);
+    const det = b1[0] * b2[1] - b1[1] * b2[0];
+    if (Math.abs(det) < 1e-3) { MW.info(infoEl, 'b₁ und b₂ sind parallel: keine Basis', [], 'Basisvektoren dürfen nicht in einer Linie (in 3D: nicht in einer Ebene) liegen.', true); }
+    const r1 = (r[0] * b2[1] - r[1] * b2[0]) / det, r2 = (b1[0] * r[1] - b1[1] * r[0]) / det;
+    const A = V.mul(b1, r1);
+    if (Math.abs(det) >= 1e-3) { v.arrow([0, 0], A, C.c2, 1.8); v.arrow(A, V.mul(b2, r2), C.c3, 1.8); v.line(V.mul(b2, r2), r, C.line, 1, [4, 4]); v.line([0, 0], V.mul(b2, r2), C.line, 1, [4, 4]); }
+    v.arrow([0, 0], b1, C.c2, 3.5); v.text(b1, 'b₁', C.c2, 4, 16);
+    v.arrow([0, 0], b2, C.c3, 3.5); v.text(b2, 'b₂', C.c3, -18, -4);
+    v.arrow([0, 0], r, C.c1, 3); v.text(r, 'r', C.c1, 6, -6);
+    if (Math.abs(det) >= 1e-3) MW.info(infoEl, 'r = ' + fmt(r1) + ' b₁ + ' + fmt(r2) + ' b₂', [['skalare Komponenten', 'r₁ = ' + fmt(r1) + ', r₂ = ' + fmt(r2)], ['vektorielle Komponenten', 'r₁b₁, r₂b₂']],
+      'Die skalaren Komponenten hängen von der Basis ab. Der Pfeil r selbst bleibt derselbe.');
+  });
+  const snap = p => [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10];
+  view.handle(() => b1, p => { b1 = snap(p); }); view.handle(() => b2, p => { b2 = snap(p); }); view.handle(() => r, p => { r = snap(p); });
+
+})();
+</script>
+</body>
+</html>

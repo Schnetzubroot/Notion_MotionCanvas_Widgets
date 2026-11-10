@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zylindrische Basis: eρ und eφ drehen mit φ</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Zylindrische Basis: e<sub>ρ</sub> und e<sub>φ</sub> drehen mit φ</h1>
+  <p class="sub">e<sub>ρ</sub> radial, e<sub>φ</sub> tangential zum Kreis, e<sub>z</sub> axial. r = ρ e<sub>ρ</sub> + z e<sub>z</sub>: φ steht nicht in der Formel, steckt aber in der Richtung von e<sub>ρ</sub>.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>e_ρ</div><div><span class="sw" style="background:var(--c3)"></span>e_φ</div><div><span class="sw" style="background:var(--c2)"></span>e_z</div><div><span class="sw" style="background:var(--fg)"></span>r = ρe_ρ + ze_z</div></div>
+    <div class="hint">φ ändern: e_ρ und e_φ drehen mit, e_z nicht. Ziehen dreht die Ansicht.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const s = { rho: 2, phi: 1.1, z: 1.2 };
+  const view = MW.View3D(cv, { extent: 2.3, pitch: 26 }, v => {
+    const C = v.C, c = Math.cos(s.phi), sn = Math.sin(s.phi), er = [c, sn, 0], ep = [-sn, c, 0], M = [s.rho * c, s.rho * sn, s.z];
+    v.floor(3); v.axes(3);
+    v.poly(v.circlePts([0, 0, s.z], [0, 0, 1], s.rho, 0, 2 * Math.PI, 90, [1, 0, 0]), C.line, 1, [4, 4]);
+    v.line([0, 0, 0], V.mul(er, s.rho), C.c1, 1.5, [3, 3]); v.line(V.mul(er, s.rho), M, C.c2, 1.5, [3, 3]);
+    v.arrow([0, 0, 0], M, C.fg, 2.5);
+    v.arrow(M, V.mul(er, 0.9), C.c1, 3); v.text(V.add(M, V.mul(er, 0.9)), 'e_ρ', C.c1, 4, 4, 12);
+    v.arrow(M, V.mul(ep, 0.9), C.c3, 3); v.text(V.add(M, V.mul(ep, 0.9)), 'e_φ', C.c3, 4, 4, 12);
+    v.arrow(M, [0, 0, 0.9], C.c2, 3); v.text(V.add(M, [0, 0, 0.9]), 'e_z', C.c2, 4, 4, 12);
+    v.dot(M, C.fg, 5); v.text(M, 'M', C.fg, -16, 16);
+    MW.info(infoEl, 'r = ' + fmt(s.rho) + ' e_ρ + ' + fmt(s.z) + ' e_z',
+      [['e_ρ = (cos φ, sin φ, 0)', fv(er)], ['e_φ = (−sin φ, cos φ, 0)', fv(ep)], ['e_z', '(0, 0, 1)']],
+      'e_ρ und e_φ hängen vom Winkel φ ab und sind darum keine konstanten Vektoren. Das erzeugt in Kapitel 2 den Zusatzterm ρφ̇ e_φ in der Geschwindigkeit.');
+  });
+  MW.slider(ctl, { label: 'φ', min: 0, max: 6.28, step: 0.01, value: s.phi, onInput: x => { s.phi = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'ρ', min: 0.5, max: 2.6, step: 0.05, value: s.rho, onInput: x => { s.rho = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'z', min: -1, max: 2.2, step: 0.05, value: s.z, onInput: x => { s.z = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

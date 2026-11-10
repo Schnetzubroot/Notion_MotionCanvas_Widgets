@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warum ėρ = φ̇ eφ</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Warum ė<sub>ρ</sub> = φ̇ e<sub>φ</sub></h1>
+  <p class="sub">Zeichnet man e<sub>ρ</sub> immer ab demselben Punkt, läuft seine Spitze auf dem Einheitskreis. Die Änderung Δe<sub>ρ</sub> zeigt für kleine Δφ in Richtung e<sub>φ</sub> und hat die Länge Δφ.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>e_ρ(φ), e_ρ(φ+Δφ)</div><div><span class="sw" style="background:var(--c3)"></span>Δe_ρ / Δφ</div><div><span class="sw" style="background:var(--c2)"></span>e_φ</div></div>
+    <div class="hint">Δφ verkleinern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let phi = 0.5, dphi = 1;
+  const view = MW.View2D(cv, { xmin: -1.4, xmax: 1.8, ymin: -0.4, ymax: 1.6 }, v => {
+    const C = v.C; v.grid(0.5, true, false);
+    v.circle([0, 0], 1, C.line, 1.5);
+    const e1 = [Math.cos(phi), Math.sin(phi)], e2 = [Math.cos(phi + dphi), Math.sin(phi + dphi)], ep = [-Math.sin(phi), Math.cos(phi)];
+    v.arrow([0, 0], e1, C.c1, 3); v.arrow([0, 0], e2, C.c1, 1.8);
+    v.text(e1, 'e_ρ(φ)', C.c1, 6, 8, 12); v.text(e2, 'e_ρ(φ+Δφ)', C.c1, -30, -8, 12);
+    const de = V.sub(e2, e1);
+    v.line(e1, e2, C.muted, 1, [3, 3]);
+    v.arrow(e1, V.mul(de, 1 / dphi), C.c3, 3); v.arrow(e1, ep, C.c2, 2, 9);
+    v.arc([0, 0], 0.3, phi, phi + dphi, C.muted, 1.5);
+    MW.info(infoEl, '|Δe_ρ| / Δφ = ' + fmt(V.norm(de) / dphi, 4),
+      [['Δe_ρ / Δφ', fv(V.mul(de, 1 / dphi), 3)], ['e_φ', fv(ep, 3)]],
+      'Für Δφ → 0 wird Δe_ρ/Δφ = e_φ, also de_ρ/dφ = e_φ. Mit der Kettenregel: ė_ρ = (de_ρ/dφ) φ̇ = φ̇ e_φ. Genauso: ė_φ = −φ̇ e_ρ.');
+  });
+  MW.slider(ctl, { label: 'Δφ', min: 0.02, max: 1.5, step: 0.01, value: dphi, onInput: x => { dphi = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'φ', min: 0, max: 1.5, step: 0.01, value: phi, onInput: x => { phi = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

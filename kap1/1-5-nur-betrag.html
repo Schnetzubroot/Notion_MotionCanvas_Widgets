@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nur der Betrag von r ändert sich: geradlinige Bewegung</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Nur der Betrag von r ändert sich: geradlinige Bewegung</h1>
+  <p class="sub">Richtung von r konstant, |r| veränderlich: Die Bahnkurve liegt auf einer Geraden durch den Ursprung O.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>r(t)</div><div><span class="sw" style="background:var(--line)"></span>Bahnkurve</div></div>
+    <div class="hint">Abspielen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let t = 0.15; const e = V.unit([2, 1]);
+  const view = MW.View2D(cv, { xmin: -3.2, xmax: 3.2, ymin: -1.8, ymax: 1.8 }, v => {
+    const C = v.C; v.grid(1);
+    const L = 2.8 * Math.sin(2 * Math.PI * t);
+    v.line(V.mul(e, -3.2), V.mul(e, 3.2), C.line, 1.5, [5, 4]);
+    v.arrow([0, 0], V.mul(e, L), C.c1, 3); v.dot(V.mul(e, L), C.fg, 6); v.text(V.mul(e, L), 'M', C.fg, 6, -8);
+    MW.info(infoEl, '|r| = ' + fmt(Math.abs(L)), [['Richtung', 'konstant (±)']], 'Die Spitze von r läuft nur entlang einer Geraden durch O.');
+  });
+  MW.player(ctl, { t0: 0, t1: 1, duration: 4, value: 0.15, onTime: x => { t = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nur die Richtung von r ändert sich: Bahn auf einer Kugel</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Nur die Richtung von r ändert sich: Bahn auf einer Kugel</h1>
+  <p class="sub">|r| konstant, Richtung veränderlich: Die Bahnkurve liegt auf einer Kugel |r| = konst. um O.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>r(t)</div><div><span class="sw" style="background:var(--c3)"></span>Bahnkurve</div></div>
+    <div class="hint">Abspielen. Ziehen dreht die Ansicht.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let t = 0.2; const R = 2;
+  const M = tt => { const th = 1.1 + 0.5 * Math.sin(6 * Math.PI * tt), ps = 2 * Math.PI * tt; return [R * Math.sin(th) * Math.cos(ps), R * Math.sin(th) * Math.sin(ps), R * Math.cos(th)]; };
+  const view = MW.View3D(cv, { extent: 2.3 }, v => {
+    const C = v.C; v.axes(2.4);
+    for (let k = 1; k < 6; k++) { const th = k * Math.PI / 6; v.poly(v.circlePts([0, 0, R * Math.cos(th)], [0, 0, 1], R * Math.sin(th), 0, 2 * Math.PI, 72, [1, 0, 0]), C.line, 1); }
+    const pts = []; for (let i = 0; i <= 200; i++) pts.push(M(t * i / 200)); v.poly(pts, C.c3, 2.5);
+    const P = M(t); v.arrow([0, 0, 0], P, C.c1, 3); v.dot(P, C.fg, 6); v.text(P, 'M', C.fg, 8, -6);
+    MW.info(infoEl, '|r| = ' + fmt(V.norm(P)) + ' (konstant)', [], 'Die Spitze von r kann sich nur auf der Kugelfläche bewegen.');
+  });
+  MW.player(ctl, { t0: 0, t1: 1, duration: 8, value: 0.2, onTime: x => { t = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

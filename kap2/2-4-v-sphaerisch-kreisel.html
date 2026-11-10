@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sphärische Komponenten: Achsenspitze des Kreisels (Buchbeispiel)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Sphärische Komponenten: Achsenspitze des Kreisels (Buchbeispiel)</h1>
+  <p class="sub">r = R konstant, also ṙ = 0. Es bleiben v = Rθ̇ e<sub>θ</sub> + R sin θ ψ̇ e<sub>ψ</sub> mit θ̇ = θ₀ω₁ cos(ω₁t) und ψ̇ = ω₂.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c4)"></span>Rθ̇ e_θ</div><div><span class="sw" style="background:var(--c3)"></span>R sin θ ψ̇ e_ψ</div><div><span class="sw" style="background:var(--fg)"></span>v</div></div>
+    <div class="hint">Abspielen. Ziehen im Bild dreht die Ansicht.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const R = 2, th0 = 0.25, w1 = 4, w2 = 1, k = 0.5; let t = 0.6;
+  const th = tt => Math.PI / 6 + th0 * Math.sin(w1 * tt);
+  const A = tt => { const a = th(tt), p = w2 * tt; return [R * Math.sin(a) * Math.cos(p), R * Math.sin(a) * Math.sin(p), R * Math.cos(a)]; };
+  const view = MW.View3D(cv, { extent: 2.2, yaw: 25, pitch: 30, center: [0, 0, 1] }, v => {
+    const C = v.C; v.axes(2.4);
+    const pts = []; for (let i = 0; i <= 200; i++) pts.push(A(2 * Math.PI * i / 200)); v.poly(pts, C.field, 1.5);
+    const a = th(t), p = w2 * t, P = A(t);
+    const et = [Math.cos(a) * Math.cos(p), Math.cos(a) * Math.sin(p), -Math.sin(a)], eps = [-Math.sin(p), Math.cos(p), 0];
+    const thd = th0 * w1 * Math.cos(w1 * t), c1 = V.mul(et, R * thd * k), c2 = V.mul(eps, R * Math.sin(a) * w2 * k);
+    v.arrow(P, c1, C.c4, 2.5); v.arrow(V.add(P, c1), c2, C.c3, 2.5); v.arrow(P, V.add(c1, c2), C.fg, 3);
+    v.line([0, 0, 0], P, C.muted, 1.5); v.dot(P, C.fg, 6); v.text(P, 'A', C.fg, -16, -4);
+    MW.info(infoEl, Math.abs(thd) < 0.03 ? 'θ̇ = 0: v ist horizontal (Umkehrpunkt in θ)' : 't = ' + fmt(t),
+      [['θ̇', fmt(thd)], ['Rθ̇', fmt(R * thd)], ['R sin θ ψ̇', fmt(R * Math.sin(a) * w2)], ['|v|', fmt(Math.hypot(R * thd, R * Math.sin(a) * w2))]],
+      'Der Faktor sin θ: Bei Änderung von ψ läuft der Punkt auf einem Parallelkreis mit Radius r sin θ, nicht r. (Pfeile mit 0,5 skaliert.)');
+  });
+  MW.player(ctl, { t0: 0, t1: 2 * Math.PI, duration: 10, value: 0.6, onTime: x => { t = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

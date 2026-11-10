@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Umrechnung kartesisch → zylindrisch: Achtung beim Winkel</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Umrechnung kartesisch → zylindrisch: Achtung beim Winkel</h1>
+  <p class="sub">ρ = √(x² + y²). Für φ liefert der Taschenrechner arctan(y/x) nur Werte zwischen −90° und 90°. Im 2. und 3. Quadranten muss man 180° addieren.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>ρ</div><div><span class="sw" style="background:var(--c3)"></span>richtiger Winkel φ</div><div><span class="sw" style="background:var(--c4)"></span>arctan(y/x)</div></div>
+    <div class="hint">Ziehe den Punkt M (Draufsicht auf die xy-Ebene).</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let M = [-1.5, 1.2];
+  const view = MW.View2D(cv, { xmin: -3, xmax: 3, ymin: -2.4, ymax: 2.4 }, v => {
+    const C = v.C; v.grid(1);
+    const phi = Math.atan2(M[1], M[0]), naive = Math.abs(M[0]) < 1e-9 ? NaN : Math.atan(M[1] / M[0]);
+    v.line([0, 0], M, C.c1, 3); v.text(V.mul(M, 0.5), 'ρ', C.c1, 4, -6);
+    v.arc([0, 0], 0.6, 0, phi < 0 ? phi + 2 * Math.PI : phi, C.c3, 2.5);
+    if (isFinite(naive)) { v.arc([0, 0], 0.95, 0, naive, C.c4, 2, [4, 3]); v.line([0, 0], [2.6 * Math.cos(naive), 2.6 * Math.sin(naive)], C.c4, 1, [4, 3]); }
+    v.dot(M, C.fg, 7); v.text(M, 'M', C.fg, 8, -8);
+    const wrong = isFinite(naive) && Math.abs(Math.cos(naive - phi) - 1) > 1e-6;
+    const d = x => fmt(x * 180 / Math.PI, 1) + '°';
+    MW.info(infoEl, wrong ? 'arctan(y/x) zeigt in die falsche Richtung' : 'arctan(y/x) stimmt hier',
+      [['x, y', fmt(M[0]) + ', ' + fmt(M[1])], ['ρ = √(x² + y²)', fmt(Math.hypot(M[0], M[1]))], ['richtiges φ', d(phi < 0 ? phi + 2 * Math.PI : phi)], ['arctan(y/x)', isFinite(naive) ? d(naive) : 'nicht definiert (x = 0)']],
+      wrong ? 'M liegt links der y-Achse (x < 0). Richtig ist φ = arctan(y/x) + 180°.' : 'Für x > 0 (1. und 4. Quadrant) ist arctan(y/x) korrekt.', wrong);
+  });
+  view.handle(() => M, p => { M = [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10]; });
+
+})();
+</script>
+</body>
+</html>

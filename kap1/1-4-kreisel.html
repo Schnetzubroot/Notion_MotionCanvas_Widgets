@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Achsenspitze eines Kreisels (Buchbeispiel Fig. 1.13)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Achsenspitze eines Kreisels (Buchbeispiel Fig. 1.13)</h1>
+  <p class="sub">r = R, θ = π/6 + θ₀ sin(ω₁t), ψ = ω₂t. Die Bahn ist eine Sinuslinie auf der Kugel zwischen θ = π/6 ± θ₀. Sie schliesst sich nach einer Umdrehung, wenn n = ω₁/ω₂ ganzzahlig ist.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>Bahnkurve der Spitze A</div><div><span class="sw" style="background:var(--line)"></span>Parallelkreise π/6 ± θ₀</div></div>
+    <div class="hint">n wählen und abspielen. Ziehen im Bild dreht die Ansicht.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const R = 2, th0 = 0.25; let n = 4, psi = 2 * Math.PI;
+  const A = p => { const th = Math.PI / 6 + th0 * Math.sin(n * p); return [R * Math.sin(th) * Math.cos(p), R * Math.sin(th) * Math.sin(p), R * Math.cos(th)]; };
+  const view = MW.View3D(cv, { extent: 2.2, yaw: 30, pitch: 30, center: [0, 0, 1] }, v => {
+    const C = v.C; v.axes(2.4);
+    for (const th of [Math.PI / 6 - th0, Math.PI / 6 + th0]) v.poly(v.circlePts([0, 0, R * Math.cos(th)], [0, 0, 1], R * Math.sin(th), 0, 2 * Math.PI, 90, [1, 0, 0]), C.line, 1, [4, 3]);
+    const pts = []; const N = Math.max(60, Math.round(psi * 60)); for (let i = 0; i <= N; i++) pts.push(A(psi * i / N));
+    v.poly(pts, C.c1, 2);
+    const P = A(psi); v.line([0, 0, 0], P, C.fg, 2); v.dot(P, C.fg, 6); v.text(P, 'A', C.fg, 8, -6);
+    MW.info(infoEl, 'Umdrehungen: ' + fmt(psi / (2 * Math.PI), 2), [['n = ω₁/ω₂', fmt(n, 2)], ['θ', fmt(Math.PI / 6 + th0 * Math.sin(n * psi))]],
+      Number.isInteger(n) ? 'n ganzzahlig: Die Bahn wiederholt sich nach jeder ganzen Umdrehung.' : 'n rational, aber nicht ganz: Die Bahn wiederholt sich erst nach mehreren Umdrehungen. Bei irrationalem n schliesst sie sich nie.');
+  });
+  MW.select(ctl, 'n = ω₁/ω₂:', [['4', '4'], ['3', '3'], ['2.5', '2,5'], ['1.5', '1,5']], x => { n = +x; psi = 0; view.redraw(); });
+  MW.player(ctl, { t0: 0, t1: 4 * Math.PI, duration: 10, loop: false, value: 2 * Math.PI, label: 'ψ', onTime: x => { psi = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

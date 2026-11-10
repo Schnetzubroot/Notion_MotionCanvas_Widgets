@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kartesische Koordinaten eines Punktes</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Kartesische Koordinaten eines Punktes</h1>
+  <p class="sub">x, y, z sind die Abstände der Projektionen M<sub>x</sub>, M<sub>y</sub>, M<sub>z</sub> vom Ursprung, mit Vorzeichen.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>x</div><div><span class="sw" style="background:var(--c3)"></span>y</div><div><span class="sw" style="background:var(--c2)"></span>z</div></div>
+    <div class="hint">Ziehen zum Drehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const s = { x: 2, y: 1.5, z: 1.5 };
+  const view = MW.View3D(cv, { extent: 3.2 }, v => {
+    const C = v.C, { x, y, z } = s, M = [x, y, z], Mxy = [x, y, 0];
+    v.floor(3); v.axes(3.2);
+    v.line([x, 0, 0], Mxy, C.muted, 1, [4, 4]); v.line([0, y, 0], Mxy, C.muted, 1, [4, 4]);
+    v.line(Mxy, M, C.muted, 1, [4, 4]); v.line([0, 0, z], M, C.muted, 1, [4, 4]);
+    v.line([0, 0, 0], [x, 0, 0], C.c1, 4); v.line([0, 0, 0], [0, y, 0], C.c3, 4); v.line([0, 0, 0], [0, 0, z], C.c2, 4);
+    v.dot([x, 0, 0], C.c1, 4); v.text([x, 0, 0], 'Mx', C.c1, -6, 18, 12);
+    v.dot([0, y, 0], C.c3, 4); v.text([0, y, 0], 'My', C.c3, 4, 16, 12);
+    v.dot([0, 0, z], C.c2, 4); v.text([0, 0, z], 'Mz', C.c2, -26, 0, 12);
+    v.dot(Mxy, C.muted, 3); v.text(Mxy, 'Mxy', C.muted, 6, 14, 11, false);
+    v.dot(M, C.fg, 6); v.text(M, 'M', C.fg, 8, -6);
+    MW.info(infoEl, 'M = (' + fmt(x) + ', ' + fmt(y) + ', ' + fmt(z) + ')',
+      [['x = OMx', fmt(x)], ['y = OMy', fmt(y)], ['z = OMz', fmt(z)], ['Abstand |OM|', fmt(Math.hypot(x, y, z))]],
+      'Jede Koordinate liegt in (−∞, ∞). Das Vorzeichen sagt, auf welcher Seite von O die Projektion liegt.');
+  });
+  ['x', 'y', 'z'].forEach(k => MW.slider(ctl, { label: k, min: -3, max: 3, step: 0.1, value: s[k], onInput: val => { s[k] = val; view.redraw(); } }));
+
+})();
+</script>
+</body>
+</html>

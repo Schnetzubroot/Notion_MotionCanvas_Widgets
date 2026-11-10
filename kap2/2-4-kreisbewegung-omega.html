@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kreisbewegung: v = ω × r</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Kreisbewegung: v = ω × r</h1>
+  <p class="sub">ω = φ̇ e<sub>z</sub> steht senkrecht auf der Kreisebene. r darf von jedem Punkt A auf der Drehachse ausgehen: Das Ergebnis v = ω × AM ist immer dasselbe.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>ω</div><div><span class="sw" style="background:var(--c4)"></span>r = AM</div><div><span class="sw" style="background:var(--c1)"></span>v = ω × r</div></div>
+    <div class="hint">Punkt A auf der Achse verschieben. Ziehen im Bild dreht die Ansicht.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const R = 1.8, z0 = 1.2; let zA = 0, phi = 0.9, pd = 1;
+  const view = MW.View3D(cv, { extent: 2.6, center: [0, 0, 0.8] }, v => {
+    const C = v.C; v.axes(2.4);
+    v.poly(v.circlePts([0, 0, z0], [0, 0, 1], R, 0, 2 * Math.PI, 90, [1, 0, 0]), C.line, 1.5);
+    v.line([0, 0, -1], [0, 0, 3], C.line, 1, [4, 4]);
+    const M = [R * Math.cos(phi), R * Math.sin(phi), z0], A = [0, 0, zA], w = [0, 0, pd], rA = V.sub(M, A), vel = V.cross(w, rA);
+    v.arrow([0, 0, 0], V.mul(w, 0.9), C.c2, 3.5); v.text(V.mul(w, 0.9), 'ω', C.c2, 6, 0);
+    v.arrow(A, rA, C.c4, 2.5); v.dot(A, C.c4, 5); v.text(A, 'A', C.c4, -16, 4);
+    v.arrow(M, V.mul(vel, 0.6), C.c1, 3); v.dot(M, C.fg, 6); v.text(M, 'M', C.fg, 8, 14);
+    MW.info(infoEl, 'v = ' + fv(vel), [['r = AM', fv(rA)], ['|v| = R φ̇', fmt(V.norm(vel))], ['z_A', fmt(zA)]],
+      'Der Anteil von AM parallel zu ω fällt im Kreuzprodukt weg (e_z × e_z = 0). Darum ist v unabhängig davon, wo A auf der Achse liegt.');
+  });
+  MW.slider(ctl, { label: 'z_A', min: -1, max: 2.8, step: 0.05, value: zA, onInput: x => { zA = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'φ', min: 0, max: 6.28, step: 0.01, value: phi, onInput: x => { phi = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'φ̇', min: -2, max: 2, step: 0.05, value: pd, onInput: x => { pd = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

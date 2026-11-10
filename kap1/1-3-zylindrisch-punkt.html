@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zylindrische Koordinaten (ρ, φ, z)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Zylindrische Koordinaten (ρ, φ, z)</h1>
+  <p class="sub">ρ = Abstand von der z-Achse, φ = Winkel von Ox zur Projektion OM<sub>xy</sub> (gegen den Uhrzeigersinn positiv), z wie kartesisch.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>ρ</div><div><span class="sw" style="background:var(--c3)"></span>φ</div><div><span class="sw" style="background:var(--c2)"></span>z</div></div>
+    <div class="hint">Ziehen zum Drehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const s = { rho: 2, phi: 1.1, z: 1.5 };
+  const view = MW.View3D(cv, { extent: 3.2 }, v => {
+    const C = v.C, x = s.rho * Math.cos(s.phi), y = s.rho * Math.sin(s.phi), M = [x, y, s.z], Mxy = [x, y, 0];
+    v.floor(3); v.axes(3.2);
+    v.line([0, 0, 0], Mxy, C.c1, 4); v.text(V.mul(Mxy, 0.5), 'ρ', C.c1, 4, 16);
+    const arc = v.circlePts([0, 0, 0], [0, 0, 1], 0.9, 0, s.phi, 40, [1, 0, 0]); v.poly(arc, C.c3, 2.5);
+    v.text(arc[Math.floor(arc.length / 2)], 'φ', C.c3, 4, 14);
+    v.line(Mxy, M, C.c2, 4); v.text(V.add(Mxy, [0, 0, s.z / 2]), 'z', C.c2, 8, 0);
+    v.line([0, 0, 0], [0, 0, s.z], C.muted, 1, [4, 4]); v.line([0, 0, s.z], M, C.muted, 1, [4, 4]);
+    v.dot(Mxy, C.muted, 3); v.text(Mxy, 'Mxy', C.muted, 6, 14, 11, false);
+    v.dot(M, C.fg, 6); v.text(M, 'M', C.fg, 8, -8);
+    MW.info(infoEl, '(ρ, φ, z) = (' + fmt(s.rho) + ', ' + fmt(s.phi) + ', ' + fmt(s.z) + ')',
+      [['x = ρ cos φ', fmt(x)], ['y = ρ sin φ', fmt(y)], ['z', fmt(s.z)], ['φ in Grad', fmt(s.phi * 180 / Math.PI, 1) + '°']],
+      s.rho < 0.05 ? 'ρ = 0: M liegt auf der z-Achse. Dort ist φ beliebig, also nicht eindeutig (Koordinatensingularität).' : 'Wertebereiche: ρ ∈ [0, ∞), φ ∈ (−∞, ∞), z ∈ (−∞, ∞).');
+  });
+  MW.slider(ctl, { label: 'ρ', min: 0, max: 3, step: 0.05, value: s.rho, onInput: x => { s.rho = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'φ', min: -3.14, max: 6.28, step: 0.01, value: s.phi, onInput: x => { s.phi = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'z', min: -2, max: 2.5, step: 0.05, value: s.z, onInput: x => { s.z = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

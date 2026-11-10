@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gleichförmige Bewegung: konstante Schnelligkeit, aber veränderliche Geschwindigkeit</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Gleichförmige Bewegung: konstante Schnelligkeit, aber veränderliche Geschwindigkeit</h1>
+  <p class="sub">Gleichförmig heisst ṡ = konst., also s = s₀ + ṡ t. Auf einer gekrümmten Bahn ändert sich trotzdem die Richtung von v. Erst auf einer Geraden ist die Bewegung geradlinig gleichförmig.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>v jetzt</div><div><span class="sw" style="background:var(--field)"></span>v zu früheren Zeiten</div></div>
+    <div class="hint">Abspielen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  function arcCurve(f, a, b, N = 600) {
+    const P = [], L = [0];
+    for (let i = 0; i <= N; i++) P.push(f(a + (b - a) * i / N));
+    for (let i = 1; i <= N; i++) L.push(L[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+    const total = L[N];
+    const at = s => { s = Math.max(0, Math.min(total, s)); let i = 1; while (i < N && L[i] < s) i++;
+      const u = (s - L[i - 1]) / (L[i] - L[i - 1] || 1), p = [P[i - 1][0] + u * (P[i][0] - P[i - 1][0]), P[i - 1][1] + u * (P[i][1] - P[i - 1][1])];
+      const tau = V.unit([P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]]); return { p, tau }; };
+    return { P, total, at };
+  }
+
+  const cur = arcCurve(a => [2.4 * Math.cos(a), 1.3 * Math.sin(a) + 0.2 * Math.sin(3 * a)], 0, 2 * Math.PI, 900);
+  const sd = 1.5; let t = 2.5;
+  const view = MW.View2D(cv, { xmin: -3, xmax: 3, ymin: -1.8, ymax: 1.8 }, v => {
+    const C = v.C; v.poly(cur.P, C.line, 2.5);
+    const sNow = (sd * t) % cur.total;
+    for (let k = 1; k <= 6; k++) { const s = sNow - k * 1.2; if (s < 0) continue; const P = cur.at(s); v.arrow(P.p, V.mul(P.tau, sd * 0.5), C.field, 1.6, 7); v.dot(P.p, C.field, 3); }
+    const P = cur.at(sNow); v.arrow(P.p, V.mul(P.tau, sd * 0.5), C.c1, 3); v.dot(P.p, C.fg, 6); v.text(P.p, 'M', C.fg, 6, -8);
+    MW.info(infoEl, 'Gleichförmig: |v| = ṡ = ' + fmt(sd) + ' bleibt konstant', [['Richtung von v', fv(P.tau)]],
+      'Alle Pfeile sind gleich lang, zeigen aber in verschiedene Richtungen. Konstante Schnelligkeit bedeutet nicht konstante Geschwindigkeit.');
+  });
+  MW.player(ctl, { t0: 0, t1: 9, duration: 9, value: 2.5, onTime: x => { t = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>
