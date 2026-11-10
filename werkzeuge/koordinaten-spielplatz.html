@@ -6,41 +6,57 @@
 <title>Koordinaten-Spielplatz</title>
 <link rel="stylesheet" href="../lib/core.css">
 <style>
-  .wrap.wide { max-width: 1200px; }
+  .wrap.wide { max-width: 1240px; }
   .grid2 { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr); gap: 14px; align-items: start; }
   @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } .sticky { position: static !important; } .right { order: -1; } }
   .sticky { position: sticky; top: 8px; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
   .card h2 { font-size: 13px; margin: 0 0 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-  .row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: 4px 0; }
-  .row label { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
-  input.ex { width: 100%; min-width: 0; font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--fg); }
+  .row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: 5px 0; }
+  .row label, .lbl { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  input.ex { min-width: 0; font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--fg); box-sizing: border-box; }
   input.ex.bad { border-color: var(--warn); outline: 1px solid var(--warn); }
+  input.ex:disabled { opacity: .5; }
   .tri { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
   .tri label { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--muted); }
+  .tri input.ex { width: 100%; }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
   .seg button { border: 0; border-radius: 0; background: var(--bg); padding: 4px 10px; }
   .seg button.on { background: var(--c2); color: #fff; }
   .chk { display: grid; grid-template-columns: 110px repeat(3, auto); gap: 4px 12px; font-size: 13px; align-items: center; }
   .chk span { color: var(--muted); }
   .chk label { display: flex; align-items: center; gap: 4px; }
-  .list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
-  .item { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 4px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
-  .item .dot { width: 12px; height: 12px; border-radius: 3px; flex: none; }
-  .item .grow { flex: 1; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-  .item button { padding: 1px 8px; }
+  .list { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+  .item { font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
+  .item.hid .txt { opacity: .45; }
+  .item.bad { border-color: var(--warn); }
+  .ihead { display: flex; align-items: center; gap: 7px; padding: 4px 6px; }
+  .ihead .txt { flex: 1; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  .ihead .kind { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 0 6px; }
+  .ihead button { padding: 1px 7px; }
+  input[type=color] { width: 26px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 5px; background: none; cursor: pointer; }
+  .ibody { border-top: 1px dashed var(--line); padding: 6px 8px 8px; display: none; }
+  .item.open .ibody { display: block; }
+  .xs { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .xs .n { color: var(--muted); min-width: 52px; }
+  .xs input[type=range] { flex: 1; min-width: 70px; }
+  .xs input.ex { width: 78px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 6px; }
+  .tabs button.on { background: var(--c2); color: #fff; border-color: var(--c2); }
   .scen { font-size: 13px; background: var(--bg); border: 1px solid var(--acc); border-radius: 8px; padding: 8px 10px; margin-top: 8px; display: none; }
   .scen b { color: var(--acc); }
   .mem { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
   .tag { font-size: 12px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
   .tag.on { color: var(--acc); border-color: var(--acc); }
   .help { font-size: 12px; color: var(--muted); }
+  .help code { font-size: 11.5px; }
+  .tbox { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin: 8px 0; }
 </style>
 </head>
 <body>
 <div class="wrap wide">
   <h1>Koordinaten-Spielplatz</h1>
-  <p class="sub">Punkt in kartesischen, zylindrischen oder sphärischen Koordinaten setzen, Koordinatenlinien, Basisvektoren, Flächen und Bahnkurven einblenden. Eingaben dürfen Ausdrücke sein: <code>pi/3</code>, <code>sqrt(3)/2</code>, <code>2*pi/3*(1-cos(t))</code>.</p>
+  <p class="sub">Punkt in kartesischen, zylindrischen oder sphärischen Koordinaten setzen; Flächen, Bahnkurven und eigene Hilfslinien einzeichnen. Jedes Feld nimmt Ausdrücke wie <code>pi/3</code>, <code>sqrt(3)/2</code>, <code>cos(t)</code>. Die Variable <code>t</code> kommt vom Regler, die Koordinaten von M heissen <code>x_M y_M z_M ρ_M φ_M r_M θ_M ψ_M</code>.</p>
   <div class="grid2">
     <div>
       <div class="card">
@@ -53,7 +69,7 @@
         <h2>Punkt M</h2>
         <div class="row"><div class="seg" id="mode"><button data-m="cart">kartesisch</button><button data-m="cyl">zylindrisch</button><button data-m="sph">sphärisch</button></div></div>
         <div class="tri" id="mIn"></div>
-        <div class="row"><label><input type="checkbox" id="follow"> M folgt Bahnkurve 1</label></div>
+        <div class="row"><label>M folgt <select id="follow"></select></label><label><input type="checkbox" id="showM" checked> M anzeigen</label></div>
       </div>
 
       <div class="card">
@@ -64,40 +80,56 @@
           <span>Basisvektoren</span><label><input type="checkbox" data-k="basis-cart"></label><label><input type="checkbox" data-k="basis-cyl"></label><label><input type="checkbox" data-k="basis-sph"></label>
           <span>Koordinaten</span><label><input type="checkbox" data-k="help-cart"></label><label><input type="checkbox" data-k="help-cyl"></label><label><input type="checkbox" data-k="help-sph"></label>
         </div>
-        <p class="help">„Koordinaten“ zeichnet die Projektionen, ρ, z, die Winkel φ, θ, ψ als Bögen.</p>
+        <p class="help">„Koordinaten“ zeichnet Projektionen, ρ, z und die Winkel φ, θ, ψ als Bögen.</p>
       </div>
 
       <div class="card">
-        <h2>Flächen (eine Koordinate fest)</h2>
-        <div class="row">
-          <select id="sType">
-            <option value="x">x =</option><option value="y">y =</option><option value="z">z =</option>
-            <option value="rho">ρ =</option><option value="phi">φ =</option>
-            <option value="r">r =</option><option value="theta">θ =</option><option value="psi">ψ =</option>
-          </select>
-          <input id="sVal" class="ex" style="width:110px" value="0">
-          <button id="sAdd">+ Fläche</button>
+        <h2>Neues Objekt</h2>
+        <div class="tabs" id="tabs"><button data-k="help">Hilfslinie</button><button data-k="surf">Fläche</button><button data-k="curve">Bahnkurve</button></div>
+        <div id="fHelp">
+          <div class="row"><label>Vorlage <select id="hPreset"></select></label></div>
+          <div class="row"><div class="seg" id="hSys"><button data-m="cart">kartesisch</button><button data-m="cyl">zylindrisch</button><button data-m="sph">sphärisch</button></div></div>
+          <div class="tri" id="hIn"></div>
+          <div class="row"><label>s von <input id="hS0" class="ex" style="width:80px"></label><label>bis <input id="hS1" class="ex" style="width:80px"></label><button id="hAdd">+ Hilfslinie</button></div>
+          <p class="help">Parameter der Linie ist <code>s</code>. Mit <code>t</code> oder den Koordinaten von M bewegt sich die Linie mit (z. B. Meridian durch M: <code>r = r_M, θ = s, ψ = ψ_M</code>).</p>
         </div>
-        <div class="list" id="sList"></div>
+        <div id="fSurf">
+          <div class="row">
+            <select id="sType">
+              <option value="x">x =</option><option value="y">y =</option><option value="z">z =</option>
+              <option value="rho">ρ = (Zylinder)</option><option value="phi">φ = (Halbebene)</option>
+              <option value="r">r = (Kugel)</option><option value="theta">θ = (Kegel)</option><option value="psi">ψ = (Halbebene)</option>
+            </select>
+            <input id="sVal" class="ex" style="width:120px" value="1">
+            <button id="sAdd">+ Fläche</button>
+          </div>
+          <p class="help">Der Wert darf <code>t</code> und die Koordinaten von M enthalten, z. B. <code>z = z_M</code> oder <code>r = 1 + t/4</code>.</p>
+        </div>
+        <div id="fCurve">
+          <div class="row"><div class="seg" id="cSys"><button data-m="cart">kartesisch</button><button data-m="cyl">zylindrisch</button><button data-m="sph">sphärisch</button></div></div>
+          <div class="tri" id="cIn"></div>
+          <div class="row"><label>t von <input id="cT0" class="ex" style="width:80px" value="0"></label><label>bis <input id="cT1" class="ex" style="width:80px" value="2*pi"></label><button id="cAdd">+ Bahnkurve</button></div>
+          <p class="help">Bahnkurven zeigen zusätzlich ihren Punkt zur aktuellen Zeit <code>t</code>.</p>
+        </div>
       </div>
 
       <div class="card">
-        <h2>Bahnkurven (Parameter t)</h2>
-        <div class="row"><div class="seg" id="cSys"><button data-m="cart">kartesisch</button><button data-m="cyl">zylindrisch</button><button data-m="sph">sphärisch</button></div></div>
-        <div class="tri" id="cIn"></div>
-        <div class="row"><label>t von <input id="cT0" class="ex" style="width:70px" value="0"></label><label>bis <input id="cT1" class="ex" style="width:70px" value="2*pi"></label><button id="cAdd">+ Bahnkurve</button></div>
-        <div class="list" id="cList"></div>
-      </div>
-
-      <div class="card">
-        <h2>Ansicht</h2>
-        <div class="row" id="viewCtl"></div>
+        <h2>Objekte</h2>
+        <div class="list" id="items"></div>
+        <p class="help" id="noItems">Noch keine Objekte. Füge oben eine Hilfslinie, Fläche oder Bahnkurve hinzu. ☑ blendet ein/aus, ⚙ öffnet Ausdrücke und Stil.</p>
       </div>
     </div>
 
     <div class="sticky right">
-      <div class="stage"><canvas id="cv" style="height:520px"></canvas><div class="hint">Ziehen zum Drehen · Mausrad zum Zoomen</div></div>
-      <div class="row" id="tCtl"></div>
+      <div class="stage"><canvas id="cv" style="height:520px"></canvas><div class="hint">Ziehen: drehen · Rechtsklick- oder Shift-Ziehen / zwei Finger: verschieben · Mausrad: zoomen</div></div>
+      <div class="tbox">
+        <div class="row" id="tRow"></div>
+        <div class="row"><label>t-Bereich von <input id="tA" class="ex" style="width:70px" value="0"></label><label>bis <input id="tB" class="ex" style="width:70px" value="2*pi"></label><label>Dauer <input id="tDur" class="ex" style="width:44px" value="8"> s</label></div>
+      </div>
+      <div class="tbox">
+        <div class="row" id="viewRow"></div>
+        <div class="row"><label><input type="checkbox" id="vAxes" checked> Achsen</label><label><input type="checkbox" id="vFloor" checked> Bodengitter</label><label><input type="checkbox" id="vLabels" checked> Beschriftungen</label></div>
+      </div>
       <div class="info" id="info"></div>
     </div>
   </div>
@@ -110,141 +142,268 @@
   const SYS = { cart: ['x', 'y', 'z'], cyl: ['ρ', 'φ', 'z'], sph: ['r', 'θ', 'ψ'] };
   const SURF = { x: 'x', y: 'y', z: 'z', rho: 'ρ', phi: 'φ', r: 'r', theta: 'θ', psi: 'ψ' };
   const PALETTE = ['--c2', '--c4', '--c3', '--c5', '--c1'];
+  const DASH = { solid: null, dash: [8, 5], dot: [2, 4], dashdot: [9, 4, 2, 4] };
+  const MV = ['x_M', 'y_M', 'z_M', 'rho_M', 'phi_M', 'r_M', 'theta_M', 'psi_M'];
+  const prep = s => String(s).replace(/φ/g, 'phi').replace(/θ/g, 'theta').replace(/ψ/g, 'psi').replace(/ρ/g, 'rho');
+  const comp = (src, vars) => MW.compile(prep(src), vars);
+  const toCart = (sys, a) => sys === 'cart' ? a : sys === 'cyl' ? [a[0] * Math.cos(a[1]), a[0] * Math.sin(a[1]), a[2]]
+    : [a[0] * Math.sin(a[1]) * Math.cos(a[2]), a[0] * Math.sin(a[1]) * Math.sin(a[2]), a[0] * Math.cos(a[1])];
+  const rgba = (c, a) => { let h = (c || '#888').trim(); if (h[0] === '#') { h = h.slice(1); if (h.length === 3) h = h.split('').map(x => x + x).join('');
+      return `rgba(${parseInt(h.slice(0, 2), 16)},${parseInt(h.slice(2, 4), 16)},${parseInt(h.slice(4, 6), 16)},${a})`; }
+    const m = h.match(/rgba?\(([^)]+)\)/); if (m) { const p = m[1].split(',').slice(0, 3).join(','); return `rgba(${p},${a})`; } return h; };
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
+
+  // slider + expression box, two-way bound
+  function exSlider(parent, o) {
+    const w = el('div', 'xs'); w.appendChild(el('span', 'n', o.label));
+    const r = el('input'); r.type = 'range'; r.min = o.min; r.max = o.max; r.step = 'any'; r.value = o.value;
+    const t = el('input', 'ex'); t.value = o.text ?? f3(o.value); t.title = 'Ausdruck, z. B. pi/2';
+    w.appendChild(r); w.appendChild(t); parent.appendChild(w);
+    r.addEventListener('input', () => { t.value = f3(+r.value); t.classList.remove('bad'); o.onInput(+r.value, true); });
+    t.addEventListener('input', () => { const e = {}, v = MW.num(prep(t.value), e); t.classList.toggle('bad', !!e.error); t.title = e.error || 'Ausdruck, z. B. pi/2';
+      if (!e.error) { r.value = Math.min(Math.max(v, o.min), o.max); o.onInput(v, false); } });
+    return { el: w, set(v) { r.value = v; t.value = f3(v); t.classList.remove('bad'); }, get: () => +r.value, setRange(a, b) { r.min = a; r.max = b; } };
+  }
 
   // ---------- state ----------
   const st = {
     mode: 'cyl', m: { cart: ['1', '1', '1'], cyl: ['1.5', 'pi/4', '1'], sph: ['2', 'pi/3', 'pi/4'] },
-    show: { 'line-cyl': true, 'help-cyl': true }, follow: false,
-    surfaces: [], curves: [], t: 0, L: 2.5, cSys: 'sph',
-    cIn: { cart: ['cos(t)', 'sin(t)', 't/4'], cyl: ['1', 't', 't/4'], sph: ['1', '2*pi/3*(1-cos(t))', 't'] },
+    show: { 'line-cyl': true, 'help-cyl': true }, follow: -1, showM: true,
+    items: [], t: 0, tA: 0, tB: 2 * PI, L: 2.5, uid: 0,
+    form: { tab: 'help', hSys: 'sph', cSys: 'sph',
+      h: { cart: ['s', '0', '0'], cyl: ['rho_M', 's', 'z_M'], sph: ['r_M', 's', 'psi_M'] },
+      c: { cart: ['cos(t)', 'sin(t)', 't/4'], cyl: ['1', 't', 't/4'], sph: ['1', '2*pi/3*(1-cos(t))', 't'] } },
   };
 
-  const toCart = (sys, a) => sys === 'cart' ? a : sys === 'cyl' ? [a[0] * Math.cos(a[1]), a[0] * Math.sin(a[1]), a[2]]
-    : [a[0] * Math.sin(a[1]) * Math.cos(a[2]), a[0] * Math.sin(a[1]) * Math.sin(a[2]), a[0] * Math.cos(a[1])];
+  // ---------- items ----------
+  function compileItem(it) {
+    try {
+      if (it.kind === 'surf') { it.f = comp(it.src, ['t', ...MV]); }
+      else if (it.kind === 'curve') { it.fs = it.ex.map(e => comp(e, ['t'])); it.f0 = comp(it.r0, []); it.f1 = comp(it.r1, []); }
+      else { it.fs = it.ex.map(e => comp(e, ['s', 't', ...MV])); it.f0 = comp(it.r0, ['t', ...MV]); it.f1 = comp(it.r1, ['t', ...MV]); }
+      it.err = ''; return true;
+    } catch (e) { it.err = e.message; return false; }
+  }
+  function newItem(o) {
+    const it = { id: ++st.uid, visible: true, pal: PALETTE[st.items.length % PALETTE.length], ...o };
+    it.style = { color: null, alpha: it.kind === 'help' ? 0.6 : 1, fill: 0.13, dash: it.kind === 'help' ? 'dash' : 'solid', width: it.kind === 'help' ? 1.5 : it.kind === 'curve' ? 2.2 : 1.5, label: it.kind !== 'help', ...(o.style || {}) };
+    compileItem(it); return it;
+  }
+  const colorOf = it => it.style.color || MW.css(it.pal);
+  const curveAt = (it, t) => toCart(it.sys, it.fs.map(f => f({ t })));
+  const curveRange = it => [it.f0({}), it.f1({})];
 
-  // ---------- inputs: point M ----------
+  // ---------- point M ----------
   const mIn = document.getElementById('mIn'), mInputs = [];
-  for (let i = 0; i < 3; i++) { const l = document.createElement('label'), s = document.createElement('span'), inp = document.createElement('input');
-    inp.className = 'ex'; l.appendChild(s); l.appendChild(inp); mIn.appendChild(l); mInputs.push({ s, inp });
-    inp.addEventListener('input', () => { st.m[st.mode][i] = inp.value; st.follow = false; document.getElementById('follow').checked = false; update(); }); }
+  for (let i = 0; i < 3; i++) { const l = el('label'), s = el('span'), inp = el('input', 'ex');
+    l.appendChild(s); l.appendChild(inp); mIn.appendChild(l); mInputs.push({ s, inp });
+    inp.addEventListener('input', () => { st.m[st.mode][i] = inp.value; update(); }); }
   function syncM() { mInputs.forEach((o, i) => { o.s.textContent = SYS[st.mode][i]; o.inp.value = st.m[st.mode][i]; });
     document.querySelectorAll('#mode button').forEach(b => b.classList.toggle('on', b.dataset.m === st.mode)); }
+  const mDependsOnT = () => st.m[st.mode].some(s => /\bt\b/.test(s));
   document.querySelectorAll('#mode button').forEach(b => b.addEventListener('click', () => {
-    // convert current M into the chosen system so the point stays where it is
-    const c = cur.M; if (c) { const rho = Math.hypot(c[0], c[1]), r = V.norm(c), ph = rho > 1e-9 ? Math.atan2(c[1], c[0]) : cur.phi;
+    const c = cur.M; if (c && !mDependsOnT()) { const rho = Math.hypot(c[0], c[1]), r = V.norm(c), ph = rho > 1e-9 ? Math.atan2(c[1], c[0]) : cur.phi;
       const n = x => String(Math.round(x * 1e4) / 1e4);
       st.m.cart = c.map(n); st.m.cyl = [n(rho), n(ph), n(c[2])]; st.m.sph = [n(r), n(r > 1e-9 ? Math.atan2(rho, c[2]) : 0), n(ph)]; }
     st.mode = b.dataset.m; syncM(); update(); }));
-  document.getElementById('follow').addEventListener('change', e => { st.follow = e.target.checked; update(); });
+  const followSel = document.getElementById('follow');
+  function syncFollow() { followSel.innerHTML = ''; const o0 = el('option', '', 'nichts (Eingabe oben)'); o0.value = -1; followSel.appendChild(o0);
+    st.items.forEach(it => { if (it.kind === 'curve') { const o = el('option', '', 'Bahnkurve ' + curveNo(it)); o.value = it.id; followSel.appendChild(o); } });
+    if (!st.items.some(it => it.id === st.follow)) st.follow = -1; followSel.value = st.follow; }
+  followSel.addEventListener('change', () => { st.follow = +followSel.value; update(); });
+  document.getElementById('showM').addEventListener('change', e => { st.showM = e.target.checked; view.redraw(); });
   document.querySelectorAll('.chk input').forEach(i => i.addEventListener('change', () => { st.show[i.dataset.k] = i.checked; view.redraw(); }));
-  function syncShow() { document.querySelectorAll('.chk input').forEach(i => { i.checked = !!st.show[i.dataset.k]; }); }
+  const syncShow = () => document.querySelectorAll('.chk input').forEach(i => { i.checked = !!st.show[i.dataset.k]; });
 
-  // ---------- surfaces ----------
-  document.getElementById('sAdd').addEventListener('click', () => {
-    const o = {}, v = MW.num(document.getElementById('sVal').value, o);
-    document.getElementById('sVal').classList.toggle('bad', !!o.error); if (o.error) return;
-    st.surfaces.push({ type: document.getElementById('sType').value, src: document.getElementById('sVal').value, v }); renderLists(); update();
-  });
-  // ---------- curves ----------
-  const cIn = document.getElementById('cIn'), cInputs = [];
-  for (let i = 0; i < 3; i++) { const l = document.createElement('label'), s = document.createElement('span'), inp = document.createElement('input');
-    inp.className = 'ex'; l.appendChild(s); l.appendChild(inp); cIn.appendChild(l); cInputs.push({ s, inp }); inp.addEventListener('input', () => { st.cIn[st.cSys][i] = inp.value; }); }
-  function syncC() { cInputs.forEach((o, i) => { o.s.textContent = SYS[st.cSys][i] + '(t) ='; o.inp.value = st.cIn[st.cSys][i]; });
-    document.querySelectorAll('#cSys button').forEach(b => b.classList.toggle('on', b.dataset.m === st.cSys)); }
-  document.querySelectorAll('#cSys button').forEach(b => b.addEventListener('click', () => { st.cSys = b.dataset.m; syncC(); }));
-  function makeCurve(sys, ex, t0s, t1s) {
-    const fs = ex.map(e => MW.compile(e, ['t'])), t0 = MW.num(t0s), t1 = MW.num(t1s);
-    if (!isFinite(t0) || !isFinite(t1) || t1 <= t0) throw new Error('t-Bereich prüfen');
-    const at = t => toCart(sys, fs.map(f => f({ t })));
-    return { sys, ex: [...ex], t0, t1, t0s, t1s, at };
+  // ---------- new-object form ----------
+  const tabs = document.querySelectorAll('#tabs button'), forms = { help: 'fHelp', surf: 'fSurf', curve: 'fCurve' };
+  function syncTabs() { tabs.forEach(b => b.classList.toggle('on', b.dataset.k === st.form.tab)); for (const k in forms) document.getElementById(forms[k]).style.display = k === st.form.tab ? '' : 'none'; }
+  tabs.forEach(b => b.addEventListener('click', () => { st.form.tab = b.dataset.k; syncTabs(); }));
+  function triInputs(box, n) { const out = []; for (let i = 0; i < n; i++) { const l = el('label'), s = el('span'), inp = el('input', 'ex'); l.appendChild(s); l.appendChild(inp); box.appendChild(l); out.push({ s, inp }); } return out; }
+  const hInputs = triInputs(document.getElementById('hIn'), 3), cInputs = triInputs(document.getElementById('cIn'), 3);
+  hInputs.forEach((o, i) => o.inp.addEventListener('input', () => { st.form.h[st.form.hSys][i] = o.inp.value; }));
+  cInputs.forEach((o, i) => o.inp.addEventListener('input', () => { st.form.c[st.form.cSys][i] = o.inp.value; }));
+  function syncForm() {
+    hInputs.forEach((o, i) => { o.s.textContent = SYS[st.form.hSys][i] + '(s) ='; o.inp.value = st.form.h[st.form.hSys][i]; });
+    cInputs.forEach((o, i) => { o.s.textContent = SYS[st.form.cSys][i] + '(t) ='; o.inp.value = st.form.c[st.form.cSys][i]; });
+    document.querySelectorAll('#hSys button').forEach(b => b.classList.toggle('on', b.dataset.m === st.form.hSys));
+    document.querySelectorAll('#cSys button').forEach(b => b.classList.toggle('on', b.dataset.m === st.form.cSys));
   }
-  document.getElementById('cAdd').addEventListener('click', () => {
-    let ok = true; cInputs.forEach(o => { try { MW.compile(o.inp.value, ['t']); o.inp.classList.remove('bad'); } catch (e) { o.inp.classList.add('bad'); o.inp.title = e.message; ok = false; } });
-    if (!ok) return;
-    try { st.curves.push(makeCurve(st.cSys, cInputs.map(o => o.inp.value), document.getElementById('cT0').value, document.getElementById('cT1').value)); }
-    catch (e) { document.getElementById('cT1').classList.add('bad'); return; }
-    document.getElementById('cT1').classList.remove('bad'); renderLists(); setupT(); update();
+  document.querySelectorAll('#hSys button').forEach(b => b.addEventListener('click', () => { st.form.hSys = b.dataset.m; syncForm(); }));
+  document.querySelectorAll('#cSys button').forEach(b => b.addEventListener('click', () => { st.form.cSys = b.dataset.m; syncForm(); }));
+  const PRESETS = [
+    ['Meridian durch M (ψ = ψ_M)', 'sph', ['r_M', 's', 'psi_M'], '0', 'pi'],
+    ['Breitenkreis durch M (θ = θ_M)', 'sph', ['r_M', 'theta_M', 's'], '0', '2*pi'],
+    ['Strahl von O durch M', 'sph', ['s', 'theta_M', 'psi_M'], '0', '1.5*r_M'],
+    ['Mantellinie durch M (ρ, φ fest)', 'cyl', ['rho_M', 'phi_M', 's'], '-2', '2'],
+    ['Radiale Linie von der z-Achse durch M', 'cyl', ['s', 'phi_M', 'z_M'], '0', '1.5*rho_M'],
+    ['Lot von M auf die xy-Ebene', 'cart', ['x_M', 'y_M', 's'], '0', 'z_M'],
+    ['Meridian ψ = konst. (Werte anpassen)', 'sph', ['1', 's', 'pi/4'], '0', 'pi'],
+    ['Breitenkreis θ = konst.', 'sph', ['1', 'pi/3', 's'], '0', '2*pi'],
+    ['Kreis in der Ebene x = 0', 'cart', ['0', 'cos(s)', 'sin(s)'], '0', '2*pi'],
+    ['Gerade durch A = (1,0,0) und B = (0,1,1)', 'cart', ['1 - s', 's', 's'], '-1', '2'],
+  ];
+  const hPreset = document.getElementById('hPreset');
+  PRESETS.forEach((p, i) => { const o = el('option', '', p[0]); o.value = i; hPreset.appendChild(o); });
+  function loadPreset(i) { const p = PRESETS[i]; st.form.hSys = p[1]; st.form.h[p[1]] = [...p[2]]; document.getElementById('hS0').value = p[3]; document.getElementById('hS1').value = p[4]; syncForm(); }
+  hPreset.addEventListener('change', () => loadPreset(+hPreset.value));
+  const flag = (inp, ok, msg) => { inp.classList.toggle('bad', !ok); inp.title = ok ? '' : (msg || ''); return ok; };
+  function tryComp(inp, vars) { try { comp(inp.value, vars); return flag(inp, true); } catch (e) { return flag(inp, false, e.message); } }
+  document.getElementById('hAdd').addEventListener('click', () => {
+    const v = ['s', 't', ...MV], r0 = document.getElementById('hS0'), r1 = document.getElementById('hS1');
+    if (![...hInputs.map(o => tryComp(o.inp, v)), tryComp(r0, ['t', ...MV]), tryComp(r1, ['t', ...MV])].every(Boolean)) return;
+    const p = PRESETS[+hPreset.value], same = p[1] === st.form.hSys && p[2].join() === hInputs.map(o => o.inp.value).join();
+    st.items.push(newItem({ kind: 'help', sys: st.form.hSys, ex: hInputs.map(o => o.inp.value), r0: r0.value, r1: r1.value, name: same ? p[0].replace(/ \(.*$/, '') : '' }));
+    renderItems(); update();
   });
+  document.getElementById('sAdd').addEventListener('click', () => { const i = document.getElementById('sVal'); if (!tryComp(i, ['t', ...MV])) return;
+    st.items.push(newItem({ kind: 'surf', type: document.getElementById('sType').value, src: i.value })); renderItems(); update(); });
+  document.getElementById('cAdd').addEventListener('click', () => { const a = document.getElementById('cT0'), b = document.getElementById('cT1');
+    if (![...cInputs.map(o => tryComp(o.inp, ['t'])), tryComp(a, []), tryComp(b, [])].every(Boolean)) return;
+    st.items.push(newItem({ kind: 'curve', sys: st.form.cSys, ex: cInputs.map(o => o.inp.value), r0: a.value, r1: b.value })); renderItems(); update(); });
 
-  const col = i => MW.css(PALETTE[i % PALETTE.length]);
-  function renderLists() {
-    const sl = document.getElementById('sList'); sl.innerHTML = '';
-    st.surfaces.forEach((s, i) => { const d = document.createElement('div'); d.className = 'item';
-      d.innerHTML = `<span class="dot" style="background:var(${PALETTE[i % PALETTE.length]})"></span><span class="grow">${SURF[s.type]} = ${s.src}${s.src.trim() !== f3(s.v) ? ' (' + f3(s.v) + ')' : ''}</span><button aria-label="entfernen">×</button>`;
-      d.querySelector('button').addEventListener('click', () => { st.surfaces.splice(i, 1); renderLists(); update(); }); sl.appendChild(d); });
-    const cl = document.getElementById('cList'); cl.innerHTML = '';
-    st.curves.forEach((c, i) => { const d = document.createElement('div'); d.className = 'item';
-      d.innerHTML = `<span class="dot" style="background:var(${PALETTE[(i + 3) % PALETTE.length]})"></span><span class="grow"><b>${i + 1}</b> ${SYS[c.sys].map((n, k) => n + ' = ' + c.ex[k]).join(', ')}; t ∈ [${c.t0s}, ${c.t1s}]</span><button aria-label="entfernen">×</button>`;
-      d.querySelector('button').addEventListener('click', () => { st.curves.splice(i, 1); renderLists(); setupT(); update(); }); cl.appendChild(d); });
+  // ---------- item list ----------
+  const curveNo = it => st.items.filter(x => x.kind === 'curve').indexOf(it) + 1;
+  const label = it => it.kind === 'surf' ? `${SURF[it.type]} = ${it.src}` : it.kind === 'curve' ? `${curveNo(it)}: ${SYS[it.sys].map((n, k) => n + ' = ' + it.ex[k]).join(', ')}`
+    : (it.name ? it.name + ': ' : '') + SYS[it.sys].map((n, k) => n + ' = ' + it.ex[k]).join(', ');
+  const KIND = { surf: 'Fläche', curve: 'Bahn', help: 'Hilfslinie' };
+  const openIds = new Set();
+  function renderItems() {
+    const box = document.getElementById('items'); box.innerHTML = '';
+    document.getElementById('noItems').style.display = st.items.length ? 'none' : '';
+    st.items.forEach((it, idx) => {
+      const d = el('div', 'item' + (it.visible ? '' : ' hid') + (openIds.has(it.id) ? ' open' : '') + (it.err ? ' bad' : ''));
+      const h = el('div', 'ihead');
+      const vis = el('input'); vis.type = 'checkbox'; vis.checked = it.visible; vis.title = 'ein-/ausblenden';
+      vis.addEventListener('change', () => { it.visible = vis.checked; d.classList.toggle('hid', !it.visible); update(); });
+      const col = el('input'); col.type = 'color'; col.value = colorOf(it).slice(0, 7); col.title = 'Farbe';
+      col.addEventListener('input', () => { it.style.color = col.value; view.redraw(); });
+      const txt = el('span', 'txt');
+      const setTxt = () => { txt.textContent = label(it) + (it.err ? '  ⚠ ' + it.err : ''); d.classList.toggle('bad', !!it.err); }; setTxt();
+      const kind = el('span', 'kind', KIND[it.kind]);
+      const gear = el('button', '', '⚙'); gear.title = 'Ausdrücke und Stil'; gear.addEventListener('click', () => { openIds.has(it.id) ? openIds.delete(it.id) : openIds.add(it.id); d.classList.toggle('open'); });
+      const del = el('button', '', '×'); del.title = 'entfernen'; del.addEventListener('click', () => { st.items.splice(idx, 1); openIds.delete(it.id); renderItems(); update(); });
+      [vis, col, txt, kind, gear, del].forEach(x => h.appendChild(x)); d.appendChild(h);
+      // body: expressions
+      const b = el('div', 'ibody');
+      const bind = (inp, get, set) => { inp.value = get(); inp.addEventListener('input', () => { const old = get(); set(inp.value);
+        if (!compileItem(it)) { const msg = it.err; set(old); compileItem(it); flag(inp, false, msg); } else flag(inp, true); setTxt(); update(); }); };
+      if (it.kind === 'surf') {
+        const r = el('div', 'row'), s = el('select'); Object.entries(SURF).forEach(([k, n]) => { const o = el('option', '', n + ' ='); o.value = k; s.appendChild(o); }); s.value = it.type;
+        s.addEventListener('change', () => { it.type = s.value; setTxt(); update(); });
+        const v = el('input', 'ex'); v.style.width = '140px'; bind(v, () => it.src, x => { it.src = x; }); r.appendChild(s); r.appendChild(v); b.appendChild(r);
+      } else {
+        const tri = el('div', 'tri'), p = it.kind === 'curve' ? 't' : 's';
+        it.ex.forEach((_, k) => { const l = el('label'); l.appendChild(el('span', '', SYS[it.sys][k] + '(' + p + ') =')); const v = el('input', 'ex'); bind(v, () => it.ex[k], x => { it.ex[k] = x; }); l.appendChild(v); tri.appendChild(l); });
+        b.appendChild(tri);
+        const r = el('div', 'row'), a = el('input', 'ex'), z = el('input', 'ex'); a.style.width = z.style.width = '80px';
+        bind(a, () => it.r0, x => { it.r0 = x; }); bind(z, () => it.r1, x => { it.r1 = x; });
+        const la = el('label', '', p + ' von '), lz = el('label', '', 'bis '); la.appendChild(a); lz.appendChild(z); r.appendChild(la); r.appendChild(lz); b.appendChild(r);
+      }
+      // style
+      const sr = el('div', 'row'), ds = el('select');
+      [['solid', 'durchgezogen'], ['dash', 'gestrichelt'], ['dot', 'gepunktet'], ['dashdot', 'Strich-Punkt']].forEach(([k, n]) => { const o = el('option', '', n); o.value = k; ds.appendChild(o); });
+      ds.value = it.style.dash; ds.addEventListener('change', () => { it.style.dash = ds.value; view.redraw(); });
+      const lb = el('label'), lbc = el('input'); lbc.type = 'checkbox'; lbc.checked = it.style.label; lbc.addEventListener('change', () => { it.style.label = lbc.checked; view.redraw(); });
+      lb.appendChild(lbc); lb.appendChild(document.createTextNode('Beschriftung'));
+      sr.appendChild(ds); sr.appendChild(lb); b.appendChild(sr);
+      exSlider(b, { label: 'Deckkraft', min: 0.05, max: 1, value: it.style.alpha, onInput: v => { it.style.alpha = Math.min(1, Math.max(0, v)); view.redraw(); } });
+      exSlider(b, { label: 'Breite', min: 0.5, max: 6, value: it.style.width, onInput: v => { it.style.width = Math.max(0.1, v); view.redraw(); } });
+      if (it.kind === 'surf') exSlider(b, { label: 'Füllung', min: 0, max: 0.6, value: it.style.fill, onInput: v => { it.style.fill = Math.min(1, Math.max(0, v)); view.redraw(); } });
+      d.appendChild(b); box.appendChild(d);
+    });
+    syncFollow();
   }
 
   // ---------- t control ----------
-  const tCtl = document.getElementById('tCtl'); let tSlider = null, tPlayer = null;
-  function setupT() {
-    tCtl.innerHTML = '';
-    if (!st.curves.length) return;
-    const t0 = Math.min(...st.curves.map(c => c.t0)), t1 = Math.max(...st.curves.map(c => c.t1));
-    st.t = Math.min(Math.max(st.t, t0), t1);
-    tPlayer = MW.player(tCtl, { t0, t1, duration: 8, value: st.t, label: 't', fmt: x => f3(x), onTime: x => { st.t = x; update(); } });
-  }
+  const tRow = document.getElementById('tRow'); let running = false, last = 0, raf = 0;
+  MW.button(tRow, '▶ Abspielen', () => running ? pause() : play());
+  const btnEl = tRow.querySelector('button');
+  const tS = exSlider(tRow, { label: 't', min: st.tA, max: st.tB, value: st.t, onInput: v => { pause(); st.t = v; update(); } });
+  tS.el.style.flex = '1'; tS.el.style.minWidth = '240px';
+  function frame(ts) { if (!running) return; const dt = last ? (ts - last) / 1000 : 0; last = ts;
+    const dur = MW.num(prep(document.getElementById('tDur').value)) || 8; let t = st.t + dt * (st.tB - st.tA) / Math.max(0.5, dur);
+    if (t > st.tB || t < st.tA) t = st.tA; st.t = t; tS.set(t); update(); raf = requestAnimationFrame(frame); }
+  function play() { running = true; last = 0; btnEl.textContent = '❚❚ Pause'; raf = requestAnimationFrame(frame); }
+  function pause() { running = false; cancelAnimationFrame(raf); btnEl.textContent = '▶ Abspielen'; }
+  ['tA', 'tB'].forEach(id => document.getElementById(id).addEventListener('input', () => {
+    const ia = document.getElementById('tA'), ib = document.getElementById('tB'), ea = {}, eb = {}, a = MW.num(prep(ia.value), ea), b = MW.num(prep(ib.value), eb);
+    flag(ia, !ea.error, ea.error); flag(ib, !eb.error && b > a, eb.error || 'bis muss grösser als von sein');
+    if (!ea.error && !eb.error && b > a) { st.tA = a; st.tB = b; tS.setRange(a, b); } }));
 
-  // ---------- view ----------
-  const viewCtl = document.getElementById('viewCtl');
-  MW.slider(viewCtl, { label: 'Grösse', min: 1, max: 6, step: 0.25, value: st.L, onInput: x => { st.L = x; view.extent = x * 1.15; view.redraw(); } });
-  MW.button(viewCtl, 'Ansicht zurücksetzen', () => view.resetView());
-  MW.button(viewCtl, 'Von oben', () => { view.cam.pitch = 1.5; view.cam.yaw = -Math.PI / 2; view.redraw(); });
+  // ---------- view controls ----------
+  const viewRow = document.getElementById('viewRow');
+  const gS = exSlider(viewRow, { label: 'Grösse', min: 1, max: 8, value: st.L, onInput: v => { st.L = Math.max(0.3, v); view.extent = st.L * 1.15; view.redraw(); } });
+  gS.el.style.flex = '1'; gS.el.style.minWidth = '220px';
+  MW.button(viewRow, 'Ansicht zurücksetzen', () => view.resetView());
+  MW.button(viewRow, 'Von oben', () => { view.cam.pitch = 1.5; view.cam.yaw = 0; view.redraw(); });
+  ['vAxes', 'vFloor', 'vLabels'].forEach(id => document.getElementById(id).addEventListener('change', () => view.redraw()));
 
-  const alpha = (hex, a) => { const h = hex.replace('#', ''); if (h.length !== 6) return hex; return `rgba(${parseInt(h.slice(0, 2), 16)},${parseInt(h.slice(2, 4), 16)},${parseInt(h.slice(4, 6), 16)},${a})`; };
+  // ---------- drawing ----------
   let cur = {};
   const view = MW.View3D(document.getElementById('cv'), { extent: st.L * 1.15, yaw: 25, pitch: 22 }, v => {
-    const C = v.C, L = st.L; v.floor(Math.round(L), 0); v.axes(L * 1.1);
-    // surfaces
-    st.surfaces.forEach((s, i) => {
-      const c = col(i), fill = alpha(c, 0.13), val = s.v;
-      const quad = (p) => { v.poly(p, c, 1.5, null, true, fill); };
-      if (s.type === 'x') { quad([[val, -L, -L], [val, L, -L], [val, L, L], [val, -L, L]]); v.text([val, L, L], 'x = ' + s.src, c, 4, -4, 12); }
-      if (s.type === 'y') { quad([[-L, val, -L], [L, val, -L], [L, val, L], [-L, val, L]]); v.text([L, val, L], 'y = ' + s.src, c, 4, -4, 12); }
-      if (s.type === 'z') { quad([[-L, -L, val], [L, -L, val], [L, L, val], [-L, L, val]]); v.text([L, L, val], 'z = ' + s.src, c, 4, -4, 12); }
-      if (s.type === 'phi' || s.type === 'psi') { const e = [Math.cos(val), Math.sin(val), 0];
-        quad([[0, 0, -L], V.add(V.mul(e, L), [0, 0, -L]), V.add(V.mul(e, L), [0, 0, L]), [0, 0, L]]);
-        for (const zz of [-L / 2, 0, L / 2]) v.line([0, 0, zz], V.add(V.mul(e, L), [0, 0, zz]), c, 0.8, [3, 3]);
-        v.line([0, 0, -L], [0, 0, L], c, 3); v.text(V.add(V.mul(e, L), [0, 0, L]), SURF[s.type] + ' = ' + s.src, c, 4, -4, 12); }
-      if (s.type === 'rho' && val > 0) { for (let k = 0; k <= 4; k++) { const zz = -L + 2 * L * k / 4; v.poly(v.circlePts([0, 0, zz], [0, 0, 1], val, 0, 2 * PI, 72, [1, 0, 0]), c, 1, null, false, k === 2 ? fill : null); }
-        for (let k = 0; k < 16; k++) { const a = k * PI / 8; v.line([val * Math.cos(a), val * Math.sin(a), -L], [val * Math.cos(a), val * Math.sin(a), L], c, 0.8); }
-        v.text([val, 0, L], 'ρ = ' + s.src, c, 4, -4, 12); }
-      if (s.type === 'r' && val > 0) { for (let k = 1; k < 8; k++) { const th = k * PI / 8; v.poly(v.circlePts([0, 0, val * Math.cos(th)], [0, 0, 1], val * Math.sin(th), 0, 2 * PI, 72, [1, 0, 0]), c, k === 4 ? 1.6 : 0.8); }
-        for (let k = 0; k < 8; k++) { const p = k * PI / 8; v.poly(v.circlePts([0, 0, 0], [-Math.sin(p), Math.cos(p), 0], val, 0, 2 * PI, 90, [0, 0, 1]), c, 0.8); }
-        v.text([0, 0, val], 'r = ' + s.src, c, 6, -6, 12); }
-      if (s.type === 'theta') { const ct = Math.cos(val), sn = Math.sin(val);
-        if (Math.abs(ct) < 1e-6) { v.poly(v.circlePts([0, 0, 0], [0, 0, 1], L, 0, 2 * PI, 90, [1, 0, 0]), c, 1.5, null, true, fill); }
-        else { const len = L / Math.max(Math.abs(ct), Math.abs(sn)) * 0.95;
-          for (let k = 0; k < 16; k++) { const p = k * PI / 8; v.line([0, 0, 0], V.mul([sn * Math.cos(p), sn * Math.sin(p), ct], len), c, 0.8); }
-          v.poly(v.circlePts([0, 0, len * ct], [0, 0, 1], Math.abs(len * sn), 0, 2 * PI, 90, [1, 0, 0]), c, 1.5, null, true, fill); }
-        v.text([0, 0, 0], 'θ = ' + s.src, c, 8, 22, 12); }
+    const C = v.C, L = st.L, env = cur.env, labels = document.getElementById('vLabels').checked;
+    if (document.getElementById('vFloor').checked) v.floor(Math.max(1, Math.round(L)), 0);
+    if (document.getElementById('vAxes').checked) v.axes(L * 1.1);
+    if (!env) return;
+    st.items.forEach(it => {
+      if (!it.visible || it.err) return;
+      const base = colorOf(it), c = rgba(base, it.style.alpha), w = it.style.width, dash = DASH[it.style.dash] && DASH[it.style.dash].map(x => x * Math.max(1, w / 1.5));
+      const txt = (p, s) => { if (labels && it.style.label) v.text(p, s, rgba(base, Math.max(0.7, it.style.alpha)), 4, -4, 12); };
+      try {
+        if (it.kind === 'surf') {
+          const val = it.f(env); if (!isFinite(val)) return; const fill = rgba(base, it.style.fill), lab = SURF[it.type] + ' = ' + it.src;
+          const quad = p => v.poly(p, c, w, dash, true, fill), thin = w * 0.55;
+          if (it.type === 'x') { quad([[val, -L, -L], [val, L, -L], [val, L, L], [val, -L, L]]); txt([val, L, L], lab); }
+          if (it.type === 'y') { quad([[-L, val, -L], [L, val, -L], [L, val, L], [-L, val, L]]); txt([L, val, L], lab); }
+          if (it.type === 'z') { quad([[-L, -L, val], [L, -L, val], [L, L, val], [-L, L, val]]); txt([L, L, val], lab); }
+          if (it.type === 'phi' || it.type === 'psi') { const e = [Math.cos(val), Math.sin(val), 0];
+            quad([[0, 0, -L], V.add(V.mul(e, L), [0, 0, -L]), V.add(V.mul(e, L), [0, 0, L]), [0, 0, L]]);
+            for (const zz of [-L / 2, 0, L / 2]) v.line([0, 0, zz], V.add(V.mul(e, L), [0, 0, zz]), c, thin, [3, 3]);
+            v.line([0, 0, -L], [0, 0, L], c, w * 2); txt(V.add(V.mul(e, L), [0, 0, L]), lab); }
+          if (it.type === 'rho' && val > 0) { for (let k = 0; k <= 4; k++) { const zz = -L + 2 * L * k / 4; v.poly(v.circlePts([0, 0, zz], [0, 0, 1], val, 0, 2 * PI, 72, [1, 0, 0]), c, thin * 1.4, dash, false, k === 2 ? fill : null); }
+            for (let k = 0; k < 16; k++) { const a = k * PI / 8; v.line([val * Math.cos(a), val * Math.sin(a), -L], [val * Math.cos(a), val * Math.sin(a), L], c, thin, dash); }
+            txt([val, 0, L], lab); }
+          if (it.type === 'r' && val > 0) { for (let k = 1; k < 8; k++) { const th = k * PI / 8; v.poly(v.circlePts([0, 0, val * Math.cos(th)], [0, 0, 1], val * Math.sin(th), 0, 2 * PI, 72, [1, 0, 0]), c, k === 4 ? w : thin, dash); }
+            for (let k = 0; k < 8; k++) { const p = k * PI / 8; v.poly(v.circlePts([0, 0, 0], [-Math.sin(p), Math.cos(p), 0], val, 0, 2 * PI, 90, [0, 0, 1]), c, thin, dash); }
+            txt([0, 0, val], lab); }
+          if (it.type === 'theta') { const ct = Math.cos(val), sn = Math.sin(val);
+            if (Math.abs(ct) < 1e-6) v.poly(v.circlePts([0, 0, 0], [0, 0, 1], L, 0, 2 * PI, 90, [1, 0, 0]), c, w, dash, true, fill);
+            else { const len = L / Math.max(Math.abs(ct), Math.abs(sn)) * 0.95;
+              for (let k = 0; k < 16; k++) { const p = k * PI / 8; v.line([0, 0, 0], V.mul([sn * Math.cos(p), sn * Math.sin(p), ct], len), c, thin, dash); }
+              v.poly(v.circlePts([0, 0, len * ct], [0, 0, 1], Math.abs(len * sn), 0, 2 * PI, 90, [1, 0, 0]), c, w, dash, true, fill); }
+            txt([0, 0, 0], lab); }
+        } else if (it.kind === 'curve') {
+          const [a, b] = curveRange(it), pts = []; if (!(b > a)) return;
+          for (let k = 0; k <= 300; k++) { const P = curveAt(it, a + (b - a) * k / 300); if (P.every(isFinite)) pts.push(P); }
+          v.poly(pts, c, w, dash);
+          if (st.t >= a - 1e-9 && st.t <= b + 1e-9) { const P = curveAt(it, st.t); if (P.every(isFinite)) { v.dot(P, rgba(base, 1), 5.5); txt(P, 'M' + curveNo(it) + '(t)'); } }
+        } else {
+          const a = it.f0(env), b = it.f1(env); if (!isFinite(a) || !isFinite(b) || Math.abs(b - a) < 1e-12) return;
+          const pts = [], e2 = { ...env };
+          for (let k = 0; k <= 240; k++) { e2.s = a + (b - a) * k / 240; const P = toCart(it.sys, it.fs.map(f => f(e2))); if (P.every(isFinite)) pts.push(P); }
+          v.poly(pts, c, w, dash); if (it.name && pts.length) txt(pts[Math.floor(pts.length * 0.6)], it.name);
+        }
+      } catch (e) { /* skip */ }
     });
-    // curves
-    st.curves.forEach((cv, i) => { const c = col(i + 3), pts = [];
-      for (let k = 0; k <= 300; k++) pts.push(cv.at(cv.t0 + (cv.t1 - cv.t0) * k / 300));
-      v.poly(pts, c, 2.2);
-      if (st.t >= cv.t0 - 1e-9 && st.t <= cv.t1 + 1e-9) { const P = cv.at(st.t); v.dot(P, c, 6); v.text(P, 'M' + (i + 1) + '(t)', c, 8, -6, 12); } });
 
     // point M
-    const M = cur.M; if (!M) return;
+    const M = cur.M; if (!M || !st.showM) return;
     const { rho, phi, r, theta } = cur, s = L / 2.5;
     const er = [Math.cos(phi), Math.sin(phi), 0], ep = [-Math.sin(phi), Math.cos(phi), 0];
     const eR = [Math.sin(theta) * Math.cos(phi), Math.sin(theta) * Math.sin(phi), Math.cos(theta)], eT = [Math.cos(theta) * Math.cos(phi), Math.cos(theta) * Math.sin(phi), -Math.sin(theta)];
-    const sh = st.show;
+    const sh = st.show, T = (p, t, c, dx, dy) => { if (labels) v.text(p, t, c, dx, dy); };
     if (sh['help-cart']) { const Mxy = [M[0], M[1], 0];
       v.line([M[0], 0, 0], Mxy, C.muted, 1, [3, 3]); v.line([0, M[1], 0], Mxy, C.muted, 1, [3, 3]); v.line(Mxy, M, C.muted, 1, [3, 3]);
       v.line([0, 0, 0], [M[0], 0, 0], C.c1, 3); v.line([0, 0, 0], [0, M[1], 0], C.c3, 3); v.line([0, 0, 0], [0, 0, M[2]], C.c2, 3); }
     if (sh['help-cyl']) { const Mxy = [M[0], M[1], 0];
-      v.line([0, 0, 0], Mxy, C.c1, 3); v.text(V.mul(Mxy, 0.5), 'ρ', C.c1, 4, 14); v.line(Mxy, M, C.c2, 3); v.text(V.add(Mxy, [0, 0, M[2] / 2]), 'z', C.c2, 6, 0);
-      if (Math.abs(phi) > 1e-6) { const arc = v.circlePts([0, 0, 0], [0, 0, 1], Math.max(0.35, Math.min(rho, L) * 0.45), 0, phi, 50, [1, 0, 0]); v.poly(arc, C.c3, 2.5); v.text(arc[25], 'φ', C.c3, 4, 14); } }
+      v.line([0, 0, 0], Mxy, C.c1, 3); T(V.mul(Mxy, 0.5), 'ρ', C.c1, 4, 14); v.line(Mxy, M, C.c2, 3); T(V.add(Mxy, [0, 0, M[2] / 2]), 'z', C.c2, 6, 0);
+      if (Math.abs(phi) > 1e-6) { const arc = v.circlePts([0, 0, 0], [0, 0, 1], Math.max(0.35, Math.min(rho, L) * 0.45), 0, phi, 50, [1, 0, 0]); v.poly(arc, C.c3, 2.5); T(arc[25], 'φ', C.c3, 4, 14); } }
     if (sh['help-sph']) {
-      v.line([0, 0, 0], M, C.c1, 3); v.text(V.mul(M, 0.55), 'r', C.c1, 6, -4);
+      v.line([0, 0, 0], M, C.c1, 3); T(V.mul(M, 0.55), 'r', C.c1, 6, -4);
       const n = V.cross([0, 0, 1], [Math.cos(phi), Math.sin(phi), 0]);
-      const arcT = v.circlePts([0, 0, 0], n, Math.max(0.4, r * 0.35), 0, theta, 50, [0, 0, 1]); v.poly(arcT, C.c4, 2.5); v.text(arcT[25], 'θ', C.c4, 4, -4);
-      if (Math.abs(phi) > 1e-6) { const arcP = v.circlePts([0, 0, 0], [0, 0, 1], 0.3 * s * 2, 0, phi, 50, [1, 0, 0]); v.poly(arcP, C.c3, 2.5); v.text(arcP[25], 'ψ', C.c3, 4, 14); }
+      const arcT = v.circlePts([0, 0, 0], n, Math.max(0.4, r * 0.35), 0, theta, 50, [0, 0, 1]); v.poly(arcT, C.c4, 2.5); T(arcT[25], 'θ', C.c4, 4, -4);
+      if (Math.abs(phi) > 1e-6) { const arcP = v.circlePts([0, 0, 0], [0, 0, 1], 0.6 * s, 0, phi, 50, [1, 0, 0]); v.poly(arcP, C.c3, 2.5); T(arcP[25], 'ψ', C.c3, 4, 14); }
       v.line([M[0], M[1], 0], M, C.muted, 1, [3, 3]); v.line([0, 0, 0], [M[0], M[1], 0], C.muted, 1, [3, 3]); }
     if (sh['line-cart']) { v.line([-L, M[1], M[2]], [L, M[1], M[2]], C.c1, 1.8); v.line([M[0], -L, M[2]], [M[0], L, M[2]], C.c3, 1.8); v.line([M[0], M[1], -L], [M[0], M[1], L], C.c2, 1.8); }
     if (sh['line-cyl']) { v.line([0, 0, M[2]], V.add([0, 0, M[2]], V.mul(er, Math.max(rho, 0) + L * 0.6)), C.c1, 2.2); v.dot([0, 0, M[2]], C.c1, 3);
@@ -253,43 +412,46 @@
     if (sh['line-sph']) { v.line([0, 0, 0], V.mul(eR, r + L * 0.6), C.c1, 2.2);
       if (r > 1e-6) { v.poly(v.circlePts([0, 0, 0], V.cross([0, 0, 1], er), r, 0, PI, 90, [0, 0, 1]), C.c4, 2.2);
         if (rho > 1e-6) v.poly(v.circlePts([0, 0, M[2]], [0, 0, 1], rho, 0, 2 * PI, 90, [1, 0, 0]), C.c3, 2.2); } }
-    const bl = 0.75 * s, bv = (d, c, n) => { v.arrow(M, V.mul(d, bl), c, 3, 10); v.text(V.add(M, V.mul(d, bl)), n, c, 4, -4, 12); };
+    const bl = 0.75 * s, bv = (d, c, n) => { v.arrow(M, V.mul(d, bl), c, 3, 10); T(V.add(M, V.mul(d, bl)), n, c, 4, -4); };
     if (sh['basis-cart']) { bv([1, 0, 0], C.c1, 'e_x'); bv([0, 1, 0], C.c3, 'e_y'); bv([0, 0, 1], C.c2, 'e_z'); }
     if (sh['basis-cyl']) { bv(er, C.c1, 'e_ρ'); bv(ep, C.c3, 'e_φ'); if (!sh['basis-cart']) bv([0, 0, 1], C.c2, 'e_z'); }
     if (sh['basis-sph']) { bv(eR, C.c5, 'e_r'); bv(eT, C.c4, 'e_θ'); if (!sh['basis-cyl']) bv(ep, C.c3, 'e_ψ'); }
-    v.dot(M, C.fg, 6.5); v.text(M, 'M', C.fg, 8, 16);
+    v.dot(M, C.fg, 6.5); T(M, 'M', C.fg, 8, 16);
   });
 
-  // ---------- membership of M on surfaces ----------
-  function onSurface(s, M) {
-    const tol = 1e-6, rho = Math.hypot(M[0], M[1]), r = V.norm(M), angEq = (a, b) => Math.abs(Math.sin((a - b) / 2)) < 1e-6;
-    switch (s.type) {
-      case 'x': return Math.abs(M[0] - s.v) < tol; case 'y': return Math.abs(M[1] - s.v) < tol; case 'z': return Math.abs(M[2] - s.v) < tol;
-      case 'rho': return Math.abs(rho - s.v) < tol; case 'r': return Math.abs(r - s.v) < tol;
-      case 'phi': case 'psi': return rho < tol || angEq(Math.atan2(M[1], M[0]), s.v);
-      case 'theta': return r < tol || angEq(Math.atan2(rho, M[2]), s.v) || angEq(Math.atan2(rho, M[2]), -s.v);
+  // ---------- membership ----------
+  function onSurface(it, M, env) {
+    const val = it.f(env), tol = 1e-6, rho = Math.hypot(M[0], M[1]), r = V.norm(M), angEq = (a, b) => Math.abs(Math.sin((a - b) / 2)) < 1e-6;
+    switch (it.type) {
+      case 'x': return Math.abs(M[0] - val) < tol; case 'y': return Math.abs(M[1] - val) < tol; case 'z': return Math.abs(M[2] - val) < tol;
+      case 'rho': return Math.abs(rho - val) < tol; case 'r': return Math.abs(r - val) < tol;
+      case 'phi': case 'psi': return rho < tol || angEq(Math.atan2(M[1], M[0]), val);
+      case 'theta': return r < tol || angEq(Math.atan2(rho, M[2]), val) || angEq(Math.atan2(rho, M[2]), -val);
     }
   }
 
   // ---------- update ----------
+  const infoEl = document.getElementById('info');
   function update() {
-    let ok = true, vals; const useCurve = st.follow && st.curves.length > 0;
-    if (useCurve) { const c = st.curves[0], tt = Math.min(Math.max(st.t, c.t0), c.t1); const P = c.at(tt);
-      cur = { M: P }; }
+    const fol = st.items.find(it => it.id === st.follow && it.kind === 'curve' && !it.err);
+    mInputs.forEach(o => { o.inp.disabled = !!fol; });
+    let vals = null;
+    if (fol) { const [a, b] = curveRange(fol); cur = { M: curveAt(fol, Math.min(Math.max(st.t, a), b)) }; }
     else {
-      vals = st.m[st.mode].map((s, i) => { const o = {}, x = MW.num(s, o); mInputs[i].inp.classList.toggle('bad', !!o.error); mInputs[i].inp.title = o.error || ''; if (o.error) ok = false; return x; });
-      if (!ok) { MW.info(document.getElementById('info'), 'Eingabe prüfen', [], 'Erlaubt: Zahlen, + − * / ^, Klammern, pi, sqrt(), sin(), cos(), tan(), exp(), ln().', true); cur = {}; view.redraw(); return; }
-      if (st.mode === 'cyl' && vals[0] < 0) { MW.info(document.getElementById('info'), 'ρ muss ≥ 0 sein', [], 'ρ ist ein Abstand.', true); cur = {}; view.redraw(); return; }
-      if (st.mode === 'sph' && vals[0] < 0) { MW.info(document.getElementById('info'), 'r muss ≥ 0 sein', [], 'r ist ein Abstand.', true); cur = {}; view.redraw(); return; }
+      let ok = true;
+      vals = st.m[st.mode].map((s, i) => { let x = NaN, err = ''; try { x = comp(s, ['t'])({ t: st.t }); if (!isFinite(x)) err = 'keine Zahl'; } catch (e) { err = e.message; }
+        flag(mInputs[i].inp, !err, err); if (err) ok = false; return x; });
+      const bad = (head, note) => { MW.info(infoEl, head, [], note, true); cur = {}; view.redraw(); };
+      if (!ok) return bad('Eingabe prüfen', 'Erlaubt: Zahlen, + − * / ^, Klammern, pi, sqrt(), sin(), cos(), tan(), exp(), ln() und t.');
+      if (st.mode !== 'cart' && vals[0] < 0) return bad((st.mode === 'cyl' ? 'ρ' : 'r') + ' muss ≥ 0 sein', 'Das ist ein Abstand.');
       cur = { M: toCart(st.mode, vals) };
     }
-    mInputs.forEach(o => { o.inp.disabled = useCurve; o.inp.style.opacity = useCurve ? 0.5 : 1; });
     const M = cur.M, rho = Math.hypot(M[0], M[1]), r = V.norm(M);
-    // angles: keep the typed angle where the conversion is singular
     let phi = Math.atan2(M[1], M[0]), theta = Math.atan2(rho, M[2]);
-    if (!useCurve && st.mode === 'cyl') phi = vals[1];
-    if (!useCurve && st.mode === 'sph') { theta = vals[1]; phi = vals[2]; }
+    if (vals && st.mode === 'cyl') phi = vals[1];
+    if (vals && st.mode === 'sph') { theta = vals[1]; phi = vals[2]; }
     Object.assign(cur, { rho, r, phi, theta });
+    cur.env = { t: st.t, x_M: M[0], y_M: M[1], z_M: M[2], rho_M: rho, phi_M: phi, r_M: r, theta_M: theta, psi_M: phi };
     const notes = [];
     if (rho < 1e-9 && r > 1e-9) notes.push('M liegt auf der z-Achse: φ und ψ sind nicht definiert (Koordinatensingularität). Gezeichnet wird mit dem eingegebenen Winkel.');
     if (r < 1e-9) notes.push('M = O: θ und ψ (und φ) sind nicht definiert.');
@@ -297,59 +459,67 @@
     const rows = [['kartesisch (x, y, z)', '(' + M.map(f3).join(', ') + ')'],
       ['zylindrisch (ρ, φ, z)', `(${f3(rho)}, ${isFinite(phiStd) ? f3(phiStd) + ' = ' + deg(phiStd) : '–'}, ${f3(M[2])})`],
       ['sphärisch (r, θ, ψ)', `(${f3(r)}, ${r > 1e-9 ? f3(Math.atan2(rho, M[2])) + ' = ' + deg(Math.atan2(rho, M[2])) : '–'}, ${isFinite(phiStd) ? f3(phiStd) : '–'})`],
-      ['Abstand zur z-Achse ρ', f3(rho)]];
-    const mem = st.surfaces.map((s, i) => `<span class="tag ${onSurface(s, M) ? 'on' : ''}">${onSurface(s, M) ? '✓ M liegt auf ' : '✗ nicht auf '}${SURF[s.type]} = ${s.src}</span>`).join('');
-    document.getElementById('info').innerHTML = '';
-    MW.info(document.getElementById('info'), 'Punkt M', rows, (notes.join(' ') || 'φ wird hier im Bereich (−π, π] angegeben; φ + 2πk beschreibt dieselbe Lage.') + (mem ? `<div class="mem">${mem}</div>` : ''));
+      ['t', f3(st.t)]];
+    const mem = st.items.filter(it => it.kind === 'surf' && it.visible && !it.err).map(it => { let on = false; try { on = onSurface(it, M, cur.env); } catch (e) {}
+      return `<span class="tag ${on ? 'on' : ''}">${on ? '✓ M liegt auf ' : '✗ nicht auf '}${SURF[it.type]} = ${it.src}</span>`; }).join('');
+    infoEl.innerHTML = '';
+    MW.info(infoEl, 'Punkt M', rows, (notes.join(' ') || 'φ wird im Bereich (−π, π] angegeben; φ + 2πk beschreibt dieselbe Lage.') + (mem ? `<div class="mem">${mem}</div>` : ''));
     view.redraw();
   }
 
   // ---------- scenarios ----------
+  const H = (name, sys, ex, r0, r1, style) => ({ kind: 'help', name, sys, ex, r0, r1, style });
+  const S = (type, src, style) => ({ kind: 'surf', type, src, style });
+  const K = (sys, ex, r0, r1, style) => ({ kind: 'curve', sys, ex, r0, r1, style });
   const SCEN = [
-    { id: 'frei', name: 'Freies Spielen', apply: () => ({ mode: 'cyl', m: ['1.5', 'pi/4', '1'], show: { 'line-cyl': true, 'help-cyl': true } }) },
+    { id: 'frei', name: 'Freies Spielen', a: { mode: 'cyl', m: ['1.5', 'pi/4', '1'], show: { 'line-cyl': true, 'help-cyl': true } } },
     { id: 'a14a', name: 'ZP1 2025 A1.4 a: ρ-Linie eines Punktes auf der y-Achse', text: '<b>Aussage a:</b> „Für Punkte auf der y-Achse ist die ρ-Koordinatenlinie parallel zur x-Achse.“ Die rote ρ-Linie geht radial von der z-Achse weg, hier also entlang der y-Achse. <b>Falsch.</b>',
-      apply: () => ({ mode: 'cart', m: ['0', '1.5', '0'], show: { 'line-cyl': true, 'basis-cyl': true } }) },
-    { id: 'a14f', name: 'ZP1 2025 A1.4 f: Ebene x = 0 gegenüber φ = π', text: '<b>Aussage f:</b> „Die Ebene x = 0 kann als φ = π beschrieben werden.“ φ = π ist nur eine Halbebene (y = 0, x < 0), sie steht sogar senkrecht auf x = 0. <b>Falsch.</b> Schiebe M in die Ebene x = 0 und sieh unten, auf welchen Flächen M liegt.',
-      apply: () => ({ mode: 'cart', m: ['0', '1', '1'], surfaces: [['x', '0'], ['phi', 'pi']], show: {} }) },
+      a: { mode: 'cart', m: ['0', '1.5', '0'], show: { 'line-cyl': true, 'basis-cyl': true } } },
+    { id: 'a14f', name: 'ZP1 2025 A1.4 f: Ebene x = 0 gegenüber φ = π', text: '<b>Aussage f:</b> „Die Ebene x = 0 kann als φ = π beschrieben werden.“ φ = π ist nur eine Halbebene (y = 0, x < 0), sie steht sogar senkrecht auf x = 0. <b>Falsch.</b> Ändere M und sieh unten, auf welchen Flächen M liegt.',
+      a: { mode: 'cart', m: ['0', '1', '1'], items: [S('x', '0'), S('phi', 'pi')], show: {} } },
     { id: 'halb', name: 'Ebene x = 0 als zwei Halbebenen φ = ±π/2', text: 'Die Ebene x = 0 setzt sich aus den Halbebenen φ = π/2 (y > 0) und φ = −π/2 (y < 0) zusammen. Beide enden an der z-Achse.',
-      apply: () => ({ mode: 'cart', m: ['0', '-1.5', '1'], surfaces: [['phi', 'pi/2'], ['phi', '-pi/2']], show: { 'help-cyl': true } }) },
-    { id: 'basis', name: 'ZP1 2025 A1.4 c, e: Basisvektoren bewegen sich (oder nicht)', text: '<b>c)</b> ė_ρ = φ̇ e_φ: Ändere φ von M und beobachte, wie e_ρ in Richtung e_φ dreht. <b>e)</b> ė_x = ė_y: Beide sind null, denn e_x und e_y zeigen an jedem Punkt in dieselbe Richtung.',
-      apply: () => ({ mode: 'cyl', m: ['1.8', 'pi/5', '0.8'], show: { 'basis-cyl': true, 'basis-cart': true, 'line-cyl': true } }) },
-    { id: 'zp25', name: 'ZP1 2025 A1: Bahn auf der Kugel, z = R/2 und Ebene x = 0', text: 'r = R, θ = (2π/3)(1 − cos μt), ψ = μt mit R = μ = 1. Der Kegel θ = π/3 und die Ebene z = 1/2 schneiden die Kugel im selben Kreis: Dort ist erstmals z = R/2 (t = π/3). Bei t = π/2 liegt M in der Ebene x = 0.',
-      apply: () => ({ follow: true, t: PI / 3, surfaces: [['r', '1'], ['z', '1/2'], ['theta', 'pi/3']], curves: [['sph', ['1', '2*pi/3*(1-cos(t))', 't'], '0', '2*pi']], show: { 'basis-sph': true }, L: 1.6 }) },
+      a: { mode: 'cart', m: ['0', '-1.5', '1'], items: [S('phi', 'pi/2'), S('phi', '-pi/2')], show: { 'help-cyl': true } } },
+    { id: 'basis', name: 'ZP1 2025 A1.4 c, e: Basisvektoren bewegen sich (oder nicht)', text: '<b>c)</b> ė_ρ = φ̇ e_φ: Spiele t ab (φ = t) und beobachte, wie e_ρ in Richtung e_φ dreht. <b>e)</b> ė_x = ė_y: Beide sind null, denn e_x und e_y zeigen an jedem Punkt in dieselbe Richtung.',
+      a: { mode: 'cyl', m: ['1.8', 't', '0.8'], t: PI / 5, show: { 'basis-cyl': true, 'basis-cart': true, 'line-cyl': true } } },
+    { id: 'meridian', name: 'Meridiane und Breitenkreise durch M', text: 'Der Meridian (ψ fest, θ läuft) und der Breitenkreis (θ fest, ψ läuft) durch M sind die θ- und ψ-Koordinatenlinien. Beide sind eigene Hilfslinien: ⚙ öffnet Stil und Ausdrücke. Spiele t ab (ψ = t), die Linien wandern mit.',
+      a: { mode: 'sph', m: ['1.6', 'pi/3', 't'], t: PI / 4, items: [S('r', '1.6', { alpha: 0.3, fill: 0 }), H('Meridian', 'sph', ['r_M', 's', 'psi_M'], '0', 'pi', { color: '#d1453b' }), H('Breitenkreis', 'sph', ['r_M', 'theta_M', 's'], '0', '2*pi', { color: '#0f9d58' }), H('Äquator', 'sph', ['r_M', 'pi/2', 's'], '0', '2*pi', { dash: 'dot', alpha: 0.5 })], show: { 'basis-sph': true } } },
+    { id: 'zp25', name: 'ZP1 2025 A1: Bahn auf der Kugel, z = R/2 und Ebene x = 0', text: 'r = R, θ = (2π/3)(1 − cos μt), ψ = μt mit R = μ = 1. Der Kegel θ = π/3 und die Ebene z = 1/2 schneiden die Kugel im selben Kreis: Dort ist erstmals z = R/2 (t = π/3). Bei t = π/2 liegt M in der Ebene x = 0. Gestrichelt: Meridian durch M.',
+      a: { follow: 0, t: PI / 3, tB: '2*pi', items: [K('sph', ['1', '2*pi/3*(1-cos(t))', 't'], '0', '2*pi'), S('r', '1', { alpha: 0.4, fill: 0 }), S('z', '1/2'), S('theta', 'pi/3'), H('Meridian', 'sph', ['1', 's', 'psi_M'], '0', 'pi')], show: { 'basis-sph': true }, L: 1.6 } },
     { id: 'zp24', name: 'ZP1 2024 A1: Treffen von M₁ und M₂', text: 'M₁ zylindrisch (ρ = 1, φ = (2π/3) sin(μt), z = 2t − 1/2) und M₂ kartesisch (t, √3 t, t² + 1/4), mit R = T = 1 und μ = π/3. Spiele t ab: Bei t = 1/2 sind beide Punkte am selben Ort.',
-      apply: () => ({ t: 0.5, surfaces: [['rho', '1'], ['phi', 'pi/3']], curves: [['cyl', ['1', '2*pi/3*sin(pi/3*t)', '2*t-1/2'], '0', '1'], ['cart', ['t', 'sqrt(3)*t', 't^2+1/4'], '0', '1']], follow: true, show: {}, L: 1.6 }) },
+      a: { follow: 0, t: 0.5, tB: '1', items: [K('cyl', ['1', '2*pi/3*sin(pi/3*t)', '2*t-1/2'], '0', '1'), K('cart', ['t', 'sqrt(3)*t', 't^2+1/4'], '0', '1'), S('rho', '1', { alpha: 0.5 }), S('phi', 'pi/3')], show: {}, L: 1.6 } },
     { id: 'zp23', name: 'ZP1 2023 A3: M₁ auf der Kugel, M₂ auf der Schraubenlinie', text: 'M₁: r = R, θ = (π/4)(1 − cos μt), ψ = μt. M₂: (R cos μt, R sin μt, Rμt − Rπ). R = μ = 1. M₁ schneidet z = 0 erstmals bei t = π. M₂ hat immer den Abstand R zur z-Achse.',
-      apply: () => ({ t: PI, surfaces: [['z', '0'], ['rho', '1']], curves: [['sph', ['1', 'pi/4*(1-cos(t))', 't'], '0', '2*pi'], ['cart', ['cos(t)', 'sin(t)', 't-pi'], '0', '2*pi']], follow: true, show: {}, L: 1.8 }) },
-    { id: 'zp22', name: 'ZP1 2022 A1: Schraubenlinie mit z(t₁) = 2R', text: 'ρ = R, φ = 4(1 − e^{−t/4}), z = Rφ (tan α = 1, k = −v₀/(4R), R = v₀ = 1). Die Ebene z = 2 wird bei t₁ = 4 ln 2 ≈ 2,77 erreicht.',
-      apply: () => ({ t: 4 * Math.log(2), surfaces: [['z', '2'], ['rho', '1']], curves: [['cyl', ['1', '4*(1-exp(-t/4))', '4*(1-exp(-t/4))'], '0', '12']], follow: true, show: { 'basis-cyl': true }, L: 2.5 }) },
-    { id: 'zylf', name: 'Zylindrische Koordinatenflächen durch M', text: 'ρ = konst. (Zylinder), φ = konst. (Halbebene), z = konst. (Ebene). Alle drei gehen durch M.',
-      apply: () => ({ mode: 'cyl', m: ['1.5', 'pi/3', '1'], surfaces: [['rho', '1.5'], ['phi', 'pi/3'], ['z', '1']], show: {} }) },
-    { id: 'sphf', name: 'Sphärische Koordinatenflächen durch M', text: 'r = konst. (Kugel), θ = konst. (Kegel), ψ = konst. (Halbebene). Alle drei gehen durch M.',
-      apply: () => ({ mode: 'sph', m: ['1.8', 'pi/4', 'pi/3'], surfaces: [['r', '1.8'], ['theta', 'pi/4'], ['psi', 'pi/3']], show: {} }) },
+      a: { follow: 0, t: PI, tB: '2*pi', items: [K('sph', ['1', 'pi/4*(1-cos(t))', 't'], '0', '2*pi'), K('cart', ['cos(t)', 'sin(t)', 't-pi'], '0', '2*pi'), S('z', '0'), S('rho', '1', { alpha: 0.5 })], show: {}, L: 1.8 } },
+    { id: 'zp22', name: 'ZP1 2022 A1: Schraubenlinie mit z(t₁) = 2R', text: 'ρ = R, φ = 4(1 − e^{−t/4}), z = Rφ (tan α = 1, k = −v₀/(4R), R = v₀ = 1). Die Ebene z = 2 wird bei t₁ = 4 ln 2 ≈ 2,77 erreicht. Gestrichelt: Mantellinie durch M.',
+      a: { follow: 0, t: 4 * Math.log(2), tB: '12', items: [K('cyl', ['1', '4*(1-exp(-t/4))', '4*(1-exp(-t/4))'], '0', '12'), S('z', '2'), S('rho', '1', { alpha: 0.5 }), H('Mantellinie', 'cyl', ['1', 'phi_M', 's'], '-2.5', '2.5')], show: { 'basis-cyl': true }, L: 2.5 } },
+    { id: 'zylf', name: 'Zylindrische Koordinatenflächen durch M', text: 'ρ = konst. (Zylinder), φ = konst. (Halbebene), z = konst. (Ebene). Die Werte sind an M gekoppelt (ρ_M, φ_M, z_M): Ändere M und alle drei Flächen folgen.',
+      a: { mode: 'cyl', m: ['1.5', 'pi/3', '1'], items: [S('rho', 'rho_M'), S('phi', 'phi_M'), S('z', 'z_M')], show: {} } },
+    { id: 'sphf', name: 'Sphärische Koordinatenflächen durch M', text: 'r = konst. (Kugel), θ = konst. (Kegel), ψ = konst. (Halbebene), gekoppelt an M.',
+      a: { mode: 'sph', m: ['1.8', 'pi/4', 'pi/3'], items: [S('r', 'r_M'), S('theta', 'theta_M'), S('psi', 'psi_M')], show: {} } },
     { id: 'kart', name: 'Kartesische Koordinatenlinien und -flächen', text: 'Alles Geraden und Ebenen parallel zu den Achsen: geradlinig orthogonal.',
-      apply: () => ({ mode: 'cart', m: ['1', '1.5', '1'], surfaces: [['z', '1']], show: { 'line-cart': true, 'help-cart': true, 'basis-cart': true } }) },
+      a: { mode: 'cart', m: ['1', '1.5', '1'], items: [S('z', 'z_M')], show: { 'line-cart': true, 'help-cart': true, 'basis-cart': true } } },
   ];
   const scenSel = document.getElementById('scen');
-  SCEN.forEach(s => { const o = document.createElement('option'); o.value = s.id; o.textContent = s.name; scenSel.appendChild(o); });
+  SCEN.forEach(s => { const o = el('option', '', s.name); o.value = s.id; scenSel.appendChild(o); });
   function applyScenario(id) {
-    const s = SCEN.find(x => x.id === id), a = s.apply(); scenSel.value = id;
+    pause(); const s = SCEN.find(x => x.id === id), a = s.a; scenSel.value = id;
     if (a.mode) { st.mode = a.mode; st.m[a.mode] = [...a.m]; }
-    st.show = { ...a.show }; st.follow = !!a.follow; st.L = a.L || 2.5; view.extent = st.L * 1.15;
-    st.surfaces = (a.surfaces || []).map(([type, src]) => ({ type, src, v: MW.num(src) }));
-    st.curves = (a.curves || []).map(([sys, ex, t0, t1]) => makeCurve(sys, ex, t0, t1));
-    if (a.t !== undefined) st.t = a.t;
-    document.getElementById('follow').checked = st.follow;
+    st.show = { ...a.show }; st.L = a.L || 2.5; view.extent = st.L * 1.15; gS.set(st.L);
+    st.items = []; (a.items || []).forEach(o => st.items.push(newItem(JSON.parse(JSON.stringify(o)))));
+    const curves = st.items.filter(i => i.kind === 'curve'); st.follow = a.follow !== undefined && curves[a.follow] ? curves[a.follow].id : -1;
+    const tBs = a.tB || '2*pi'; st.tA = 0; st.tB = MW.num(tBs); tS.setRange(st.tA, st.tB);
+    document.getElementById('tA').value = '0'; document.getElementById('tB').value = tBs; flag(document.getElementById('tA'), true); flag(document.getElementById('tB'), true);
+    st.t = a.t ?? 0; tS.set(st.t);
     const tx = document.getElementById('scenText'); tx.innerHTML = s.text || ''; tx.style.display = s.text ? 'block' : 'none';
-    syncM(); syncShow(); renderLists(); setupT(); view.resetView(); update();
+    openIds.clear(); syncM(); syncShow(); renderItems(); view.resetView(); update();
   }
   scenSel.addEventListener('change', () => applyScenario(scenSel.value));
-  window.applyScenario = applyScenario; window.getState = () => ({ M: cur.M, surfaces: st.surfaces.map(s => [s.type, s.v, onSurface(s, cur.M)]) });
+  window.applyScenario = applyScenario;
+  window.getState = () => ({ M: cur.M, items: st.items.map(it => [it.kind, it.err || 'ok', it.kind === 'surf' && cur.env ? onSurface(it, cur.M, cur.env) : null]) });
 
-  syncC();
+  syncTabs(); loadPreset(0); syncForm();
   const q = new URLSearchParams(location.search).get('szenario');
-  const start = SCEN.some(s => s.id === q) ? q : 'frei'; scenSel.value = start; applyScenario(start);
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { renderLists(); view.redraw(); });
+  applyScenario(SCEN.some(s => s.id === q) ? q : 'frei');
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { renderItems(); view.redraw(); });
 })();
 </script>
 </body>
