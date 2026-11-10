@@ -159,7 +159,7 @@
     { g: 'Kreuzprodukt', id: 'crossba', lab: 'b × a', kind: 'v', calc: (a, b) => ({ v: V.cross(b, a), st: 'b × a = −(a × b)', note: 'Reihenfolge vertauschen ändert das Vorzeichen.' }) },
     { g: 'Kreuzprodukt', id: 'area', lab: '|a × b| (Fläche)', kind: 's', calc: (a, b) => ({ s: V.norm(V.cross(a, b)), st: `|a × b| = |a| |b| sin α = ${f3(V.norm(a))} · ${f3(V.norm(b))} · sin α`, note: 'Fläche des von a und b aufgespannten Parallelogramms.' }) },
     { g: 'Kreuzprodukt', id: 'triple', lab: '(a × b) · c (Spatprodukt)', kind: 's', calc: (a, b, c) => { const ab = V.cross(a, b), t = V.dot(ab, c);
-      return { s: t, st: `a × b = ${vs(ab)}, dann · c = ${f3(t)}`, note: Math.abs(t) < 1e-9 ? 'Spatprodukt = 0: a, b, c liegen in einer Ebene (keine Basis).' : 'Volumen des Spats (mit Vorzeichen). Positiv: a, b, c bilden ein Rechtssystem.' }; } },
+      return { s: t, st: `a × b = ${vs(ab)}, dann · c = ${f3(t)}`, note: Math.abs(t) < 1e-9 ? 'Spatprodukt = 0: a, b, c liegen in einer Ebene (keine Basis).' : 'Volumen des Spats (mit Vorzeichen) = Grundfläche |a × b| mal Höhe h (Anteil von c entlang a × b, gestrichelt). Positiv: a, b, c bilden ein Rechtssystem. Eigene Konstruktionen: spatkoerper() im Rechenblatt.' }; } },
     { g: 'Kreuzprodukt', id: 'bac', lab: 'a × (b × c)', kind: 'v', calc: (a, b, c) => { const v = V.cross(a, V.cross(b, c));
       return { v, st: `= b (a · c) − c (a · b) = ${f3(V.dot(a, c))} b − ${f3(V.dot(a, b))} c = ${vs(V.sub(V.mul(b, V.dot(a, c)), V.mul(c, V.dot(a, b))))}`, note: 'Entwicklungssatz („bac − cab“). Hilft beim Umformen doppelter Kreuzprodukte.' }; } },
 
@@ -204,7 +204,10 @@
     if ((op === 'cross' || op === 'crossba' || op === 'area') && V.norm(V.cross(a, b)) > 1e-9) v.poly([O, a, V.add(a, b), b], C.c5, 1, null, true, fill);
     if (op === 'area') v.arrow(O, V.cross(a, b), C.c5, 1.5, 8);
     if (op === 'triple') { const ab = V.add(a, b); [[O, a], [O, b], [a, ab], [b, ab]].forEach(([p, q]) => { v.line(p, q, C.c5, 1); v.line(V.add(p, c), V.add(q, c), C.c5, 1); v.line(p, V.add(p, c), C.c5, 1); v.line(q, V.add(q, c), C.c5, 1); });
-      v.poly([O, a, ab, b], null, 1, null, true, fill); }
+      v.poly([O, a, ab, b], null, 1, null, true, fill);
+      [[O, a, V.add(a, c), c], [O, b, V.add(b, c), c], [c, V.add(a, c), V.add(ab, c), V.add(b, c)]].forEach(f => v.poly(f, null, 1, null, true, fill));
+      const nn = V.cross(a, b), F = V.norm(nn); if (F > 1e-9) { const u = V.mul(nn, 1 / F), h = V.dot(c, u), foot = V.sub(c, V.mul(u, h));
+        v.line(c, foot, C.fg, 1.4, [5, 4]); v.dot(foot, C.fg, 3); v.text(V.mul(V.add(c, foot), 0.5), 'h', C.fg, 6, 0, 13, true); v.arrow(O, V.mul(u, Math.max(0.6, Math.abs(h) * 0.6)), C.muted, 1.3, 7); } }
     if (op === 'bac') v.arrow(O, V.cross(b, c), C.muted, 1.5, 8);
     if (op === 'angle' && V.norm(a) > 1e-9 && V.norm(b) > 1e-9) {
       const n = V.cross(a, b), R = Math.min(V.norm(a), V.norm(b)) * 0.35;
