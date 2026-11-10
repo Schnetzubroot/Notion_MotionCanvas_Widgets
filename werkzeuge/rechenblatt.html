@@ -75,6 +75,7 @@
             <tr><td><code>parallelogramm(a, b)</code></td><td>von a und b aufgespannt, mit Fläche |a × b|; optional Fusspunkt: <code>parallelogramm(A, a, b)</code></td></tr>
             <tr><td><code>spatkoerper(a, b, c)</code></td><td>Spat mit Grundfläche, Höhe h und Volumen |(a × b) · c|; optional <code>spatkoerper(A, a, b, c)</code></td></tr>
             <tr><td><code>dreieck(A, B, C)</code>, <code>polygon(P1, P2, …)</code></td><td>gefüllte Fläche durch die Punkte (selbst definieren)</td></tr>
+            <tr><td><code>bahn(M, 0, 4)</code></td><td>Bahnkurve von M für t von 0 bis 4 (M darf über mehrere Zeilen von t abhängen; geht auch direkt: <code>bahn(zyl(1, t, t/4), 0, 4pi)</code>, <code>bahn(sph(1, θ(t), ψ(t)), …)</code>). Ist t nirgends definiert, entsteht ein Regler automatisch</td></tr>
             <tr><td><code>strecke(A, B)</code>, <code>hilfslinie(A, B)</code></td><td>Verbindung; Hilfslinie gestrichelt und halb transparent</td></tr>
             <tr><td><code># Kommentar</code></td><td>wird ignoriert; Zeilen ohne <code>=</code> werden nur ausgewertet</td></tr>
           </table>
@@ -134,9 +135,10 @@
         let op = null, consume = false;
         if (t.k === 'op' && BIN[t.v]) { op = t.v; consume = true; }
         else if (left.implicit && (t.k === 'id' || (t.k === 'op' && (t.v === '(' || t.v === '[')))) op = '*';
-        if (!op || BIN[op] < minP) break;
+        const prec = consume ? BIN[op] : 3;   // implicit multiplication (2pi, 3(1,0,0)) binds tighter
+        if (!op || prec < minP) break;
         if (consume) p++;
-        left = { t: 'bin', op, a: left, b: expr(BIN[op] + 1, inAbs) };
+        left = { t: 'bin', op, a: left, b: expr(prec + 1, inAbs) };
       }
       return left;
     }
@@ -265,22 +267,70 @@
   const sliders = {}; // name -> {min,max,value}
   let results = [], hidden = new Set(), forced = new Set();
   const visible = r => r.auto ? forced.has(r.key) : !hidden.has(r.key);
-  function run(src) {
-    const env = {}, out = [], used = new Set(); consumed = new Set();
+  // split "f(a, b, c)" arguments at top-level commas
+  function splitArgs(str) { const out = []; let d = 0, cur = '';
+    for (const ch of str) { if ('(['.includes(ch)) d++; if (')]'.includes(ch)) d--; if (ch === ',' && d === 0) { out.push(cur); cur = ''; } else cur += ch; }
+    out.push(cur); return out.map(x => x.trim()); }
+  const NAME_RE = /^([A-Za-z_À-ÖØ-öø-ɏͰ-Ͽ][A-Za-z0-9_'À-ÖØ-öø-ɏͰ-Ͽ̀-ͯ]*)\s*=(?!=)(.*)$/;
+  function compileProgram(src) {
+    const prog = [];
     src.split('\n').forEach((raw, i) => {
       const line = raw.replace(/#.*$/, '').trim(); if (!line) return;
-      const r = { line: i + 1, src: line };
+      const L = { line: i + 1, src: line };
       try {
-        let name = null, rhs = line; const m = line.match(/^([A-Za-z_À-ÖØ-öø-ɏͰ-Ͽ][A-Za-z0-9_'À-ÖØ-öø-ɏͰ-Ͽ̀-ͯ]*)\s*=(?!=)(.*)$/);
+        let name = null, rhs = line; const m = line.match(NAME_RE);
         if (m) { name = m[1]; rhs = m[2]; if (!rhs.trim()) throw new E('rechte Seite fehlt'); if (FUN[name]) throw new E('„' + name + '“ ist ein Funktionsname'); if (name in CONST && name !== 'e') throw new E('„' + name + '“ ist eine Konstante'); }
+        L.name = name;
         const sm = rhs.match(/^\s*(regler|slider)\s*\((.*)\)\s*$/);
-        if (sm) { if (!name) throw new E('Regler braucht einen Namen: t = regler(0, 1)');
-          const args = sm[2].split(',').map(x => ev(parse(lex(x)), env)); if (args.length < 2 || args.length > 3 || !args.every(isN) || args[1] <= args[0]) throw new E('regler(min, max) mit min < max');
-          let s = sliders[name]; if (!s) s = sliders[name] = { min: args[0], max: args[1], value: args.length === 3 ? args[2] : args[0] };
-          s.min = args[0]; s.max = args[1]; s.value = Math.min(Math.max(s.value, s.min), s.max);
-          used.add(name); env[name] = s.value; r.name = name; r.val = s.value; r.slider = true; out.push(r); return; }
-        const v = ev(parse(lex(rhs)), env);
-        if (name) env[name] = v; r.name = name; r.val = v;
+        const bm = rhs.match(/^\s*(bahn|kurve|curve)\s*\((.*)\)\s*$/);
+        if (sm) { if (!name) throw new E('Regler braucht einen Namen: t = regler(0, 1)'); L.kind = 'slider'; L.args = splitArgs(sm[2]).map(x => parse(lex(x)));
+          if (L.args.length < 2 || L.args.length > 3) throw new E('regler(min, max) oder regler(min, max, start)'); }
+        else if (bm) { const g = splitArgs(bm[2]); if (g.length < 3 || g.length > 4) throw new E('bahn(Ortsvektor, t0, t1) oder bahn(Ortsvektor, t0, t1, Parametername)');
+          L.kind = 'bahn'; L.expr = parse(lex(g[0])); L.t0 = parse(lex(g[1])); L.t1 = parse(lex(g[2]));
+          L.param = 't'; if (g[3]) { const pn = parse(lex(g[3])); if (pn.t !== 'var') throw new E('4. Argument muss ein Name sein, z. B. t'); L.param = pn.v; } }
+        else { L.kind = 'expr'; L.ast = parse(lex(rhs)); }
+      } catch (e) { L.err = e instanceof E ? e.message : 'Fehler: ' + e.message; }
+      prog.push(L);
+    });
+    return prog;
+  }
+  // evaluate the program up to (excluding) index `upto`, with some names forced to values
+  function replay(prog, upto, forced) {
+    const env = { ...forced };
+    for (let k = 0; k < upto; k++) { const L = prog[k]; if (L.err || L.kind === 'bahn') continue;
+      if (L.name && L.name in forced) continue;
+      try { if (L.kind === 'slider') env[L.name] = sliders[L.name] ? sliders[L.name].value : ev(L.args[0], env);
+        else { const v = ev(L.ast, env); if (L.name) env[L.name] = v; } } catch (e) { if (L.name) delete env[L.name]; } }
+    return env;
+  }
+  function run(src) {
+    const prog = compileProgram(src), env = {}, out = [], used = new Set(); consumed = new Set();
+    // a path parameter that no line defines becomes an automatic slider
+    const defined = new Set(prog.filter(L => L.name).map(L => L.name)), auto = [];
+    prog.forEach(L => { if (L.kind === 'bahn' && !L.err && !defined.has(L.param) && !auto.some(a => a.name === L.param)) {
+      let a = 0, b = 1; try { a = ev(L.t0, {}); b = ev(L.t1, {}); } catch (e) {} if (!(isN(a) && isN(b) && b > a)) { a = 0; b = 1; }
+      auto.push({ name: L.param, a, b }); } });
+    auto.forEach(A => { let s = sliders[A.name]; if (!s) s = sliders[A.name] = { min: A.a, max: A.b, value: A.a }; s.min = A.a; s.max = A.b; s.value = Math.min(Math.max(s.value, s.min), s.max);
+      used.add(A.name); env[A.name] = s.value; out.push({ line: 0, name: A.name, val: s.value, slider: true, note: 'automatischer Regler für bahn()' }); });
+    prog.forEach((L, idx) => {
+      const r = { line: L.line, src: L.src, name: L.name };
+      if (L.err) { r.err = L.err; out.push(r); return; }
+      try {
+        if (L.kind === 'slider') { const args = L.args.map(x => ev(x, env)); if (!args.every(isN) || args[1] <= args[0]) throw new E('regler(min, max) mit min < max');
+          let sl = sliders[L.name]; if (!sl) sl = sliders[L.name] = { min: args[0], max: args[1], value: args.length === 3 ? args[2] : args[0] };
+          sl.min = args[0]; sl.max = args[1]; sl.value = Math.min(Math.max(sl.value, sl.min), sl.max);
+          used.add(L.name); env[L.name] = sl.value; r.val = sl.value; r.slider = true; }
+        else if (L.kind === 'bahn') {
+          const t0 = ev(L.t0, env), t1 = ev(L.t1, env); if (!isN(t0) || !isN(t1) || !(t1 > t0)) throw new E('Bereich: t0 < t1 (Zahlen)');
+          const N = 240, pts = []; let firstErr = '';
+          for (let k = 0; k <= N; k++) { const tv = t0 + (t1 - t0) * k / N, e2 = replay(prog, idx, { [L.param]: tv });
+            try { const P = ev(L.expr, e2); if (!isV(P)) throw new E('bahn() braucht einen Ortsvektor, z. B. bahn(M, 0, 4) oder bahn(zyl(1, t, t/4), 0, 2pi)'); if (P.every(isFinite)) pts.push(P); }
+            catch (e) { firstErr = firstErr || e.message; } }
+          if (pts.length < 2) throw new E(firstErr || 'Bahn konnte nicht berechnet werden');
+          let len = 0; for (let k = 1; k < pts.length; k++) len += V.norm(V.sub(pts[k], pts[k - 1]));
+          r.val = { draw: 'path', pts, desc: `Bahn für ${L.param} ∈ [${fmt(t0)}, ${fmt(t1)}], Bogenlänge ≈ ${fmt(len)}` };
+          if (L.name) env[L.name] = r.val; }
+        else { const v = ev(L.ast, env); if (L.name) env[L.name] = v; r.val = v; }
       } catch (e) { r.err = e instanceof E ? e.message : 'Fehler: ' + e.message; }
       out.push(r);
     });
@@ -299,13 +349,13 @@
     resEl.innerHTML = '';
     results.forEach(r => {
       const d = document.createElement('div'); d.className = 'ln' + (r.err ? ' err' : '');
-      const no = document.createElement('span'); no.className = 'no'; no.textContent = r.line; d.appendChild(no);
+      const no = document.createElement('span'); no.className = 'no'; no.textContent = r.line || '·'; d.appendChild(no);
       const sw = document.createElement(r.col ? 'button' : 'span'); d.appendChild(sw);
       if (r.col) { sw.className = 'sw' + (visible(r) ? '' : ' off'); sw.style.background = `var(${r.pal})`; sw.title = 'ein-/ausblenden';
         sw.addEventListener('click', () => { const set = r.auto ? forced : hidden; set.has(r.key) ? set.delete(r.key) : set.add(r.key); sw.classList.toggle('off', !visible(r)); view.redraw(); }); }
       const v = document.createElement('span'); v.className = 'v';
       if (r.err) v.textContent = r.src + '  →  ' + r.err;
-      else { const nm = document.createElement('b'); nm.textContent = r.name ? r.name + ' = ' : ''; v.appendChild(nm); v.appendChild(document.createTextNode(showVal(r.val)));
+      else { const nm = document.createElement('b'); nm.textContent = r.name ? r.name + ' = ' : ''; v.appendChild(nm); v.appendChild(document.createTextNode(showVal(r.val) + (r.note ? '   (' + r.note + ')' : '')));
         if (isV(r.val)) v.appendChild(document.createTextNode('   |…| = ' + fmt(V.norm(r.val)))); }
       d.appendChild(v); resEl.appendChild(d);
     });
@@ -347,6 +397,8 @@
         v.poly([q(-1, -1), q(1, -1), q(1, 1), q(-1, 1)], c, 1.4, null, true, h);
         for (const t of [-0.5, 0, 0.5]) { v.line(q(-1, t), q(1, t), c, 0.6, [3, 3]); v.line(q(t, -1), q(t, 1), c, 0.6, [3, 3]); }
         v.arrow(x.A, V.mul(n, L * 0.35), c, 1.8, 8); v.text(q(1, 1), lab, c, 4, -4, 13, true); }
+      else if (x.draw === 'path') { v.poly(x.pts, c, 2.2); const n = x.pts.length, e = x.pts[n - 1], d = V.sub(e, x.pts[n - 2]);
+        if (V.norm(d) > 1e-12) v.arrow(V.sub(e, V.mul(V.unit(d), 1e-3)), V.mul(V.unit(d), 1e-3), c, 2.2, 10); v.text(x.pts[Math.floor(n * 0.55)], lab, c, 6, -6, 12, false); }
       else if (x.draw === 'para') { const P = [x.A, V.add(x.A, x.a), V.add(x.A, V.add(x.a, x.b)), V.add(x.A, x.b)];
         v.poly(P, c, 1.6, null, true, fa(c, 0.22)); v.text(V.add(x.A, V.mul(V.add(x.a, x.b), 0.5)), lab ? lab + ' = ' + fmt(x.F) : fmt(x.F), c, -10, 4, 13, true); }
       else if (x.draw === 'poly') { v.poly(x.P, c, 1.6, null, true, fa(c, 0.22)); x.P.forEach(p => v.dot(p, c, 3));
@@ -454,6 +506,23 @@ d1 = hilfslinie(P1, P3)
 d2 = hilfslinie(P2, P4)
 # Fläche über Diagonalen: ½ |d1 × d2|
 F = 1/2 * norm((P3 - P1) × (P4 - P2))`],
+    ['Bahnkurve: Aufgabe Tangentialebene', `# x = 2t − 3, y = 2 − t², z = a + 2t berührt x + y + z = 2
+t = regler(1, 3, 2)
+a = -1
+M = (2t - 3, 2 - t^2, a + 2t)
+B = bahn(M, 1, 3)
+v = pfeil(M, (2, -2t, 2))
+E = ebene((0, 0, 2), (1, 1, 1))
+abstand = (M · (1, 1, 1) - 2) / sqrt(3)`],
+    ['Bahnkurven zylindrisch und sphärisch', `# Schraubenlinie (zylindrisch) und Bahn auf der Kugel (sphärisch, ZP1 2025)
+t = regler(0, 2pi, 1)
+H = zyl(1, t, t/4)
+schraube = bahn(H, 0, 4pi)
+θ = 2pi/3 * (1 - cos(t))
+ψ = t
+K = sph(1.5, θ, ψ)
+kugelbahn = bahn(K, 0, 2pi)
+vK = pfeil(K, 1.5 * (sin(t) * 2pi/3 * e_theta(θ, ψ) + sin(θ) * e_psi(ψ)))`],
     ['Leeres Blatt', ``],
   ];
   const exSel = document.getElementById('ex');
