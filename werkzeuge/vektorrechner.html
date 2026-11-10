@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vektorrechner</title>
+<link rel="stylesheet" href="../lib/core.css">
+<style>
+  .wrap.wide { max-width: 1180px; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 14px; align-items: start; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } .sticky { position: static !important; } }
+  .sticky { position: sticky; top: 8px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .card h2 { font-size: 13px; margin: 0 0 6px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  table.vin { border-collapse: collapse; width: 100%; }
+  table.vin td, table.vin th { padding: 3px 4px; font-size: 13px; text-align: center; }
+  table.vin th { color: var(--muted); font-weight: 500; }
+  table.vin td.n { font-weight: 700; font-size: 15px; width: 34px; }
+  input.cmp { width: 100%; min-width: 0; font: inherit; font-variant-numeric: tabular-nums; padding: 5px 6px; border: 1px solid var(--line);
+    border-radius: 7px; background: var(--bg); color: var(--fg); text-align: center; }
+  input.cmp.bad { border-color: var(--warn); outline: 1px solid var(--warn); }
+  .val { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ops { display: flex; flex-direction: column; gap: 4px; }
+  .grp { font-size: 12px; color: var(--muted); margin: 8px 0 2px; font-weight: 600; }
+  .op { display: grid; grid-template-columns: 150px 1fr; gap: 8px; text-align: left; align-items: baseline; padding: 6px 9px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--bg); cursor: pointer; font: inherit; color: var(--fg); }
+  .op:hover { border-color: var(--c2); }
+  .op.sel { border-color: var(--c5); outline: 1px solid var(--c5); }
+  .op .lab { font-weight: 600; font-size: 13px; }
+  .op .res { font-variant-numeric: tabular-nums; font-size: 13px; overflow-wrap: anywhere; }
+  .steps { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.55; display: none; }
+  .op.sel .steps { display: block; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tag { font-size: 12px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+  .tag.on { color: var(--acc); border-color: var(--acc); }
+  .help { font-size: 12px; color: var(--muted); margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap wide">
+  <h1>Vektorrechner</h1>
+  <p class="sub">Komponenten eintippen (auch Ausdrücke wie <code>sqrt(3)/2</code>, <code>2pi</code>, <code>cos(pi/3)</code>, <code>-1/2</code>). Klicke eine Rechnung an: Du siehst den Rechenweg und die Grafik dazu.</p>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h2>Vektoren</h2>
+        <table class="vin">
+          <tr><th></th><th>x</th><th>y</th><th>z</th><th>Betrag</th></tr>
+          <tr id="row-a"><td class="n" style="color:var(--c1)">a</td></tr>
+          <tr id="row-b"><td class="n" style="color:var(--c2)">b</td></tr>
+          <tr id="row-c"><td class="n" style="color:var(--c3)">c</td></tr>
+        </table>
+        <div class="ctl" style="margin:8px 0 0">
+          <label>Skalar λ <input id="lam" class="cmp" style="width:80px" value="2"></label>
+          <label>Beispiel <select id="preset">
+            <option value="">wählen …</option>
+            <option value="basic">Einfaches Beispiel</option>
+            <option value="rh">e_x × e_y = e_z (Rechtssystem)</option>
+            <option value="ortho">Senkrechte Vektoren</option>
+            <option value="par">Parallele Vektoren</option>
+            <option value="zp23">ZP1 2023 A1: a = ω, b = v_A</option>
+            <option value="zp24">ZP1 2024 A2: v_E = v_A + ω × AE</option>
+          </select></label>
+          <button id="swap">a ↔ b</button>
+        </div>
+        <div class="tags" id="tags"></div>
+      </div>
+      <div class="card">
+        <h2>Rechnungen</h2>
+        <div class="ops" id="ops"></div>
+      </div>
+    </div>
+    <div class="sticky">
+      <div class="stage"><canvas id="cv" style="height:460px"></canvas>
+        <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>a</div><div><span class="sw" style="background:var(--c2)"></span>b</div><div><span class="sw" style="background:var(--c3)"></span>c</div><div><span class="sw" style="background:var(--c5)"></span>Ergebnis</div></div>
+        <div class="hint">Ziehen zum Drehen · Mausrad zum Zoomen</div>
+      </div>
+      <div class="ctl"><label><input type="checkbox" id="showC" checked> c anzeigen</label><button id="reset">Ansicht zurücksetzen</button></div>
+      <div class="info" id="info"></div>
+    </div>
+  </div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V } = MW;
+  const f3 = x => MW.fmt(x, 3);
+  const p3 = x => (x < 0 ? '(' + f3(x) + ')' : f3(x));            // Klammern um negative Zahlen in Rechenwegen
+  const vs = a => '(' + a.map(f3).join(', ') + ')';
+  const NAMES = ['a', 'b', 'c'], COLORS = { a: '--c1', b: '--c2', c: '--c3' };
+  const inputs = {};
+  const S = { a: ['1', '2', '0'], b: ['2', '0', '1'], c: ['0', '1', '2'] };
+
+  // ---------- inputs ----------
+  NAMES.forEach(n => {
+    const row = document.getElementById('row-' + n); inputs[n] = [];
+    for (let i = 0; i < 3; i++) {
+      const td = document.createElement('td'), inp = document.createElement('input');
+      inp.className = 'cmp'; inp.value = S[n][i]; inp.setAttribute('aria-label', n + ' Komponente ' + 'xyz'[i]);
+      inp.addEventListener('input', () => { S[n][i] = inp.value; update(); });
+      td.appendChild(inp); row.appendChild(td); inputs[n].push(inp);
+    }
+    const td = document.createElement('td'); td.className = 'val'; td.id = 'norm-' + n; row.appendChild(td);
+  });
+  const lamIn = document.getElementById('lam'); lamIn.addEventListener('input', () => update());
+  const PRESETS = {
+    basic: { a: ['1', '2', '0'], b: ['2', '0', '1'], c: ['0', '1', '2'], lam: '2' },
+    rh: { a: ['1', '0', '0'], b: ['0', '1', '0'], c: ['0', '0', '1'], lam: '1', op: 'cross' },
+    ortho: { a: ['2', '1', '0'], b: ['-1', '2', '1'], c: ['0', '0', '1'], lam: '1', op: 'dot' },
+    par: { a: ['1', '-2', '1'], b: ['-2', '4', '-2'], c: ['1', '1', '1'], lam: '-2', op: 'cross' },
+    zp23: { a: ['0', '1', '1'], b: ['3', '1', '1'], c: ['0', '0', '0'], lam: '1', op: 'axis' },
+    zp24: { a: ['-1', '0', '0'], b: ['1', '0', '2'], c: ['0', '1', 'sqrt(3)'], lam: '1', op: 'wxr' },
+  };
+  document.getElementById('preset').addEventListener('change', e => {
+    const p = PRESETS[e.target.value]; if (!p) return;
+    NAMES.forEach(n => p[n].forEach((v, i) => { S[n][i] = v; inputs[n][i].value = v; }));
+    lamIn.value = p.lam; if (p.op) sel = p.op; update();
+  });
+  document.getElementById('swap').addEventListener('click', () => {
+    [S.a, S.b] = [S.b, S.a]; NAMES.forEach(n => S[n].forEach((v, i) => { inputs[n][i].value = v; })); update();
+  });
+
+  // ---------- operations ----------
+  const OPS = [
+    { g: 'Grundrechenarten', id: 'add', lab: 'a + b', kind: 'v', calc: (a, b) => ({ v: V.add(a, b),
+      st: `(${p3(a[0])} + ${p3(b[0])}, ${p3(a[1])} + ${p3(b[1])}, ${p3(a[2])} + ${p3(b[2])})`,
+      note: 'Komponentenweise addieren. Grafik: Parallelogrammregel.' }) },
+    { g: 'Grundrechenarten', id: 'sub', lab: 'a − b', kind: 'v', calc: (a, b) => ({ v: V.sub(a, b),
+      st: `(${p3(a[0])} − ${p3(b[0])}, ${p3(a[1])} − ${p3(b[1])}, ${p3(a[2])} − ${p3(b[2])})`,
+      note: 'a − b ist der Pfeil von der Spitze von b zur Spitze von a. Merke: BA = A − B (Ziel minus Start).' }) },
+    { g: 'Grundrechenarten', id: 'scale', lab: 'λ a', kind: 'v', calc: (a, b, c, l) => ({ v: V.mul(a, l),
+      st: `λ = ${f3(l)}: (${f3(l)}·${p3(a[0])}, ${f3(l)}·${p3(a[1])}, ${f3(l)}·${p3(a[2])})`, note: 'λ < 0 dreht die Richtung um.' }) },
+    { g: 'Grundrechenarten', id: 'unit', lab: 'e_a = a / |a|', kind: 'v', calc: a => { const n = V.norm(a);
+      return n < 1e-12 ? { err: 'a = 0 hat keine Richtung.' } : { v: V.mul(a, 1 / n), st: `|a| = ${f3(n)} → a / ${f3(n)}`, note: 'Einheitsvektor: gleiche Richtung, Betrag 1.' }; } },
+
+    { g: 'Skalarprodukt und Winkel', id: 'dot', lab: 'a · b', kind: 's', calc: (a, b) => { const d = V.dot(a, b);
+      return { s: d, st: `${p3(a[0])}·${p3(b[0])} + ${p3(a[1])}·${p3(b[1])} + ${p3(a[2])}·${p3(b[2])} = ${f3(a[0] * b[0])} + ${f3(a[1] * b[1])} + ${f3(a[2] * b[2])} = ${f3(d)}`,
+        note: Math.abs(d) < 1e-9 ? 'a · b = 0: a und b stehen senkrecht (falls beide ≠ 0).' : 'a · b = |a| |b| cos α. Positiv: spitzer Winkel, negativ: stumpfer Winkel.' }; } },
+    { g: 'Skalarprodukt und Winkel', id: 'norm', lab: '|a|', kind: 's', calc: a => ({ s: V.norm(a),
+      st: `√(${p3(a[0])}² + ${p3(a[1])}² + ${p3(a[2])}²) = √${f3(V.dot(a, a))}`, note: '|a|² = a · a.' }) },
+    { g: 'Skalarprodukt und Winkel', id: 'angle', lab: 'Winkel ∠(a, b)', kind: 's', calc: (a, b) => { const na = V.norm(a), nb = V.norm(b);
+      if (na < 1e-12 || nb < 1e-12) return { err: 'Ein Vektor ist null, der Winkel ist nicht definiert.' };
+      const c = Math.max(-1, Math.min(1, V.dot(a, b) / (na * nb))), al = Math.acos(c);
+      return { s: al, txt: `${MW.fmt(al * 180 / Math.PI, 2)}° = ${f3(al)} rad`, st: `cos α = a·b / (|a||b|) = ${f3(V.dot(a, b))} / (${f3(na)} · ${f3(nb)}) = ${f3(c)}`, note: 'α liegt immer zwischen 0° und 180°.' }; } },
+    { g: 'Skalarprodukt und Winkel', id: 'projs', lab: 'Komponente von a entlang b', kind: 's', calc: (a, b) => { const nb = V.norm(b);
+      return nb < 1e-12 ? { err: 'b = 0.' } : { s: V.dot(a, b) / nb, st: `a · b / |b| = ${f3(V.dot(a, b))} / ${f3(nb)}`, note: 'Skalare Projektion: wie viel von a in Richtung b zeigt (mit Vorzeichen). Grundlage des Satzes der projizierten Geschwindigkeiten.' }; } },
+    { g: 'Skalarprodukt und Winkel', id: 'proj', lab: 'Projektion von a auf b', kind: 'v', calc: (a, b) => { const bb = V.dot(b, b);
+      return bb < 1e-12 ? { err: 'b = 0.' } : { v: V.mul(b, V.dot(a, b) / bb), st: `(a · b / |b|²) b = (${f3(V.dot(a, b))} / ${f3(bb)}) b`, note: 'Vektorielle Projektion: Anteil von a parallel zu b.' }; } },
+    { g: 'Skalarprodukt und Winkel', id: 'projba', lab: 'Projektion von b auf a', kind: 'v', calc: (a, b) => { const aa = V.dot(a, a);
+      return aa < 1e-12 ? { err: 'a = 0.' } : { v: V.mul(a, V.dot(a, b) / aa), st: `(a · b / |a|²) a = (${f3(V.dot(a, b))} / ${f3(aa)}) a`, note: 'Mit a = ω und b = v_B ist das die 2. Invariante v_ω = (v_B · ω / |ω|²) ω.' }; } },
+    { g: 'Skalarprodukt und Winkel', id: 'perp', lab: 'Anteil von a senkrecht zu b', kind: 'v', calc: (a, b) => { const bb = V.dot(b, b);
+      return bb < 1e-12 ? { err: 'b = 0.' } : { v: V.sub(a, V.mul(b, V.dot(a, b) / bb)), st: `a − (a · b / |b|²) b`, note: 'Zusammen mit der Projektion ergibt das wieder a.' }; } },
+
+    { g: 'Kreuzprodukt', id: 'cross', lab: 'a × b', kind: 'v', calc: (a, b) => { const v = V.cross(a, b);
+      return { v, st: `x: a_y b_z − a_z b_y = ${p3(a[1])}·${p3(b[2])} − ${p3(a[2])}·${p3(b[1])} = ${f3(v[0])}<br>` +
+        `y: a_z b_x − a_x b_z = ${p3(a[2])}·${p3(b[0])} − ${p3(a[0])}·${p3(b[2])} = ${f3(v[1])}<br>` +
+        `z: a_x b_y − a_y b_x = ${p3(a[0])}·${p3(b[1])} − ${p3(a[1])}·${p3(b[0])} = ${f3(v[2])}`,
+        note: V.norm(v) < 1e-9 ? 'a × b = 0: a und b sind parallel (oder einer ist null).' : 'a × b steht senkrecht auf a und auf b (rechte Hand: Daumen a, Zeigefinger b, Mittelfinger a × b). Betrag = Fläche des Parallelogramms.' }; } },
+    { g: 'Kreuzprodukt', id: 'crossba', lab: 'b × a', kind: 'v', calc: (a, b) => ({ v: V.cross(b, a), st: 'b × a = −(a × b)', note: 'Reihenfolge vertauschen ändert das Vorzeichen.' }) },
+    { g: 'Kreuzprodukt', id: 'area', lab: '|a × b| (Fläche)', kind: 's', calc: (a, b) => ({ s: V.norm(V.cross(a, b)), st: `|a × b| = |a| |b| sin α = ${f3(V.norm(a))} · ${f3(V.norm(b))} · sin α`, note: 'Fläche des von a und b aufgespannten Parallelogramms.' }) },
+    { g: 'Kreuzprodukt', id: 'triple', lab: '(a × b) · c (Spatprodukt)', kind: 's', calc: (a, b, c) => { const ab = V.cross(a, b), t = V.dot(ab, c);
+      return { s: t, st: `a × b = ${vs(ab)}, dann · c = ${f3(t)}`, note: Math.abs(t) < 1e-9 ? 'Spatprodukt = 0: a, b, c liegen in einer Ebene (keine Basis).' : 'Volumen des Spats (mit Vorzeichen). Positiv: a, b, c bilden ein Rechtssystem.' }; } },
+    { g: 'Kreuzprodukt', id: 'bac', lab: 'a × (b × c)', kind: 'v', calc: (a, b, c) => { const v = V.cross(a, V.cross(b, c));
+      return { v, st: `= b (a · c) − c (a · b) = ${f3(V.dot(a, c))} b − ${f3(V.dot(a, b))} c = ${vs(V.sub(V.mul(b, V.dot(a, c)), V.mul(c, V.dot(a, b))))}`, note: 'Entwicklungssatz („bac − cab“). Hilft beim Umformen doppelter Kreuzprodukte.' }; } },
+
+    { g: 'Mechanik', id: 'axis', lab: 'a × b / |a|²', kind: 'v', calc: (a, b) => { const aa = V.dot(a, a);
+      return aa < 1e-12 ? { err: 'a = 0.' } : { v: V.mul(V.cross(a, b), 1 / aa), st: `a × b = ${vs(V.cross(a, b))}, geteilt durch |a|² = ${f3(aa)}`,
+        note: 'Mit a = ω und b = v_B: Lot BZ von B auf die Zentralachse (Kap. 3.5). Mit a = R und b = M_B: Punkt der Zentralachse einer Kräftegruppe.' }; } },
+    { g: 'Mechanik', id: 'wxr', lab: 'b + a × c', kind: 'v', calc: (a, b, c) => ({ v: V.add(b, V.cross(a, c)), st: `a × c = ${vs(V.cross(a, c))}, plus b`,
+      note: 'Mit a = ω, b = v_A und c = AP: Geschwindigkeit v_P = v_A + ω × AP (Grundgleichung des Bewegungszustandes).' }) },
+  ];
+  let sel = 'cross';
+
+  const opsEl = document.getElementById('ops'), btn = {};
+  let lastG = '';
+  OPS.forEach(o => {
+    if (o.g !== lastG) { const h = document.createElement('div'); h.className = 'grp'; h.textContent = o.g; opsEl.appendChild(h); lastG = o.g; }
+    const b = document.createElement('button'); b.className = 'op';
+    b.innerHTML = `<span class="lab">${o.lab}</span><span class="res"></span><div class="steps"></div>`;
+    b.addEventListener('click', () => { sel = o.id; update(); });
+    opsEl.appendChild(b); btn[o.id] = b;
+  });
+
+  // ---------- view ----------
+  const showC = document.getElementById('showC'); showC.addEventListener('change', () => view.redraw());
+  let cur = null;
+  const view = MW.View3D(document.getElementById('cv'), { extent: 3, yaw: 25, pitch: 22 }, v => {
+    if (!cur) return;
+    const C = v.C, { a, b, c, op, r } = cur;
+    const L = v.extent * 0.95; v.axes(L);
+    const vec = (p, q, col, w, lab) => { v.arrow(p, V.sub(q, p), col, w); if (lab) v.text(q, lab, col, 6, -6); };
+    const O = [0, 0, 0];
+    const fill = C.fill;
+    // context per operation
+    if (op === 'add' && r.v) { v.line(a, r.v, C.c2, 1, [4, 4]); v.line(b, r.v, C.c1, 1, [4, 4]); }
+    if (op === 'sub' && r.v) { v.arrow(b, r.v, C.c5, 2, 9); v.line([0, 0, 0], r.v, C.c5, 1, [3, 3]); }
+    if (op === 'projba' && V.dot(a, a) > 1e-12) { const pr = V.mul(a, V.dot(a, b) / V.dot(a, a)); v.line(V.mul(V.unit(a), -L), V.mul(V.unit(a), L), C.line, 1, [5, 4]); v.line(b, pr, C.muted, 1.2, [3, 3]); }
+    if ((op === 'proj' || op === 'perp' || op === 'projs' || op === 'dot') && V.dot(b, b) > 1e-12) {
+      const pr = V.mul(b, V.dot(a, b) / V.dot(b, b)); v.line(V.mul(V.unit(b), -L), V.mul(V.unit(b), L), C.line, 1, [5, 4]);
+      v.line(a, pr, C.muted, 1.2, [3, 3]); v.dot(pr, C.c5, 4);
+      if (op === 'perp') v.arrow(pr, V.sub(a, pr), C.c5, 2, 8);
+      if (op === 'dot' || op === 'projs') v.arrow(O, pr, C.c5, 3);
+    }
+    if ((op === 'cross' || op === 'crossba' || op === 'area') && V.norm(V.cross(a, b)) > 1e-9) v.poly([O, a, V.add(a, b), b], C.c5, 1, null, true, fill);
+    if (op === 'area') v.arrow(O, V.cross(a, b), C.c5, 1.5, 8);
+    if (op === 'triple') { const ab = V.add(a, b); [[O, a], [O, b], [a, ab], [b, ab]].forEach(([p, q]) => { v.line(p, q, C.c5, 1); v.line(V.add(p, c), V.add(q, c), C.c5, 1); v.line(p, V.add(p, c), C.c5, 1); v.line(q, V.add(q, c), C.c5, 1); });
+      v.poly([O, a, ab, b], null, 1, null, true, fill); }
+    if (op === 'bac') v.arrow(O, V.cross(b, c), C.muted, 1.5, 8);
+    if (op === 'angle' && V.norm(a) > 1e-9 && V.norm(b) > 1e-9) {
+      const n = V.cross(a, b), R = Math.min(V.norm(a), V.norm(b)) * 0.35;
+      if (V.norm(n) > 1e-9) { const e1 = V.unit(a), e2 = V.unit(V.cross(n, a)), al = Math.acos(Math.max(-1, Math.min(1, V.dot(a, b) / (V.norm(a) * V.norm(b)))));
+        const pts = []; for (let i = 0; i <= 40; i++) { const t = al * i / 40; pts.push(V.add(V.mul(e1, R * Math.cos(t)), V.mul(e2, R * Math.sin(t)))); }
+        v.poly(pts, C.c5, 2.5); v.text(pts[20], 'α', C.c5, 4, -4); } }
+    if (op === 'wxr') { v.arrow(O, V.cross(a, c), C.muted, 1.5, 8); }
+    // input vectors
+    vec(O, a, C.c1, 3, 'a'); vec(O, b, C.c2, 3, 'b');
+    if (showC.checked || cur.usesC) vec(O, c, C.c3, 3, 'c');
+    // result vector
+    if (r.v && op !== 'sub') vec(O, r.v, C.c5, 4, cur.label);
+    if (r.v && op === 'sub') v.text(r.v, 'a − b', C.c5, 6, -6);
+  });
+  document.getElementById('reset').addEventListener('click', () => view.resetView());
+
+  // ---------- update ----------
+  function update() {
+    const val = {}, bad = {};
+    NAMES.forEach(n => { val[n] = S[n].map((s, i) => { const o = {}; const x = MW.num(s, o); inputs[n][i].classList.toggle('bad', !!o.error); inputs[n][i].title = o.error || ''; if (o.error) bad[n] = true; return x; });
+      document.getElementById('norm-' + n).textContent = bad[n] ? '–' : f3(V.norm(val[n])); });
+    const lo = {}, lam = MW.num(lamIn.value, lo); lamIn.classList.toggle('bad', !!lo.error);
+    const ok = !bad.a && !bad.b && !bad.c && !lo.error;
+    const tags = [];
+    if (ok) {
+      const { a, b } = val, cr = V.norm(V.cross(a, b)), d = V.dot(a, b);
+      tags.push([Math.abs(d) < 1e-9 && V.norm(a) > 1e-9 && V.norm(b) > 1e-9, 'a ⊥ b'], [cr < 1e-9 && V.norm(a) > 1e-9 && V.norm(b) > 1e-9, 'a ∥ b'],
+        [Math.abs(V.dot(V.cross(a, b), val.c)) < 1e-9, 'a, b, c in einer Ebene']);
+    }
+    document.getElementById('tags').innerHTML = tags.map(([on, t]) => `<span class="tag ${on ? 'on' : ''}">${on ? '✓ ' : ''}${t}</span>`).join('');
+    let selR = null;
+    OPS.forEach(o => {
+      const el = btn[o.id]; el.classList.toggle('sel', o.id === sel);
+      if (!ok) { el.querySelector('.res').textContent = 'Eingabe prüfen'; el.querySelector('.steps').innerHTML = ''; return; }
+      const r = o.calc(val.a, val.b, val.c, lam);
+      el.querySelector('.res').textContent = r.err ? r.err : r.txt ? r.txt : o.kind === 'v' ? vs(r.v) : f3(r.s);
+      el.querySelector('.steps').innerHTML = r.err ? '' : (r.st ? r.st + '<br>' : '') + (r.note || '');
+      if (o.id === sel) selR = { r, o };
+    });
+    if (!ok || !selR) { MW.info(document.getElementById('info'), 'Eingabe prüfen', [], 'Erlaubt: Zahlen, + − * / ^, Klammern, pi, sqrt(), sin(), cos(), tan(), exp(), ln(). Komma oder Punkt als Dezimaltrennzeichen.', true); cur = null; view.redraw(); return; }
+    const { r, o } = selR;
+    cur = { a: val.a, b: val.b, c: val.c, op: o.id, r, label: o.lab, usesC: ['triple', 'bac', 'wxr'].includes(o.id) };
+    const pts = [val.a, val.b, r.v || [0, 0, 0], o.id === 'add' ? V.add(val.a, val.b) : [0, 0, 0]];
+    if (cur.usesC || showC.checked) pts.push(val.c);
+    view.extent = Math.max(1.6, Math.max(...pts.map(V.norm)) * 1.05);
+    MW.info(document.getElementById('info'), o.lab + ' = ' + (r.err ? '–' : r.txt ? r.txt : o.kind === 'v' ? vs(r.v) : f3(r.s)),
+      o.kind === 'v' && r.v ? [['Betrag', f3(V.norm(r.v))]] : [], r.err || r.note || '', !!r.err);
+    view.redraw();
+  }
+  update();
+})();
+</script>
+</body>
+</html>

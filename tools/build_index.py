@@ -14,7 +14,9 @@ SECTIONS = {
 def title(p):
     return re.search(r'<title>(.*?)</title>', p.read_text(encoding='utf-8')).group(1)
 
-parts = []
+parts = ['<h2>Werkzeuge</h2><ul>'
+         '<li><a href="werkzeuge/vektorrechner.html">Vektorrechner</a> (Addition, Skalar-, Kreuz- und Spatprodukt, Projektionen, Zentralachse)</li>'
+         '<li><a href="werkzeuge/koordinaten-spielplatz.html">Koordinaten-Spielplatz</a> (Punkte, Koordinatenlinien, Flächen, Bahnkurven)</li></ul>']
 for key, name in SECTIONS.items():
     files = sorted((ROOT / f'kap{key[0]}').glob(f'{key}-*.html'))
     items = ''.join(f'<li><a href="kap{key[0]}/{f.name}">{title(f)}</a></li>' for f in files)
