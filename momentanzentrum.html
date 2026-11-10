@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Momentanzentrum finden</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1f2328; --muted: #6b7280; --panel: #f6f7f9; --line: #d9dde3; --grid: #eef0f3;
+    --plate: rgba(47, 111, 219, 0.10); --plateEdge: rgba(47, 111, 219, 0.45);
+    --vP: #d1453b; --vQ: #2f6fdb; --Z: #d89a00; --field: #8a94a3; --spg: #0f9d58; --decor: #9aa3af; --acc: #0f7b6c; --warn: #b42318;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #191919; --fg: #e8e8e8; --muted: #9aa0a6; --panel: #232323; --line: #3a3a3a; --grid: #262626;
+      --plate: rgba(91, 155, 255, 0.13); --plateEdge: rgba(91, 155, 255, 0.5);
+      --vP: #ff6b5e; --vQ: #5b9bff; --Z: #ffc233; --field: #7d8796; --spg: #34c27a; --decor: #6b7280; --acc: #3ec7b3; --warn: #ff8a80;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 12px 16px 16px; }
+  h1 { font-size: 17px; margin: 0 0 2px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+  .stage { position: relative; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 420px; touch-action: none; }
+  @media (max-width: 680px) { canvas { height: 360px; } }
+  .hint { position: absolute; left: 10px; bottom: 8px; font-size: 12px; color: var(--muted); pointer-events: none; max-width: 70%; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; align-items: center; }
+  .row label { font-size: 13px; color: var(--muted); }
+  select { font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px; }
+  .info { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 18px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+  @media (max-width: 680px) { .info { grid-template-columns: 1fr; } }
+  .info .k { color: var(--muted); }
+  .info .v { font-variant-numeric: tabular-nums; }
+  .type { grid-column: 1 / -1; font-weight: 600; font-size: 14px; color: var(--acc); }
+  .type.warn { color: var(--warn); }
+  .note { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; }
+  .steps { margin: 10px 0 0; padding-left: 20px; font-size: 13px; color: var(--muted); }
+  .steps b { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Momentanzentrum einer ebenen Bewegung</h1>
+  <p class="sub">Von Punkt P ist die ganze Geschwindigkeit bekannt, von Punkt Q nur die Richtung. Das Widget bestimmt v<sub>Q</sub> mit dem Satz der projizierten Geschwindigkeiten, dann ω und das Momentanzentrum Z.</p>
+
+  <div class="stage">
+    <canvas id="cv" aria-label="Ebene Ansicht mit ziehbaren Punkten"></canvas>
+    <div class="hint">Ziehe die Punkte P und Q, die Pfeilspitze von v<sub>P</sub> und den Richtungsgriff ○ von Q.</div>
+  </div>
+
+  <div class="row">
+    <label for="preset">Beispiel:</label>
+    <select id="preset">
+      <option value="zp25">ZP1 2025 A3: Stab AC (l = 2, ω = 1)</option>
+      <option value="leiter">Buch Fig. 3.3: rutschende Leiter</option>
+      <option value="rad">Buch Fig. 3.20: rollendes Rad</option>
+      <option value="trans">Momentane Translation</option>
+      <option value="frei">Freies Beispiel</option>
+    </select>
+    <label><input type="checkbox" id="snap" checked> Einrasten (0.25 / 15°)</label>
+    <label><input type="checkbox" id="showSpg" checked> SPG-Projektionen</label>
+    <label><input type="checkbox" id="showField" checked> Geschwindigkeitsfeld</label>
+  </div>
+
+  <div class="info" id="info"></div>
+  <ol class="steps">
+    <li><b>SPG:</b> Die Komponenten von v<sub>P</sub> und v<sub>Q</sub> entlang PQ sind gleich (grüne Pfeile). Das liefert den Betrag von v<sub>Q</sub>.</li>
+    <li><b>Lote:</b> Z liegt auf der Senkrechten zu v<sub>P</sub> durch P und auf der Senkrechten zur Richtung von Q durch Q.</li>
+    <li><b>ω:</b> |v<sub>P</sub>| = |ω| · |ZP|. Jeder Punkt M hat v<sub>M</sub> ⊥ ZM und |v<sub>M</sub>| = |ω| · |ZM|.</li>
+  </ol>
+</div>
+
+<script>
+(() => {
+  const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+  const mul = (a, s) => [a[0] * s, a[1] * s];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
+  const len = a => Math.hypot(a[0], a[1]);
+  const unit = a => { const l = len(a); return l < 1e-12 ? [0, 0] : [a[0] / l, a[1] / l]; };
+  const perp = a => [-a[1], a[0]];                 // e_z × a
+  const fmt = x => { const r = Math.round(x * 100) / 100; return (Math.abs(r) < 1e-9 ? 0 : r).toLocaleString('de-CH', { maximumFractionDigits: 2 }); };
+  const fv = a => `(${fmt(a[0])}, ${fmt(a[1])})`;
+  const s3 = Math.sqrt(3);
+
+  const PRESETS = {
+    zp25:   { P: [1, s3], vP: [s3, -1], Q: [2, 0], eQ: [1, 0], width: 0.18, names: ['E', 'A'],
+              decor: { lines: [[[0, 0], [2, 2 * s3]], [[2, 0], [0, 2 * s3]]], ground: [[-0.6, 0], [3.2, 0]], pins: [[0, 0]], rollers: [[2, 0]],
+                       labels: [[[0, 0], 'O'], [[2, 2 * s3], 'B'], [[0, 2 * s3], 'C']] } },
+    leiter: { P: [2, 0], vP: [1.5, 0], Q: [0, 2], eQ: [0, 1], width: 0.18, names: ['A', 'B'],
+              decor: { lines: [[[-1, 0], [4.5, 0]], [[0, -1], [0, 4.2]]], labels: [[[-0.25, -0.3], 'O']] } },
+    rad:    { P: [0, 1], vP: [2, 0], Q: [1, 1], eQ: [Math.SQRT1_2, -Math.SQRT1_2], width: 0.35, names: ['O', 'Q'],
+              decor: { circles: [[[0, 1], 1]], ground: [[-3, 0], [3.5, 0]] },
+              fieldPts: Array.from({ length: 8 }, (_, i) => [Math.cos(i * Math.PI / 4), 1 + Math.sin(i * Math.PI / 4)]) },
+    trans:  { P: [-2, 0], vP: [1.5, 0.5], Q: [2, 1], eQ: unit([1.5, 0.5]), width: 0.9, names: ['P', 'Q'], decor: {} },
+    frei:   { P: [-2, 0.5], vP: [1.5, 1.2], Q: [2, 0.5], eQ: unit([1.5, -1.2]), width: 0.9, names: ['P', 'Q'], decor: {} },
+  };
+  let st = null;
+  function applyPreset(name) {
+    const p = PRESETS[name];
+    st = { P: [...p.P], vP: [...p.vP], Q: [...p.Q], eQ: [...p.eQ], width: p.width, names: p.names, decor: p.decor, fieldPts: p.fieldPts || null };
+    sel.value = name; draw();
+  }
+
+  // ---------- kinematics ----------
+  function compute() {
+    const r = sub(st.Q, st.P), L = len(r);
+    const res = { r, L };
+    if (L < 1e-6) { res.status = 'bad'; res.type = 'P und Q fallen zusammen'; res.text = 'Wähle zwei verschiedene Punkte.'; return res; }
+    const e = mul(r, 1 / L); res.e = e;
+    const pP = dot(st.vP, e), den = dot(st.eQ, e);
+    res.pP = pP;
+    if (Math.abs(den) < 1e-6) {
+      res.status = 'bad';
+      if (Math.abs(pP) < 1e-6) { res.type = 'Nicht bestimmbar';
+        res.text = 'Die Richtung von Q steht senkrecht auf PQ, und v_P hat keine Komponente entlang PQ. Der SPG liefert dann keine Information über |v_Q|.'; }
+      else { res.type = 'Für einen starren Körper unmöglich';
+        res.text = 'Die Richtung von Q steht senkrecht auf PQ, aber v_P hat eine Komponente entlang PQ. Der Abstand PQ würde sich ändern.'; }
+      return res;
+    }
+    const s = pP / den; res.vQ = mul(st.eQ, s);
+    res.w = dot(sub(res.vQ, st.vP), perp(r)) / (L * L);     // ω (z-Komponente)
+    if (Math.abs(res.w) < 1e-6) {
+      res.status = 'trans'; res.type = 'Momentane Translation (ω = 0)';
+      res.text = 'Die beiden Lote sind parallel: Das Momentanzentrum liegt „im Unendlichen“. Alle Punkte haben dieselbe Geschwindigkeit.';
+      return res;
+    }
+    res.status = 'ok';
+    res.Z = add(st.P, mul(perp(st.vP), 1 / res.w));
+    res.type = `Momentane Rotation um Z, ${res.w > 0 ? 'gegen den Uhrzeigersinn' : 'im Uhrzeigersinn'}`;
+    res.text = 'Jeder Punkt bewegt sich senkrecht zu seiner Verbindungslinie mit Z, proportional zum Abstand von Z.';
+    return res;
+  }
+  const velAt = (M, res) => add(st.vP, mul(perp(sub(M, st.P)), res.w || 0));
+
+  // ---------- view ----------
+  const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  let W = 0, H = 0, S = 50; const C0 = [0.6, 1.4];
+  const toS = p => [W / 2 + (p[0] - C0[0]) * S, H / 2 - (p[1] - C0[1]) * S];
+  const toW = (x, y) => [C0[0] + (x - W / 2) / S, C0[1] - (y - H / 2) / S];
+  function resize() {
+    const dpr = window.devicePixelRatio || 1, rect = cv.getBoundingClientRect();
+    W = rect.width; H = rect.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); S = Math.min(W / 12.5, H / 8.2); draw();
+  }
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function seg(a, b, color, w = 1, dash = null) {
+    const p = toS(a), q = toS(b); ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = w; if (dash) ctx.setLineDash(dash);
+    ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke(); ctx.restore();
+  }
+  function arrow(a, v, color, w = 2.5, head = 10) {
+    const p = toS(a), q = toS(add(a, v)); const dx = q[0] - p[0], dy = q[1] - p[1], L = Math.hypot(dx, dy);
+    if (L < 2) return; const h = Math.min(head, L * 0.45), ux = dx / L, uy = dy / L;
+    ctx.save(); ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0] - ux * h * 0.8, q[1] - uy * h * 0.8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(q[0] - ux * h - uy * h * 0.45, q[1] - uy * h + ux * h * 0.45);
+    ctx.lineTo(q[0] - ux * h + uy * h * 0.45, q[1] - uy * h - ux * h * 0.45); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  function disc(p, color, r = 5, hollow = false) {
+    const s = toS(p); ctx.save(); ctx.beginPath(); ctx.arc(s[0], s[1], r, 0, 2 * Math.PI);
+    if (hollow) { ctx.lineWidth = 2; ctx.strokeStyle = color; ctx.fillStyle = css('--bg'); ctx.fill(); ctx.stroke(); }
+    else { ctx.fillStyle = color; ctx.fill(); } ctx.restore();
+  }
+  function text(p, t, color, dx = 8, dy = -8, bold = true) {
+    const s = toS(p); ctx.save(); ctx.fillStyle = color; ctx.font = `${bold ? '600 ' : ''}13px -apple-system, Segoe UI, Roboto, sans-serif`;
+    ctx.fillText(t, s[0] + dx, s[1] + dy); ctx.restore();
+  }
+
+  const handles = {};
+  function draw() {
+    if (!W || !st) return;
+    const C = { fg: css('--fg'), muted: css('--muted'), grid: css('--grid'), line: css('--line'), plate: css('--plate'),
+      plateEdge: css('--plateEdge'), vP: css('--vP'), vQ: css('--vQ'), Z: css('--Z'), field: css('--field'), spg: css('--spg'), decor: css('--decor') };
+    ctx.clearRect(0, 0, W, H);
+    const tl = toW(0, 0), br = toW(W, H);
+    for (let x = Math.ceil(tl[0]); x <= br[0]; x++) seg([x, br[1]], [x, tl[1]], C.grid, 1);
+    for (let y = Math.ceil(br[1]); y <= tl[1]; y++) seg([tl[0], y], [br[0], y], C.grid, 1);
+
+    // decor (mechanism context)
+    const d = st.decor || {};
+    (d.ground ? [d.ground] : []).forEach(g => { seg(g[0], g[1], C.decor, 2);
+      for (let x = g[0][0]; x < g[1][0]; x += 0.3) seg([x, g[0][1]], [x - 0.18, g[0][1] - 0.18], C.decor, 1); });
+    (d.lines || []).forEach(l => seg(l[0], l[1], C.decor, 4));
+    (d.circles || []).forEach(([c, r]) => { const s = toS(c); ctx.save(); ctx.strokeStyle = C.decor; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(s[0], s[1], r * S, 0, 2 * Math.PI); ctx.stroke(); ctx.restore(); });
+    (d.pins || []).forEach(p => { const s = toS(p); ctx.save(); ctx.fillStyle = C.decor; ctx.beginPath();
+      ctx.moveTo(s[0], s[1]); ctx.lineTo(s[0] - 10, s[1] + 14); ctx.lineTo(s[0] + 10, s[1] + 14); ctx.closePath(); ctx.fill(); ctx.restore(); });
+    (d.rollers || []).forEach(p => { disc(add(p, [-0.12, -0.12]), C.decor, 4); disc(add(p, [0.12, -0.12]), C.decor, 4); });
+    (d.labels || []).forEach(([p, t]) => text(p, t, C.muted, 6, 16, false));
+
+    const res = compute();
+    // plate around PQ
+    if (res.L > 1e-6) {
+      const e = res.e, n = perp(e), wd = st.width, ext = Math.max(0.25, wd);
+      const a = add(st.P, mul(e, -ext)), b = add(st.Q, mul(e, ext));
+      const poly = [add(a, mul(n, wd)), add(b, mul(n, wd)), add(b, mul(n, -wd)), add(a, mul(n, -wd))].map(toS);
+      ctx.save(); ctx.fillStyle = C.plate; ctx.strokeStyle = C.plateEdge; ctx.lineWidth = 1.5; ctx.beginPath();
+      poly.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+
+      if (document.getElementById('showField').checked && (res.status === 'ok' || res.status === 'trans')) {
+        const pts = [];
+        if (st.fieldPts) pts.push(...st.fieldPts);
+        else {
+          const nu = Math.max(3, Math.round((res.L + 2 * ext) / 0.9)), nv = wd > 0.5 ? 3 : 1;
+          for (let i = 0; i <= nu; i++) for (let j = 0; j < nv; j++) {
+            const t = -ext + (res.L + 2 * ext) * i / nu, s = nv === 1 ? 0 : -wd * 0.8 + 1.6 * wd * j / (nv - 1);
+            pts.push(add(add(st.P, mul(e, t)), mul(n, s)));
+          }
+        }
+        for (const M of pts) {
+          if (len(sub(M, st.P)) < 0.3 || len(sub(M, st.Q)) < 0.3) continue;
+          disc(M, C.field, 2); arrow(M, velAt(M, res), C.field, 1.4, 7);
+        }
+      }
+    }
+
+    // perpendicular lines and Z
+    const far = 60;
+    if (len(st.vP) > 1e-6) { const nP = unit(perp(st.vP)); seg(add(st.P, mul(nP, -far)), add(st.P, mul(nP, far)), C.Z, 1.3, [6, 5]); }
+    const nQ = unit(perp(st.eQ)); seg(add(st.Q, mul(nQ, -far)), add(st.Q, mul(nQ, far)), C.Z, 1.3, [6, 5]);
+    if (res.status === 'ok') {
+      seg(res.Z, st.P, C.Z, 1, [2, 4]); seg(res.Z, st.Q, C.Z, 1, [2, 4]);
+      disc(res.Z, C.Z, 6); text(res.Z, 'Z', C.Z, 9, -9);
+      // sense of rotation
+      const s = toS(res.Z), r0 = 18, a0 = res.w > 0 ? 0.3 : -0.3, a1 = res.w > 0 ? 4.6 : -4.6;
+      ctx.save(); ctx.strokeStyle = C.Z; ctx.lineWidth = 2; ctx.beginPath();
+      ctx.arc(s[0], s[1], r0, -a0, -a1, res.w > 0); ctx.stroke();
+      const ex = s[0] + r0 * Math.cos(-a1), ey = s[1] + r0 * Math.sin(-a1), tg = res.w > 0 ? -a1 - Math.PI / 2 : -a1 + Math.PI / 2;
+      ctx.fillStyle = C.Z; ctx.beginPath(); ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - 8 * Math.cos(tg) - 4 * Math.sin(tg), ey - 8 * Math.sin(tg) + 4 * Math.cos(tg));
+      ctx.lineTo(ex - 8 * Math.cos(tg) + 4 * Math.sin(tg), ey - 8 * Math.sin(tg) - 4 * Math.cos(tg)); ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+
+    // SPG projections
+    if (document.getElementById('showSpg').checked && res.e && res.vQ) {
+      arrow(st.P, mul(res.e, res.pP), C.spg, 4, 9); arrow(st.Q, mul(res.e, res.pP), C.spg, 4, 9);
+    }
+
+    // direction handle of Q
+    handles.DQ = add(st.Q, mul(st.eQ, 1.3));
+    seg(st.Q, handles.DQ, C.vQ, 1.2, [3, 3]);
+    disc(handles.DQ, C.vQ, 6, true);
+    if (res.vQ) { arrow(st.Q, res.vQ, C.vQ, 3, 11); text(add(st.Q, res.vQ), 'v_Q', C.vQ, 6, 14); }
+
+    // v_P
+    handles.TP = add(st.P, st.vP);
+    arrow(st.P, st.vP, C.vP, 3, 11); disc(handles.TP, C.vP, 4, true); text(handles.TP, 'v_P', C.vP, 6, -6);
+
+    // points
+    handles.P = st.P; handles.Q = st.Q;
+    disc(st.P, C.fg, 5.5); text(st.P, st.names[0] === 'P' ? 'P' : `P = ${st.names[0]}`, C.fg, -10, 20);
+    disc(st.Q, C.fg, 5.5); text(st.Q, st.names[1] === 'Q' ? 'Q' : `Q = ${st.names[1]}`, C.fg, -10, 20);
+
+    renderInfo(res);
+  }
+
+  function renderInfo(res) {
+    const rows = [['v_P', fv(st.vP)], ['Richtung von Q', fv(st.eQ)]];
+    if (res.e) rows.push(['SPG: v_P · e_PQ', fmt(res.pP)]);
+    if (res.vQ) rows.push(['⇒ v_Q', `${fv(res.vQ)}, |v_Q| = ${fmt(len(res.vQ))}`]);
+    if (res.status === 'ok') {
+      const ZP = len(sub(st.P, res.Z));
+      rows.push(['ω = ω e_z', `ω = ${fmt(res.w)}`]);
+      rows.push(['Momentanzentrum Z', fv(res.Z)]);
+      rows.push(['Kontrolle |v_P| = |ω|·|ZP|', `${fmt(len(st.vP))} = ${fmt(Math.abs(res.w))} · ${fmt(ZP)}`]);
+      rows.push(['|v_Q| = |ω|·|ZQ|', `${fmt(len(res.vQ))} = ${fmt(Math.abs(res.w))} · ${fmt(len(sub(st.Q, res.Z)))}`]);
+    }
+    document.getElementById('info').innerHTML =
+      `<div class="type ${res.status === 'bad' ? 'warn' : ''}">${res.type}</div>` +
+      rows.map(([k, v]) => `<div><span class="k">${k}:</span> <span class="v">${v}</span></div>`).join('') +
+      `<div class="note">${res.text}</div>`;
+    window.widgetState = { ...st, ...res };
+  }
+
+  // ---------- interaction ----------
+  let drag = null;
+  const snapOn = () => document.getElementById('snap').checked;
+  const snapP = p => snapOn() ? [Math.round(p[0] * 4) / 4, Math.round(p[1] * 4) / 4] : p;
+  cv.addEventListener('pointerdown', e => {
+    const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    let best = null, bd = 18;
+    for (const k of ['TP', 'DQ', 'P', 'Q']) { if (!handles[k]) continue; const s = toS(handles[k]); const dd = Math.hypot(s[0] - x, s[1] - y);
+      if (dd < bd) { bd = dd; best = k; } }
+    if (best) { drag = best; cv.setPointerCapture(e.pointerId); sel.value = 'frei'; }
+  });
+  cv.addEventListener('pointermove', e => {
+    const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    if (!drag) { let over = false; for (const k of ['TP', 'DQ', 'P', 'Q']) { if (!handles[k]) continue; const s = toS(handles[k]);
+        if (Math.hypot(s[0] - x, s[1] - y) < 18) over = true; } cv.style.cursor = over ? 'grab' : 'default'; return; }
+    const w = toW(x, y);
+    if (drag === 'P') { const np = snapP(w); st.vP = st.vP; st.P = np; }
+    if (drag === 'Q') st.Q = snapP(w);
+    if (drag === 'TP') st.vP = sub(snapP(w), st.P);
+    if (drag === 'DQ') { let a = Math.atan2(w[1] - st.Q[1], w[0] - st.Q[0]); if (snapOn()) a = Math.round(a / (Math.PI / 12)) * (Math.PI / 12);
+      st.eQ = [Math.cos(a), Math.sin(a)]; }
+    st.names = ['P', 'Q']; st.decor = {}; st.fieldPts = null; draw();
+  });
+  const end = () => { drag = null; };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+
+  const sel = document.getElementById('preset');
+  sel.addEventListener('change', () => applyPreset(sel.value));
+  ['snap', 'showSpg', 'showField'].forEach(id => document.getElementById(id).addEventListener('change', draw));
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+  window.applyPreset = applyPreset;
+  new ResizeObserver(resize).observe(cv);
+  const q = new URLSearchParams(location.search).get('preset');
+  applyPreset(q && PRESETS[q] ? q : 'zp25');
+  resize();
+})();
+</script>
+</body>
+</html>

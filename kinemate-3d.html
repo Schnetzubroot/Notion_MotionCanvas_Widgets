@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinemate und Zentralachse</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1f2328; --muted: #6b7280; --panel: #f6f7f9; --line: #d9dde3;
+    --grid: #e6e9ee; --vB: #d1453b; --om: #2f6fdb; --axis: #d89a00; --field: #8a94a3;
+    --vom: #8b3fd1; --acc: #0f7b6c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #191919; --fg: #e8e8e8; --muted: #9aa0a6; --panel: #232323; --line: #3a3a3a;
+      --grid: #2c2c2c; --vB: #ff6b5e; --om: #5b9bff; --axis: #ffc233; --field: #7d8796;
+      --vom: #c08bff; --acc: #3ec7b3;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 12px 16px 16px; }
+  h1 { font-size: 17px; margin: 0 0 2px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+  .stage { position: relative; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg); }
+  canvas { display: block; width: 100%; height: 400px; touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  .hint { position: absolute; left: 10px; bottom: 8px; font-size: 12px; color: var(--muted); pointer-events: none; }
+  .legend { position: absolute; right: 10px; top: 8px; font-size: 12px; background: color-mix(in srgb, var(--bg) 85%, transparent);
+    border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; pointer-events: none; }
+  .legend div { display: flex; align-items: center; gap: 6px; }
+  .sw { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; }
+  .row label { font-size: 13px; color: var(--muted); }
+  select, button { font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px; }
+  button { cursor: pointer; }
+  .controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  @media (max-width: 680px) { .controls { grid-template-columns: 1fr; } canvas { height: 340px; } }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; margin: 0; padding: 8px 10px 6px; background: var(--panel); }
+  legend { font-weight: 600; font-size: 13px; padding: 0 4px; }
+  .sl { display: grid; grid-template-columns: 22px 1fr 42px; gap: 6px; align-items: center; font-size: 13px; }
+  .sl input { width: 100%; }
+  .sl output { text-align: right; font-variant-numeric: tabular-nums; }
+  .info { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 18px; margin-top: 10px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+  @media (max-width: 680px) { .info { grid-template-columns: 1fr; } }
+  .info .k { color: var(--muted); }
+  .info .v { font-variant-numeric: tabular-nums; }
+  .type { grid-column: 1 / -1; font-weight: 600; font-size: 14px; color: var(--acc); }
+  .note { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kinemate, Invarianten und Zentralachse</h1>
+  <p class="sub">Wähle die Kinemate {v<sub>B</sub>, ω} im Bezugspunkt B. Jeder Punkt M des Körpers bewegt sich mit v<sub>M</sub> = v<sub>B</sub> + ω × BM.</p>
+
+  <div class="stage">
+    <canvas id="cv" aria-label="3D-Ansicht des Geschwindigkeitsfeldes"></canvas>
+    <div class="legend">
+      <div><span class="sw" style="background:var(--vB)"></span>v<sub>B</sub></div>
+      <div><span class="sw" style="background:var(--om)"></span>ω</div>
+      <div><span class="sw" style="background:var(--field)"></span>v<sub>M</sub> (Feld)</div>
+      <div><span class="sw" style="background:var(--axis)"></span>Zentralachse ζ</div>
+      <div><span class="sw" style="background:var(--vom)"></span>v<sub>ω</sub> (2. Invariante)</div>
+    </div>
+    <div class="hint">Ziehen zum Drehen · Mausrad oder zwei Finger zum Zoomen</div>
+  </div>
+
+  <div class="row">
+    <label for="preset">Beispiel:</label>
+    <select id="preset">
+      <option value="book">Buch, Fig. 3.17 (a = v = 1)</option>
+      <option value="zp23">ZP1 2023 A1: Würfel (L = v = 1)</option>
+      <option value="zp24">ZP1 2024 A2: Kegel (R = v = 1)</option>
+      <option value="rot">Reine Rotation</option>
+      <option value="plane">Ebene Bewegung (v_B ⊥ ω)</option>
+      <option value="trans">Translation (ω = 0)</option>
+    </select>
+    <label><input type="checkbox" id="showField" checked> Geschwindigkeitsfeld</label>
+    <label for="scale">Pfeillänge</label>
+    <input type="range" id="scale" min="0.15" max="1" step="0.05" value="0.45" style="width:110px">
+    <button id="resetView">Ansicht zurücksetzen</button>
+  </div>
+
+  <div class="controls">
+    <fieldset><legend>Bezugspunkt B</legend><div id="gB"></div></fieldset>
+    <fieldset><legend style="color:var(--vB)">Geschwindigkeit v<sub>B</sub></legend><div id="gV"></div></fieldset>
+    <fieldset><legend style="color:var(--om)">Rotationsgeschwindigkeit ω</legend><div id="gW"></div></fieldset>
+  </div>
+
+  <div class="info" id="info"></div>
+</div>
+
+<script>
+(() => {
+  // ---------- vector helpers ----------
+  const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const norm = a => Math.sqrt(dot(a, a));
+  const EPS = 1e-9;
+  const fmt = x => { const r = Math.round(x * 100) / 100; return (Object.is(r, -0) || Math.abs(r) < 1e-9 ? 0 : r).toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); };
+  const fv = a => `(${fmt(a[0])}, ${fmt(a[1])}, ${fmt(a[2])})`;
+
+  // ---------- state ----------
+  const state = { B: [0, 1, 0], vB: [-1, 1, 0], w: [1, 0, 0] };
+  const PRESETS = {
+    book:  { B: [0, 1, 0], vB: [-1, 1, 0], w: [1, 0, 0] },
+    zp23:  { B: [0, 0, 0], vB: [3, 1, 1],  w: [0, 1, 1] },
+    zp24:  { B: [0, 1, 0], vB: [1, 0, 2],  w: [-1, 0, 0] },
+    rot:   { B: [0, 0, 0], vB: [0, 0, 0],  w: [0, 0, 1] },
+    plane: { B: [0, 0, 0], vB: [1, 0, 0],  w: [0, 0, 1] },
+    trans: { B: [0, 0, 0], vB: [1, 1, 0],  w: [0, 0, 0] },
+  };
+
+  // ---------- sliders ----------
+  const sliders = {};
+  function makeGroup(id, key, min, max, step, names) {
+    const g = document.getElementById(id);
+    names.forEach((n, i) => {
+      const row = document.createElement('div');
+      row.className = 'sl';
+      row.innerHTML = `<span>${n}</span><input type="range" min="${min}" max="${max}" step="${step}"><output></output>`;
+      const inp = row.querySelector('input'), out = row.querySelector('output');
+      inp.addEventListener('input', () => { state[key][i] = parseFloat(inp.value); out.textContent = fmt(state[key][i]); update(); });
+      g.appendChild(row);
+      sliders[key + i] = { inp, out };
+    });
+  }
+  makeGroup('gB', 'B', -2, 2, 0.5, ['x', 'y', 'z']);
+  makeGroup('gV', 'vB', -3, 3, 0.5, ['x', 'y', 'z']);
+  makeGroup('gW', 'w', -2, 2, 0.5, ['x', 'y', 'z']);
+  function syncSliders() {
+    ['B', 'vB', 'w'].forEach(k => [0, 1, 2].forEach(i => {
+      const s = sliders[k + i]; s.inp.value = state[k][i]; s.out.textContent = fmt(state[k][i]);
+    }));
+  }
+
+  // ---------- kinematics ----------
+  function compute() {
+    const { B, vB, w } = state;
+    const w2 = dot(w, w);
+    const res = { I2: dot(vB, w), w2 };
+    if (w2 < EPS) {
+      res.type = 'Translation';
+      res.text = 'ω = 0: Alle Punkte haben dieselbe Geschwindigkeit v_B. Es gibt keine Zentralachse (sie „wandert ins Unendliche“).';
+      return res;
+    }
+    res.vw = mul(w, res.I2 / w2);                 // 2. Invariante als Vektor
+    res.rBZ = mul(cross(w, vB), 1 / w2);          // Lot von B auf die Zentralachse
+    res.Z = add(B, res.rBZ);
+    res.dZ = norm(res.rBZ);
+    res.vperp = sub(vB, res.vw);
+    if (Math.abs(res.I2) < 1e-9) {
+      res.type = 'Rotation (momentan)';
+      res.text = 'v_B · ω = 0: Die 2. Invariante verschwindet. Die Zentralachse ist die momentane Rotationsachse; ihre Punkte sind in Ruhe.';
+    } else {
+      res.type = 'Schraubung';
+      res.text = 'v_B · ω ≠ 0: Momentane Schraubung um die Zentralachse. Punkte auf ζ bewegen sich nur mit v_ω entlang der Achse – das ist die kleinste Geschwindigkeit im Körper.';
+    }
+    return res;
+  }
+  const vel = (r, res) => add(state.vB, cross(state.w, sub(r, state.B)));
+
+  // ---------- camera ----------
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const DEF = { yaw: 40 * Math.PI / 180, pitch: 24 * Math.PI / 180, zoom: 1 };
+  const cam = { ...DEF };
+  function basis() {
+    const cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw), cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+    return { f: [cp * cy, cp * sy, sp], r: [-sy, cy, 0], u: [-sp * cy, -sp * sy, cp] };
+  }
+  let W = 0, H = 0, S = 1, bas = basis();
+  function proj(p) { return { x: W / 2 + S * dot(p, bas.r), y: H / 2 + 10 - S * dot(p, bas.u), d: dot(p, bas.f) }; }
+
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = cv.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+
+  // ---------- drawing ----------
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function line3(a, b, color, width = 1, dash = null) {
+    const p = proj(a), q = proj(b);
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width; if (dash) ctx.setLineDash(dash);
+    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore();
+  }
+  function arrow3(a, vec, color, width = 2, head = 9) {
+    const b = add(a, vec);
+    const p = proj(a), q = proj(b);
+    const dx = q.x - p.x, dy = q.y - p.y, L = Math.hypot(dx, dy);
+    if (L < 1.5) return;
+    const h = Math.min(head, L * 0.45), ux = dx / L, uy = dy / L;
+    ctx.save(); ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x - ux * h * 0.8, q.y - uy * h * 0.8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(q.x, q.y);
+    ctx.lineTo(q.x - ux * h - uy * h * 0.45, q.y - uy * h + ux * h * 0.45);
+    ctx.lineTo(q.x - ux * h + uy * h * 0.45, q.y - uy * h - ux * h * 0.45);
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  function label3(p3, text, color, dx = 6, dy = -6, bold = false) {
+    const p = proj(p3);
+    ctx.save(); ctx.fillStyle = color; ctx.font = `${bold ? '600 ' : ''}13px -apple-system, Segoe UI, Roboto, sans-serif`;
+    ctx.fillText(text, p.x + dx, p.y + dy); ctx.restore();
+  }
+  function dot3(p3, color, r = 4) {
+    const p = proj(p3); ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+  }
+
+  let lastRes = null;
+  function draw() {
+    if (!W) return;
+    bas = basis();
+    S = Math.min(W, H) / 9.5 * cam.zoom;
+    ctx.clearRect(0, 0, W, H);
+    const C = { fg: css('--fg'), muted: css('--muted'), grid: css('--grid'), line: css('--line'), vB: css('--vB'),
+      om: css('--om'), axis: css('--axis'), field: css('--field'), vom: css('--vom'), acc: css('--acc') };
+    const k = parseFloat(document.getElementById('scale').value);
+    const res = lastRes = compute();
+
+    // floor grid z = -2
+    for (let i = -3; i <= 3; i++) {
+      line3([i, -3, -2], [i, 3, -2], C.grid, 1);
+      line3([-3, i, -2], [3, i, -2], C.grid, 1);
+    }
+    // axes
+    const AX = 3.4;
+    [[[AX, 0, 0], 'x'], [[0, AX, 0], 'y'], [[0, 0, AX], 'z']].forEach(([e, n]) => {
+      line3([0, 0, 0], e, C.muted, 1.2); arrow3(mul(e, 0.93), mul(e, 0.07), C.muted, 1.2, 7); label3(e, n, C.muted, 4, -4);
+    });
+    label3([0, 0, 0], 'O', C.muted, -14, 14);
+    // body: cube [-2,2]^3 wireframe
+    const c = [-2, 2];
+    for (const a of c) for (const b of c) {
+      line3([-2, a, b], [2, a, b], C.line, 1); line3([a, -2, b], [a, 2, b], C.line, 1); line3([a, b, -2], [a, b, 2], C.line, 1);
+    }
+
+    // velocity field on lattice
+    if (document.getElementById('showField').checked) {
+      const pts = [];
+      for (const x of [-2, 0, 2]) for (const y of [-2, 0, 2]) for (const z of [-2, 0, 2]) pts.push([x, y, z]);
+      pts.sort((p, q) => proj(p).d - proj(q).d);
+      for (const p of pts) { dot3(p, C.field, 2.2); arrow3(p, mul(vel(p, res), k), C.field, 1.4, 7); }
+    }
+
+    // central axis
+    if (res.Z) {
+      const e = mul(state.w, 1 / Math.sqrt(res.w2));
+      line3(add(res.Z, mul(e, -7)), add(res.Z, mul(e, 7)), C.axis, 2.2, [7, 5]);
+      line3(state.B, res.Z, C.axis, 1.2, [2, 4]);
+      dot3(res.Z, C.axis, 4.5);
+      label3(res.Z, 'Z', C.axis, 7, 14, true);
+      label3(add(res.Z, mul(e, 3.2)), 'ζ', C.axis, 8, -4, true);
+      if (Math.abs(res.I2) > 1e-9) for (const t of [-2.5, 0, 2.5]) arrow3(add(res.Z, mul(e, t)), mul(res.vw, k), C.vom, 2.4, 9);
+    }
+
+    // kinemate at B
+    dot3(state.B, C.fg, 4.5);
+    label3(state.B, 'B', C.fg, -16, -6, true);
+    arrow3(state.B, mul(state.w, 1.1), C.om, 3, 11);
+    if (res.w2 > EPS) label3(add(state.B, mul(state.w, 1.1)), 'ω', C.om, 6, -4, true);
+    arrow3(state.B, mul(state.vB, k), C.vB, 3, 11);
+    if (norm(state.vB) > EPS) label3(add(state.B, mul(state.vB, k)), 'v_B', C.vB, 6, 12, true);
+
+    renderInfo(res);
+  }
+
+  function renderInfo(res) {
+    const rows = [
+      ['ω (1. Invariante)', fv(state.w)],
+      ['v_B', fv(state.vB)],
+      ['I₂ = v_B · ω', fmt(res.I2)],
+      ['|ω|', fmt(Math.sqrt(res.w2))],
+    ];
+    if (res.Z) {
+      rows.push(['v_ω = (v_B·ω / |ω|²) ω', fv(res.vw)]);
+      rows.push(['(v_B)⊥ = v_B − v_ω', fv(res.vperp)]);
+      rows.push(['BZ = ω × v_B / |ω|²', fv(res.rBZ)]);
+      rows.push(['Z = B + BZ', fv(res.Z)]);
+      rows.push(['Abstand d_Z = |(v_B)⊥| / |ω|', fmt(res.dZ)]);
+      rows.push(['kleinste Geschwindigkeit |v_ω|', fmt(norm(res.vw))]);
+    }
+    document.getElementById('info').innerHTML =
+      `<div class="type">Bewegungszustand: ${res.type}</div>` +
+      rows.map(([k, v]) => `<div><span class="k">${k}:</span> <span class="v">${v}</span></div>`).join('') +
+      `<div class="note">${res.text}</div>`;
+    window.widgetState = { ...state, ...res };
+  }
+
+  let raf = 0;
+  function update() { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); }
+
+  // ---------- interaction ----------
+  const pointers = new Map(); let pinch0 = 0, zoom0 = 1;
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); zoom0 = cam.zoom; } });
+  cv.addEventListener('pointermove', e => {
+    if (!pointers.has(e.pointerId)) return;
+    const prev = pointers.get(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y);
+      cam.zoom = Math.min(3, Math.max(0.4, zoom0 * d / pinch0)); update(); return; }
+    cam.yaw -= (e.clientX - prev.x) * 0.008;
+    cam.pitch = Math.min(1.45, Math.max(-1.45, cam.pitch + (e.clientY - prev.y) * 0.008));
+    update();
+  });
+  const up = e => { pointers.delete(e.pointerId); };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  cv.addEventListener('wheel', e => { e.preventDefault(); cam.zoom = Math.min(3, Math.max(0.4, cam.zoom * Math.exp(-e.deltaY * 0.0015))); update(); }, { passive: false });
+  document.getElementById('resetView').addEventListener('click', () => { Object.assign(cam, DEF); update(); });
+  document.getElementById('showField').addEventListener('change', update);
+  document.getElementById('scale').addEventListener('input', update);
+  const sel = document.getElementById('preset');
+  function applyPreset(name) { const p = PRESETS[name]; sel.value = name; state.B = [...p.B]; state.vB = [...p.vB]; state.w = [...p.w]; syncSliders(); update(); }
+  sel.addEventListener('change', () => applyPreset(sel.value));
+  window.applyPreset = applyPreset;
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', update);
+  new ResizeObserver(resize).observe(cv);
+
+  applyPreset(new URLSearchParams(location.search).get('preset') || 'book');
+  const q = new URLSearchParams(location.search).get('preset'); if (q && PRESETS[q]) sel.value = q;
+  resize();
+})();
+</script>
+</body>
+</html>
