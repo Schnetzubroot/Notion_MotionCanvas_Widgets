@@ -260,5 +260,32 @@ W.append(dict(file='1-3-rekursion-wurzel.html', title='Übung: a<sub>1</sub> = 1
   MW.slider(ctl, { label: 'a₁', min: 0, max: 4, step: 0.05, value: a1, onInput: t => { a1 = t; view.redraw(); } });
 '''))
 
+W.append(dict(file='1-1-summenfolge-schranken.html', title='Schranken einer Summenfolge: a<sub>n</sub> = 1/n² + 2/n² + … + n/n²',
+  sub='Rechts: die n Summanden k/n² als Balken. Jeder ist höchstens so hoch wie der grösste (1/n) und mindestens so hoch wie der kleinste (1/n²). Links: alle Glieder liegen zwischen den festen Schranken 0 und 1.',
+  hint='n verändern und die Balken mit den Rechtecken vergleichen.', tall=True, legend=[('--c2', 'a_n bzw. Summanden k/n²'), ('--c1', 'obere Abschätzung n · 1/n = 1'), ('--c3', 'untere Abschätzung n · 1/n² = 1/n')], js=AX + r'''
+  let N = 5;
+  const a = n => { let s = 0; for (let k = 1; k <= n; k++) s += k / (n * n); return s; };
+  const view = MW.View2D(cv, { xmin: -0.7, xmax: 7.7, ymin: -0.5, ymax: 3.75 }, v => {
+    const C = v.C;
+    // links: Glieder mit Schranken
+    const A = mkAx(0, 12.5, 0, 1.15, 3.4, 3.2); axes(v, A, 'n', 'a_n', 2, 0.25);
+    v.poly([A.P(0, 0), A.P(12.5, 0), A.P(12.5, 1), A.P(0, 1)], null, 1, null, true, C.fill);
+    v.line(A.P(0, 1), A.P(12.5, 1), C.c1, 1.8, [6, 4]); v.text(A.P(12.5, 1), 'o = 1', C.c1, -4, -6, 12, true, 'right');
+    v.line(A.P(0, 0), A.P(12.5, 0), C.c3, 2); v.text(A.P(10, 0), 'u = 0', C.c3, 0, -6, 12, true, 'right');
+    for (let n = 1; n <= 12; n++) { v.dot(A.P(n, 1 / n), C.c3, 3.5, true); v.dot(A.P(n, a(n)), n === N ? C.fg : C.c2, n === N ? 5.5 : 4); }
+    // rechts: Summanden als Balken der Breite 1
+    const ymax = 1 / N * 1.25, Bx = mkAx(0, N + 0.4, 0, ymax, 3.2, 3.2, 4.3, 0); axes(v, Bx, 'k', 'k/n²', N > 8 ? 2 : 1);
+    v.poly([Bx.P(0, 0), Bx.P(N, 0), Bx.P(N, 1 / N), Bx.P(0, 1 / N)], C.c1, 1.6, [6, 4]);
+    v.poly([Bx.P(0, 0), Bx.P(N, 0), Bx.P(N, 1 / (N * N)), Bx.P(0, 1 / (N * N))], C.c3, 1.6, null, true, 'rgba(15,157,88,0.18)');
+    for (let k = 1; k <= N; k++) { const h = k / (N * N);
+      v.poly([Bx.P(k - 1 + 0.08, 0), Bx.P(k - 0.08, 0), Bx.P(k - 0.08, h), Bx.P(k - 1 + 0.08, h)], C.c2, 1.2, null, true, 'rgba(47,111,219,0.30)'); }
+    v.text(Bx.P(0, 1 / N), '1/n', C.c1, 4, -6, 12, true);
+    MW.info(infoEl, 'n = ' + N + ': ' + fmt(1 / N, 4) + ' ≤ a_n = ' + fmt(a(N), 4) + ' ≤ 1',
+      [['n Summanden, grösster', N + '/' + (N * N) + ' = 1/' + N], ['obere Abschätzung', N + ' · 1/' + N + ' = 1'], ['untere Abschätzung', N + ' · 1/' + (N * N) + ' = 1/' + N]],
+      'Summe der blauen Balken = a_n. Sie passt immer in das rote Rechteck (Fläche n · 1/n = 1, fest) und enthält das grüne (n · 1/n² = 1/n > 0). Feste Schranken: 0 < a_n ≤ 1.');
+  });
+  MW.slider(ctl, { label: 'n', min: 1, max: 12, step: 1, value: N, fmt: t => String(t), onInput: t => { N = t; view.redraw(); } });
+'''))
+
 if __name__ == '__main__':
     print(build('analysis-w1', W))
