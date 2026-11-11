@@ -26,6 +26,21 @@ parts.append('<h2>3.5 / 3.6 Allgemeinste und ebene Bewegung</h2><ul>'
              '<li><a href="kinemate-3d.html">Kinemate, Invarianten und Zentralachse</a></li>'
              '<li><a href="momentanzentrum.html">Momentanzentrum einer ebenen Bewegung</a></li></ul>')
 
+# Analysis I (Stammbach, Teil A)
+ANA = {
+    ('analysis-w1', '1-1'): 'Analysis I.1 Folgen und ihre Darstellung', ('analysis-w1', '1-2'): 'Analysis I.1 Nullfolgen und Konvergenz',
+    ('analysis-w1', '1-3'): 'Analysis I.1 Monoton und beschränkt', ('analysis-w1', '1-4'): 'Analysis I.1 Rechenregeln',
+    ('analysis-w1', '1-5'): 'Analysis I.1 Geometrische Folge und Reihe',
+    ('analysis-w2', '2-1'): 'Analysis I.2 Funktionsbegriff', ('analysis-w2', '2-2'): 'Analysis I.2 Beispiele von Funktionen',
+    ('analysis-w2', '2-3'): 'Analysis I.2 Elementare Funktionen', ('analysis-w2', '3-1'): 'Analysis I.3 Einseitige Grenzwerte',
+    ('analysis-w2', '3-2'): 'Analysis I.3 sin x / x und Rechenregeln', ('analysis-w2', '3-3'): 'Analysis I.3 Stetigkeit',
+}
+parts.append('<h1 style="margin-top:32px">Analysis I</h1><p class="sub">Begleitmaterial zu U. Stammbach: Analysis I/II, Teil A (ETH Zürich).</p>')
+for (folder, key), name in ANA.items():
+    files = sorted((ROOT / folder).glob(f'{key}-*.html'))
+    items = ''.join(f'<li><a href="{folder}/{f.name}">{title(f)}</a></li>' for f in files)
+    parts.append(f'<h2>{html.escape(name)}</h2><ul>{items}</ul>')
+
 page = f"""<!doctype html>
 <html lang="de">
 <head>

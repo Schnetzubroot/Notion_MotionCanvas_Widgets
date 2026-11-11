@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monoton und beschränkt ⇒ konvergent: die Zahl e</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Monoton und beschränkt ⇒ konvergent: die Zahl e</h1>
+  <p class="sub">a<sub>n</sub> = 1 + 1/1! + 1/2! + … + 1/n! wächst strikt. Mit 1/k! ≤ 1/2<sup>k−1</sup> folgt a<sub>n</sub> ≤ 3 − 1/2<sup>n−1</sup> < 3. Also konvergiert die Folge, obwohl man den Limes vorher nicht kennt.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>a_n</div><div><span class="sw" style="background:var(--c3)"></span>Schranke 3 − 1/2^(n−1)</div><div><span class="sw" style="background:var(--c1)"></span>Limes e</div></div>
+    <div class="hint">n vergrössern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  let N = 6;
+  const a = [], b = []; { let s = 1, f = 1; for (let n = 1; n <= 15; n++) { f *= n; s += 1 / f; a.push(s); b.push(3 - 1 / 2 ** (n - 1)); } }
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, A = mkAx(0, 15.5, 0, 3.4); axes(v, A, 'n', '', 1, 0.5);
+    v.line(A.P(0, 3), A.P(15.5, 3), C.c3, 1.2, [6, 4]); v.text(A.P(0, 3), '3', C.c3, 4, -6, 12);
+    v.line(A.P(0, Math.E), A.P(15.5, Math.E), C.c1, 1.2, [2, 3]); v.text(A.P(15.5, Math.E), 'e', C.c1, -10, 16, 13);
+    for (let n = 1; n <= N; n++) { v.dot(A.P(n, b[n - 1]), C.c3, 4, true); v.dot(A.P(n, a[n - 1]), C.c2, 4.5); }
+    MW.info(infoEl, 'a_' + N + ' = ' + fmt(a[N - 1], 10), [['Schranke 3 − 1/2^' + (N - 1), fmt(b[N - 1], 6)], ['e − a_' + N, fmt(Math.E - a[N - 1], 10)], ['Zuwachs a_n − a_{n−1} = 1/n!', fmt(N > 1 ? a[N - 1] - a[N - 2] : 1, 10)]],
+      'Die Zuwächse 1/n! werden so schnell klein, dass die Summe unter 3 bleibt. Satz: monoton und beschränkt ⇒ konvergent. Der Limes ist e = 2.718281828…');
+  });
+  MW.slider(ctl, { label: 'n', min: 1, max: 15, step: 1, value: N, fmt: x => String(x), onInput: x => { N = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

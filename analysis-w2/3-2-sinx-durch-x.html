@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Der Grenzwert sin x / x → 1 (Einschliessung)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Der Grenzwert sin x / x → 1 (Einschliessung)</h1>
+  <p class="sub">Am Einheitskreis: Dreieck ⊂ Sektor ⊂ grosses Dreieck, also ½ sin x cos x < ½ x < ½ tan x. Umgeformt: cos x < sin x / x < 1/cos x. Beide Schranken gehen für x → 0 gegen 1.</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c3)"></span>Dreieck ½ sin x cos x</div><div><span class="sw" style="background:var(--c2)"></span>Sektor ½ x</div><div><span class="sw" style="background:var(--c4)"></span>Dreieck ½ tan x</div><div><span class="sw" style="background:var(--c1)"></span>sin x / x</div></div>
+    <div class="hint">x verkleinern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  let x = 0.9;
+  const view = MW.View2D(cv, { xmin: -0.4, xmax: 7.6, ymin: -0.5, ymax: 3.7 }, v => {
+    const C = v.C, s = 2.6, O = [0.1, 0.2], P = (u, w) => [O[0] + s * u, O[1] + s * w];
+    const c = Math.cos(x), si = Math.sin(x), t = Math.tan(x);
+    v.arc(O, s, 0, Math.PI / 2, C.line, 1.2);
+    v.poly([P(0, 0), P(1, 0), P(1, Math.min(t, 1.35))], C.c4, 1.5, null, true, 'rgba(216,154,0,0.15)');
+    const sec = [P(0, 0)]; for (let i = 0; i <= 40; i++) sec.push(P(Math.cos(x * i / 40), Math.sin(x * i / 40))); v.poly(sec, C.c2, 1.5, null, true, 'rgba(47,111,219,0.18)');
+    v.poly([P(0, 0), P(c, 0), P(c, si)], C.c3, 1.5, null, true, 'rgba(15,157,88,0.25)');
+    v.text(P(c, si / 2), 'sin x', C.c3, 4, 4, 11); v.text(P(c / 2, 0), 'cos x', C.c3, 0, 14, 11, true, 'center');
+    if (t < 1.35) v.text(P(1, t / 2), 'tan x', C.c4, 4, 4, 11);
+    v.text(P(0, 0), 'O', C.fg, -14, 14, 12); v.text(P(1, 0), '1', C.muted, -4, 14, 11, false);
+    const B = mkAx(-1.6, 1.6, 0.3, 1.6, 3.4, 3.2, 4.0, 0); axes(v, B, 'x', '', 0.5, 0.25);
+    fplot(v, B, u => Math.cos(u), C.c3, 1.5); fplot(v, B, u => 1 / Math.cos(u), C.c4, 1.5);
+    fplot(v, B, u => Math.sin(u) / u, C.c1, 2.5, 400, -1.6, -1e-4); fplot(v, B, u => Math.sin(u) / u, C.c1, 2.5, 400, 1e-4, 1.6);
+    v.dot(B.P(0, 1), C.c1, 5, true); v.line(B.P(x, 0.3), B.P(x, 1.6), C.muted, 1, [3, 3]);
+    if (B.inY(si / x)) v.dot(B.P(x, si / x), C.c1, 5);
+    MW.info(infoEl, 'cos x < sin x / x < 1/cos x', [['x', fmt(x, 3)], ['cos x', fmt(c, 6)], ['sin x / x', fmt(si / x, 6)], ['1/cos x', fmt(1 / c, 6)]],
+      'Die Funktion ist bei 0 nicht definiert (Kreis rechts im Graph), aber gerade. Darum genügt der rechte Grenzwert: lim_{x→0} sin x / x = 1.');
+  });
+  MW.slider(ctl, { label: 'x', min: 0.02, max: 1.25, step: 0.005, value: x, onInput: t => { x = t; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

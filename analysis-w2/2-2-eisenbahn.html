@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kurvenradius einer Eisenbahnlinie: r(x) = ½(a²/x + x)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Kurvenradius einer Eisenbahnlinie: r(x) = ½(a²/x + x)</h1>
+  <p class="sub">Gegeben ist die halbe Sehne a, gemessen wird die Pfeilhöhe x. Pythagoras: a² + (r − x)² = r². Daraus r = ½(a²/x + x). Für die Anwendung ist nur D(r) = (0, a] interessant.</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>Kreisbogen</div><div><span class="sw" style="background:var(--c1)"></span>r</div><div><span class="sw" style="background:var(--c3)"></span>a</div><div><span class="sw" style="background:var(--c4)"></span>x</div></div>
+    <div class="hint">x und a ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  let a = 1.5, x = 0.5;
+  const view = MW.View2D(cv, { xmin: -0.5, xmax: 7.6, ymin: -0.6, ymax: 3.7 }, v => {
+    const C = v.C, r = 0.5 * (a * a / x + x);
+    // linke Skizze: Sehne horizontal bei y = 2.6, Bogen nach oben, Mittelpunkt unten
+    const s = Math.min(1, 1.6 / a), cx = 1.8, top = 3.2, M = [cx, top - r * s];
+    const th = Math.asin(Math.min(1, a / r)), pts = [];
+    for (let i = 0; i <= 80; i++) { const ang = Math.PI / 2 - th + 2 * th * i / 80; pts.push([M[0] + r * s * Math.cos(ang), M[1] + r * s * Math.sin(ang)]); }
+    v.poly(pts.filter(p => p[1] > -0.6), C.c2, 3);
+    const yc = top - x * s, L = [cx - a * s, yc], R = [cx + a * s, yc];
+    v.line(L, R, C.muted, 1.2); v.line([cx, yc], R, C.c3, 2.5); v.text([cx + a * s / 2, yc], 'a', C.c3, -4, 16, 13);
+    v.line([cx, yc], [cx, top], C.c4, 2.5); v.text([cx, (yc + top) / 2], 'x', C.c4, 6, 4, 13);
+    if (M[1] > -0.6) { v.line(M, R, C.c1, 2, [5, 4]); v.dot(M, C.fg, 4); v.text(M, 'M', C.fg, 6, 4, 12); v.line(M, [cx, yc], C.muted, 1, [2, 3]); }
+    else v.text([cx, -0.3], 'M liegt weit unten (r gross)', C.muted, 0, 0, 11, false, 'center');
+    v.text([(M[0] + R[0]) / 2, Math.max(-0.4, (M[1] + R[1]) / 2)], 'r', C.c1, 6, 0, 13);
+    // rechter Graph r(x)
+    const B = mkAx(0, 3, 0, 6, 3.2, 3.2, 4.2, 0); axes(v, B, 'x', 'r', 0.5, 1);
+    v.poly([B.P(0, 0), B.P(a, 0), B.P(a, 6), B.P(0, 6)], null, 1, null, true, C.fill);
+    fplot(v, B, t => 0.5 * (a * a / t + t), C.line, 1.5, 400, 0.01, 3);
+    fplot(v, B, t => 0.5 * (a * a / t + t), C.c1, 2.5, 400, 0.01, a);
+    if (B.inY(r)) v.dot(B.P(x, r), C.fg, 5);
+    v.dot(B.P(a, a), C.c3, 4, true);
+    MW.info(infoEl, 'r(' + fmt(x) + ') = ' + fmt(r, 3), [['a² + (r − x)²', fmt(a * a + (r - x) ** 2, 3)], ['r²', fmt(r * r, 3)]],
+      x >= a - 1e-9 ? 'x = a: Halbkreis, r = a. Für x > a gibt die Formel zwar Werte, aber die Skizze passt nicht mehr: darum D(r) = (0, a].' : 'Je flacher der Bogen (x klein), desto grösser der Radius. Für x → 0 wächst r über alle Grenzen.');
+  });
+  MW.slider(ctl, { label: 'x', min: 0.08, max: 3, step: 0.01, value: x, onInput: t => { x = Math.min(t, 3); view.redraw(); } });
+  MW.slider(ctl, { label: 'a', min: 0.6, max: 2.5, step: 0.05, value: a, onInput: t => { a = t; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

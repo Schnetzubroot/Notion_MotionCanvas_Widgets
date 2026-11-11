@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linker und rechter Grenzwert von 2−1/x bei ξ = 0</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Linker und rechter Grenzwert von 2<sup>−1/x</sup> bei ξ = 0</h1>
+  <p class="sub">Rechts: für x<sub>k</sub> → 0+ geht −1/x<sub>k</sub> → −∞, also 2<sup>−1/x<sub>k</sub></sup> → 0. Links: −1/x<sub>k</sub> → +∞, die Werte wachsen über alle Grenzen. Der rechte Grenzwert ist 0, der linke existiert nicht.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>Graph</div><div><span class="sw" style="background:var(--c1)"></span>Folge (x_k, f(x_k))</div></div>
+    <div class="hint">Seite wählen, k erhöhen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  const f = x => Math.pow(2, -1 / x);
+  let side = 1, k = 4;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, A = mkAx(-2, 2, -0.5, 5); axes(v, A, 'x', 'y', 0.5, 1);
+    fplot(v, A, f, C.c2, 2.5, 800, -2, -0.001); fplot(v, A, f, C.c2, 2.5, 800, 0.001, 2);
+    v.line(A.P(-2, 1), A.P(2, 1), C.muted, 1, [2, 4]);
+    const rows = [];
+    for (let j = 1; j <= k; j++) { const x = side / (j + 0.5) , y = f(x); if (A.inY(y)) v.dot(A.P(x, y), j === k ? C.c1 : C.c4, j === k ? 6 : 4);
+      v.dot(A.P(x, -0.5), C.muted, 2.5); }
+    for (let j = Math.max(1, k - 4); j <= k; j++) { const x = side / (j + 0.5); rows.push(['x = ' + fmt(x, 4), 'f(x) = ' + (f(x) > 1e6 ? f(x).toExponential(2) : fmt(f(x), 6))]); }
+    MW.info(infoEl, side > 0 ? 'x → 0+: f(x_k) → 0' : 'x → 0−: f(x_k) wächst über alle Grenzen', rows,
+      side > 0 ? 'Jede Folge positiver x_k → 0 liefert f(x_k) → 0. Darum lim_{x→0+} 2^(−1/x) = 0.' : 'Für keine Folge negativer x_k → 0 konvergiert f(x_k). lim_{x→0−} 2^(−1/x) existiert nicht.', side < 0);
+  });
+  MW.select(ctl, 'Seite', [['1', 'von rechts (x → 0+)'], ['-1', 'von links (x → 0−)']], x => { side = +x; view.redraw(); });
+  MW.slider(ctl, { label: 'k', min: 1, max: 30, step: 1, value: k, fmt: x => String(x), onInput: x => { k = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

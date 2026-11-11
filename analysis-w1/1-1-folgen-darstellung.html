@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Folgen als Punkte (n, an)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Folgen als Punkte (n, a<sub>n</sub>)</h1>
+  <p class="sub">Eine Folge ordnet jeder natürlichen Zahl n eine reelle Zahl a<sub>n</sub> zu. Zeichnet man die Glieder als Punkte (n, a<sub>n</sub>), sieht man Beschränktheit und Monotonie direkt.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>Glieder (n, a_n)</div><div><span class="sw" style="background:var(--c3)"></span>Parallelstreifen</div></div>
+    <div class="hint">Folge wählen, Anzahl Glieder ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  const S = {
+    lin: { name: 'a_n = −5 + 3n (explizit)', f: n => -5 + 3 * n, bd: false },
+    alt: { name: 'a_n = 1/2 + (−1)^n / n²', f: n => 0.5 + (-1) ** n / (n * n), bd: [-0.5, 0.75] },
+    inv: { name: 'a_n = 1/n', f: n => 1 / n, bd: [0, 1] },
+    osc: { name: 'a_n = (−1)^n', f: n => (-1) ** n, bd: [-1, 1] },
+    her: { name: 'a₁ = 1, a_{n+1} = ½(a_n + 3/a_n) (rekursiv)', f: null, bd: [1, 2] },
+  };
+  const heron = []; { let a = 1; for (let n = 1; n <= 60; n++) { heron.push(a); a = 0.5 * (a + 3 / a); } } S.her.f = n => heron[n - 1];
+  let key = 'alt', N = 20, strip = true;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, s = S[key], vals = []; for (let n = 1; n <= N; n++) vals.push(s.f(n));
+    let lo = Math.min(...vals), hi = Math.max(...vals); if (s.bd) { lo = Math.min(lo, s.bd[0]); hi = Math.max(hi, s.bd[1]); }
+    const pad = 0.12 * (hi - lo || 1), A = mkAx(0, N + 1, Math.min(0, lo - pad), hi + pad);
+    axes(v, A, 'n', 'a_n', N > 20 ? 5 : N > 10 ? 2 : 1);
+    if (strip && s.bd) { v.poly([A.P(0, s.bd[0]), A.P(N + 1, s.bd[0]), A.P(N + 1, s.bd[1]), A.P(0, s.bd[1])], null, 1, null, true, C.fill);
+      v.line(A.P(0, s.bd[0]), A.P(N + 1, s.bd[0]), C.c3, 1.5, [5, 4]); v.line(A.P(0, s.bd[1]), A.P(N + 1, s.bd[1]), C.c3, 1.5, [5, 4]); }
+    vals.forEach((y, i) => v.dot(A.P(i + 1, y), C.c2, 4.5));
+    let inc = true, dec = true; for (let i = 1; i < vals.length; i++) { if (vals[i] < vals[i - 1] - 1e-15) inc = false; if (vals[i] > vals[i - 1] + 1e-15) dec = false; }
+    const mono = key === 'her' ? 'ab n = 2 monoton fallend' : inc ? 'monoton wachsend' : dec ? 'monoton fallend' : 'nicht monoton';
+    MW.info(infoEl, s.name, [['a₁, a₂, a₃, a₄', vals.slice(0, 4).map(x => fmt(x, 4)).join(', ')], ['a_' + N, fmt(vals[N - 1], 6)], ['beschränkt', s.bd ? 'ja, alle Glieder in [' + fmt(s.bd[0], 2) + ', ' + fmt(s.bd[1], 2) + ']' : 'nein, kein Streifen reicht'], ['Monotonie', mono]],
+      key === 'lin' ? 'Die Glieder wachsen um 3 pro Schritt über jede Schranke hinaus. Kein waagrechter Streifen endlicher Breite enthält alle Punkte.'
+      : key === 'her' ? 'Rekursive Folge: a_{n+1} wird aus a_n berechnet. So rechnet ein Taschenrechner √3 ≈ 1.7320508.'
+      : 'Beschränkt heisst: alle Punkte liegen in einem waagrechten Streifen endlicher Breite.');
+  });
+  MW.select(ctl, 'Folge', Object.entries(S).map(([k, s]) => [k, s.name]), x => { key = x; view.redraw(); }).set(key);
+  MW.slider(ctl, { label: 'Glieder', min: 4, max: 40, step: 1, value: N, fmt: x => String(x), onInput: x => { N = x; view.redraw(); } });
+  MW.check(ctl, 'Streifen zeigen', strip, x => { strip = x; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rechenregeln: durch die höchste Potenz kürzen</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Rechenregeln: durch die höchste Potenz kürzen</h1>
+  <p class="sub">Bei Quotienten von Polynomen in n kürzt man durch die höchste Potenz im Nenner. Dann stehen nur noch konvergente Folgen da, und die Rechenregeln dürfen angewendet werden.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>a_n</div><div><span class="sw" style="background:var(--c1)"></span>Grenzwert</div></div>
+    <div class="hint">Beispiel wählen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  const S = {
+    a: { name: '(n + 3)/(2n + 5)', f: n => (n + 3) / (2 * n + 5), L: 0.5, step: '= (1 + 3/n)/(2 + 5/n) → (1 + 0)/(2 + 0) = 1/2' },
+    b: { name: '(n³ + n² + 1)/(−3n³ + 13)', f: n => (n ** 3 + n * n + 1) / (-3 * n ** 3 + 13), L: -1 / 3, step: '= (1 + 1/n + 1/n³)/(−3 + 13/n³) → −1/3' },
+    c: { name: '17n²/(18n + 1)', f: n => 17 * n * n / (18 * n + 1), L: null, step: '= 17n/(18 + 1/n): Zähler wächst über alle Grenzen, Nenner → 18. Grenzwert existiert nicht.' },
+    d: { name: '(2n²/(n² + 3))⁴', f: n => (2 * n * n / (n * n + 3)) ** 4, L: 16, step: '= (2/(1 + 3/n²))⁴ → 2⁴ = 16 (Produktregel viermal)' },
+    e: { name: 'Warnung: n · (1/n)', f: n => 1, L: 1, step: 'Hier ist lim(n · 1/n) = 1. Aber „lim n · lim 1/n = ∞ · 0“ ist keine Rechnung: lim n existiert nicht, die Regel gilt nicht.' },
+  };
+  let key = 'a', N = 30;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, s = S[key], vals = []; for (let n = 1; n <= N; n++) vals.push(s.f(n));
+    let lo = Math.min(...vals, s.L ?? Infinity), hi = Math.max(...vals, s.L ?? -Infinity); const pad = 0.15 * (hi - lo || 1);
+    const A = mkAx(0, N + 1, lo - pad, hi + pad); axes(v, A, 'n', 'a_n', 5);
+    if (s.L !== null) { v.line(A.P(0, s.L), A.P(N + 1, s.L), C.c1, 1.4, [5, 4]); v.text(A.P(N + 1, s.L), 'Limes ' + fmt(s.L, 4), C.c1, -4, -6, 12, true, 'right'); }
+    vals.forEach((y, i) => v.dot(A.P(i + 1, y), C.c2, 4));
+    MW.info(infoEl, 'a_n = ' + s.name, [['Umformung', s.step], ['a_' + N, fmt(vals[N - 1], 6)]],
+      'Die Rechenregeln (Summe, Differenz, Produkt, Quotient) gelten nur, wenn die einzelnen Folgen konvergieren (beim Quotienten Nenner-Limes ≠ 0).', s.L === null);
+  });
+  MW.select(ctl, 'Beispiel', Object.entries(S).map(([k, s]) => [k, s.name]), x => { key = x; view.redraw(); });
+  MW.slider(ctl, { label: 'Glieder', min: 5, max: 60, step: 1, value: N, fmt: x => String(x), onInput: x => { N = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

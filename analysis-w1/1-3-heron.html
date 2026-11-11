@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rekursive Folge für √c (Heron-Verfahren)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Rekursive Folge für √c (Heron-Verfahren)</h1>
+  <p class="sub">a<sub>1</sub> = 1, a<sub>n+1</sub> = ½(a<sub>n</sub> + c/a<sub>n</sub>). Für b<sub>n</sub> = a<sub>n</sub> − √c gilt b<sub>n+1</sub> = b<sub>n</sub>²/(2a<sub>n</sub>) ≥ 0 und |b<sub>n+1</sub>| < ½|b<sub>n</sub>|. Also a<sub>n</sub> → √c.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>a_n</div><div><span class="sw" style="background:var(--c1)"></span>√c</div></div>
+    <div class="hint">c und den Startwert ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  let c = 3, a1 = 1;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, a = [a1]; for (let n = 1; n < 8; n++) a.push(0.5 * (a[n - 1] + c / a[n - 1]));
+    const hi = Math.max(...a, Math.sqrt(c)) * 1.12, A = mkAx(0, 8.5, 0, hi); axes(v, A, 'n', 'a_n', 1);
+    v.line(A.P(0, Math.sqrt(c)), A.P(8.5, Math.sqrt(c)), C.c1, 1.4, [5, 4]); v.text(A.P(8.5, Math.sqrt(c)), '√c', C.c1, -6, -6, 13, true, 'right');
+    v.poly(a.map((y, i) => A.P(i + 1, y)), C.line, 1.2);
+    a.forEach((y, i) => v.dot(A.P(i + 1, y), C.c2, 5));
+    const b = a.map(x => x - Math.sqrt(c)), rows = [];
+    for (let n = 0; n < 6; n++) rows.push(['n = ' + (n + 1), 'a = ' + fmt(a[n], 10) + ',  b = ' + (Math.abs(b[n]) < 1e-12 ? '0' : b[n].toExponential(2))]);
+    MW.info(infoEl, '√' + fmt(c) + ' = ' + fmt(Math.sqrt(c), 10), rows,
+      'Ab n = 2 ist b_n ≥ 0: Die Folge nähert sich √c von oben. Der Fehler wird mindestens halbiert, in der Praxis sogar quadriert (die Zahl der richtigen Stellen verdoppelt sich).');
+  });
+  MW.slider(ctl, { label: 'c', min: 0.5, max: 10, step: 0.1, value: c, onInput: x => { c = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'a₁', min: 0.2, max: 6, step: 0.1, value: a1, onInput: x => { a1 = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>
