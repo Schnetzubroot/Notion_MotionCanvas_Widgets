@@ -226,5 +226,39 @@ W.append(dict(file='1-5-geometrische-reihe.html', title='Geometrische Reihe: s<s
   MW.slider(ctl, { label: 'N', min: 0, max: 30, step: 1, value: N, fmt: t => String(t), onInput: t => { N = t; view.redraw(); } });
 '''))
 
+W.append(dict(file='1-3-rekursion-wurzel.html', title='Übung: a<sub>1</sub> = 1, a<sub>n+1</sub> = √(2 + a<sub>n</sub>)',
+  sub='Links die Glieder (n, a<sub>n</sub>) im Streifen 0 < a<sub>n</sub> < 2. Rechts das Treppendiagramm: Von a<sub>n</sub> senkrecht zur Kurve y = √(2 + x) ergibt a<sub>n+1</sub>, waagrecht zur Diagonalen y = x überträgt den Wert zurück auf die x-Achse.',
+  hint='Schritte erhöhen. Startwert ändern, auch über 2.', tall=True, legend=[('--c2', 'Glieder a_n'), ('--c3', 'Schranken 0 und 2'), ('--c1', 'Grenzwert L = 2'), ('--c4', 'y = √(2 + x)')], js=AX + r'''
+  let a1 = 1, N = 5;
+  const f = x => Math.sqrt(2 + x);
+  const view = MW.View2D(cv, { xmin: -0.7, xmax: 7.7, ymin: -0.5, ymax: 3.75 }, v => {
+    const C = v.C, a = [a1]; for (let n = 1; n < 12; n++) a.push(f(a[n - 1]));
+    const top = Math.max(2.4, a1 * 1.08), lo = a1 < 2 ? 0 : 2, hi = a1 < 2 ? 2 : a1;
+    // links: Folge
+    const A = mkAx(0, 12.5, 0, top, 3.4, 3.2); axes(v, A, 'n', 'a_n', 2, 0.5);
+    v.poly([A.P(0, lo), A.P(12.5, lo), A.P(12.5, hi), A.P(0, hi)], null, 1, null, true, C.fill);
+    v.line(A.P(0, 0), A.P(12.5, 0), C.c3, 2); v.text(A.P(10, 0), 'u = 0', C.c3, 0, -6, 12, true, 'right');
+    v.line(A.P(0, 2), A.P(12.5, 2), C.c1, 1.6, [6, 4]); v.text(A.P(12.5, 2), a1 < 2 ? 'o = 2 = L' : 'L = 2', C.c1, -4, -6, 12, true, 'right');
+    for (let n = 1; n <= N; n++) v.dot(A.P(n, a[n - 1]), n === N ? C.fg : C.c2, n === N ? 5.5 : 4.5);
+    // rechts: Treppendiagramm
+    const T = Math.max(3, a1 * 1.1), B = mkAx(0, T, 0, T, 3.2, 3.2, 4.3, 0); axes(v, B, 'x', 'y', 0.5, 0.5);
+    if (a1 < 2) v.poly([B.P(0, 0), B.P(2, 0), B.P(2, 2), B.P(0, 2)], C.c3, 1, [3, 3], true, 'rgba(15,157,88,0.10)');
+    v.line(B.P(0, 0), B.P(T, T), C.muted, 1.4);
+    fplot(v, B, f, C.c4, 2.5, 300, 0, T);
+    v.dot(B.P(2, 2), C.c1, 5); v.text(B.P(2, 2), 'Fixpunkt (2, 2)', C.c1, 8, 16, 11);
+    let x = a[0], path = [B.P(x, 0)];
+    for (let n = 1; n < N; n++) { const y = f(x); path.push(B.P(x, y)); path.push(B.P(y, y)); x = y; }
+    v.poly(path, C.c2, 1.6);
+    for (let n = 1; n <= N; n++) v.dot(B.P(a[n - 1], 0), n === N ? C.fg : C.c2, n === N ? 5 : 3.5);
+    const inc = a1 < 2;
+    MW.info(infoEl, inc ? '0 < a_n < 2, wachsend → konvergent gegen 2' : (a1 === 2 ? 'konstant 2' : '2 < a_n, fallend → konvergent gegen 2'),
+      [['a_1 … a_' + Math.min(N, 6), a.slice(0, Math.min(N, 6)).map(t => fmt(t, 4)).join(', ')], ['a_' + N, fmt(a[N - 1], 8)], ['2 − a_' + N, fmt(2 - a[N - 1], 8)]],
+      inc ? 'Grünes Quadrat = Induktionsschritt: Liegt a_n zwischen 0 und 2, liegt die Kurve dort unter 2, also auch a_{n+1}. Weil die Kurve über der Diagonalen liegt, ist a_{n+1} > a_n.'
+          : 'Startwert über 2: Jetzt liegt die Kurve unter der Diagonalen. Die Folge fällt, bleibt aber über 2. Untere Schranke 2, wieder konvergent gegen L = 2.');
+  });
+  MW.slider(ctl, { label: 'Schritte n', min: 1, max: 12, step: 1, value: N, fmt: t => String(t), onInput: t => { N = t; view.redraw(); } });
+  MW.slider(ctl, { label: 'a₁', min: 0, max: 4, step: 0.05, value: a1, onInput: t => { a1 = t; view.redraw(); } });
+'''))
+
 if __name__ == '__main__':
     print(build('analysis-w1', W))
