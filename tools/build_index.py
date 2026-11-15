@@ -36,6 +36,10 @@ ANA = {
     ('analysis-w2', '2-1'): 'Analysis I.2 Funktionsbegriff', ('analysis-w2', '2-2'): 'Analysis I.2 Beispiele von Funktionen',
     ('analysis-w2', '2-3'): 'Analysis I.2 Elementare Funktionen', ('analysis-w2', '3-1'): 'Analysis I.3 Einseitige Grenzwerte',
     ('analysis-w2', '3-2'): 'Analysis I.3 sin x / x und Rechenregeln', ('analysis-w2', '3-3'): 'Analysis I.3 Stetigkeit',
+    ('analysis-w3', '4-1'): 'Analysis I.4 Zwischenwertsatz', ('analysis-w3', '5-1'): 'Analysis I.5 Koordinatentransformationen',
+    ('analysis-w3', '5-2'): 'Analysis I.5 Graphen skizzieren, Schwingungen', ('analysis-w3', '6-1'): 'Analysis I.6 Injektiv, surjektiv, bijektiv',
+    ('analysis-w3', '6-2'): 'Analysis I.6 Umkehrfunktion', ('analysis-w3', '6-3'): 'Analysis I.6 Arcus-Funktionen',
+    ('analysis-w3', '7-1'): 'Analysis I.7 Asymptoten',
 }
 parts.append('<h1 style="margin-top:32px">Analysis I</h1><p class="sub">Begleitmaterial zu U. Stammbach: Analysis I/II, Teil A (ETH Zürich).</p>')
 for (folder, key), name in ANA.items():

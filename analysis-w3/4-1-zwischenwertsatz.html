@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zwischenwertsatz: jeder Wert zwischen f(a) und f(b) wird angenommen</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Zwischenwertsatz: jeder Wert zwischen f(a) und f(b) wird angenommen</h1>
+  <p class="sub">f stetig auf [a, b], m zwischen f(a) und f(b). Dann gibt es (mindestens) ein ξ ∈ [a, b] mit f(ξ) = m. Welches ξ, sagt der Satz nicht. Ohne Stetigkeit kann die Aussage falsch sein.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>Graph von f auf [a, b]</div><div><span class="sw" style="background:var(--c4)"></span>Werte zwischen f(a) und f(b)</div><div><span class="sw" style="background:var(--c1)"></span>Stellen ξ mit f(ξ) = m</div></div>
+    <div class="hint">Funktion wählen, m verschieben.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  const S = {
+    cub: { name: 'f(x) = 2x³ − 3x² − 6x + 6 auf [−2, 3]', f: x => 2 * x ** 3 - 3 * x * x - 6 * x + 6, a: -2, b: 3, y: [-12, 17], cont: true,
+      note: 'Für m zwischen etwa −1 und 9.5 gibt es drei Stellen ξ. Der Satz garantiert nur eine.' },
+    cos: { name: 'f(x) = x² − cos x auf [0, π/2]', f: x => x * x - Math.cos(x), a: 0, b: Math.PI / 2, y: [-1.3, 2.8], cont: true,
+      note: 'Vorlesung: f(0) = −1 < 0 < π²/4 = f(π/2). Also gibt es ein ξ mit ξ² = cos ξ.' },
+    exp: { name: 'f(x) = x − e^(−x) auf [0, 1]', f: x => x - Math.exp(-x), a: 0, b: 1, y: [-1.2, 0.9], cont: true,
+      note: 'Skript: f(0) = −1, f(1) = 1 − 1/e ≈ 0.63. Mit m = 0 folgt: x = e^(−x) hat eine Lösung in [0, 1].' },
+    jump: { name: 'Sprungfunktion: x für x < 1, x + 1 für x ≥ 1, auf [0, 2]', f: x => x < 1 ? x : x + 1, a: 0, b: 2, y: [-0.4, 3.4], cont: false,
+      note: 'Eigenes Gegenbeispiel (nicht aus dem Skript): f ist bei x = 1 nicht stetig. Werte m in [1, 2) werden übersprungen.' },
+  };
+  let key = 'cos', m = 0;
+  const roots = (s, m) => { const out = [], N = 4000; let px = s.a, py = s.f(s.a) - m; if (Math.abs(py) < 1e-12) out.push(px);
+    for (let i = 1; i <= N; i++) { const x = s.a + (s.b - s.a) * i / N, y = s.f(x) - m;
+      if (Math.abs(y) < 1e-12) out.push(x); else if (py * y < 0 && Math.abs(y - py) < 0.5 * (s.y[1] - s.y[0])) { let lo = px, hi = x;
+        for (let k = 0; k < 60; k++) { const c = (lo + hi) / 2; if ((s.f(lo) - m) * (s.f(c) - m) <= 0) hi = c; else lo = c; } out.push((lo + hi) / 2); }
+      px = x; py = y; }
+    return out; };
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, s = S[key], pad = 0.08 * (s.b - s.a), A = mkAx(s.a - pad, s.b + pad, s.y[0], s.y[1]); axes(v, A, 'x', 'y');
+    const fa = s.f(s.a), fb = s.f(s.b), lo = Math.min(fa, fb), hi = Math.max(fa, fb);
+    v.poly([A.P(s.a, lo), A.P(s.b, lo), A.P(s.b, hi), A.P(s.a, hi)], null, 1, null, true, 'rgba(216,154,0,0.10)');
+    v.line(A.P(A.x0, lo), A.P(A.x0, hi), C.c4, 6);
+    if (s.cont) fplot(v, A, s.f, C.c2, 2.5, 800, s.a, s.b);
+    else { fplot(v, A, s.f, C.c2, 2.5, 400, s.a, 1 - 1e-9); fplot(v, A, s.f, C.c2, 2.5, 400, 1, s.b); v.dot(A.P(1, 1), C.c2, 5, true); v.dot(A.P(1, 2), C.c2, 5); }
+    v.dot(A.P(s.a, fa), C.fg, 5); v.text(A.P(s.a, fa), 'f(a)', C.fg, 6, fa < 0 ? 16 : -8, 12);
+    v.dot(A.P(s.b, fb), C.fg, 5); v.text(A.P(s.b, fb), 'f(b)', C.fg, -34, fb < 0 ? 16 : -8, 12);
+    [s.a, s.b].forEach(x => v.line(A.P(x, s.y[0]), A.P(x, s.y[1]), C.muted, 1, [3, 3]));
+    v.line(A.P(A.x0, m), A.P(A.x1, m), C.c1, 1.5, [6, 4]); v.text(A.P(A.x1, m), 'y = m', C.c1, -50, -6, 12);
+    const between = m >= lo - 1e-12 && m <= hi + 1e-12, R = roots(s, m);
+    R.forEach(x => { v.line(A.P(x, m), A.P(x, A.inY(0) ? 0 : s.y[0]), C.c1, 1, [2, 3]); v.dot(A.P(x, m), C.c1, 6); });
+    MW.info(infoEl, !between ? 'm liegt nicht zwischen f(a) und f(b): Satz macht keine Aussage'
+      : R.length ? R.length + ' Stelle' + (R.length > 1 ? 'n' : '') + ' ξ mit f(ξ) = m' : 'Keine Stelle ξ: der Wert m wird übersprungen',
+      [['f(a)', fmt(fa, 4)], ['f(b)', fmt(fb, 4)], ['m', fmt(m, 3)], ['ξ', R.length ? R.map(x => fmt(x, 4)).join(', ') : '–']],
+      s.note, between && !R.length);
+  });
+  const sl = MW.slider(ctl, { label: 'm', min: -12, max: 17, step: 0.01, value: m, onInput: x => { m = x; view.redraw(); } });
+  MW.select(ctl, 'Funktion', Object.entries(S).map(([k, s]) => [k, s.name]), x => { key = x; const s = S[key];
+    m = key === 'jump' ? 1.5 : key === 'cub' ? 2 : 0; rng(); view.redraw(); }).set(key);
+  function rng() { const s = S[key], inp = ctl.querySelector('input[type=range]'); inp.min = s.y[0]; inp.max = s.y[1]; sl.set(m); }
+  rng();
+
+})();
+</script>
+</body>
+</html>

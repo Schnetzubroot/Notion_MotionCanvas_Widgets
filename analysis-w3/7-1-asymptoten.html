@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asymptoten: f − g → 0 für x → ±∞</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Asymptoten: f − g → 0 für x → ±∞</h1>
+  <p class="sub">g heisst Asymptote von f für x → ∞, wenn lim (f(x) − g(x)) = 0. Oben f und g, unten die Differenz f − g. Asymptoten müssen keine Geraden sein.</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>f</div><div><span class="sw" style="background:var(--c1)"></span>Asymptote g</div><div><span class="sw" style="background:var(--c5)"></span>Asymptote für x → −∞</div><div><span class="sw" style="background:var(--c3)"></span>f − g</div></div>
+    <div class="hint">Beispiel wählen, Fenster vergrössern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  const S = {
+    a: { name: '(2x + 1)/(x − 1)  →  2', f: x => (2 * x + 1) / (x - 1), g: x => 2, h: null, gt: 'g(x) = 2 (beide Richtungen)', note: 'Skript: (2x + 1)/(x − 1) = 2 + 3/(x − 1). Der Pol bei x = 1 („vertikale Asymptote“) ist nach unserer Definition keine Asymptote.' },
+    b: { name: '(x² + 2x − 8)/(x − 3)  →  x + 5', f: x => (x * x + 2 * x - 8) / (x - 3), g: x => x + 5, h: null, gt: 'g(x) = x + 5 (beide Richtungen)', note: 'Skript: Polynomdivision ergibt x + 5 + 7/(x − 3). Pol bei x = 3.' },
+    c: { name: '−1 + √(x² + 1)  →  x − 1 bzw. −x − 1', f: x => -1 + Math.sqrt(x * x + 1), g: x => x - 1, h: x => -x - 1, gt: 'g(x) = x − 1 für x → ∞, h(x) = −x − 1 für x → −∞', note: 'Skript: √(x² + 1) − x = 1/(√(x² + 1) + x) → 0. Da f gerade ist, folgt die Aussage für x → −∞ ebenso.' },
+    d: { name: '(x³ − 3x + 5)/(x − 1)  →  x² + x − 2', f: x => (x ** 3 - 3 * x + 5) / (x - 1), g: x => x * x + x - 2, h: null, gt: 'g(x) = x² + x − 2 (beide Richtungen)', note: 'Skript: = x² + x − 2 + 3/(x − 1). Die Asymptote ist eine Parabel.' },
+    e: { name: '2025 e^(−x²) + sin x  →  sin x', f: x => 2025 * Math.exp(-x * x) + Math.sin(x), g: Math.sin, h: null, gt: 'g(x) = sin x', note: 'Vorlesung: bei x = 0 dominiert 2025 e^(−x²), verschwindet aber für x → ∞. Asymptoten sind nicht immer Geraden.' },
+  };
+  let key = 'c', X = 6;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.75 }, v => {
+    const C = v.C, s = S[key];
+    let lo = Infinity, hi = -Infinity; for (let i = 0; i <= 200; i++) { const x = -X + 2 * X * i / 200; [s.g(x), s.h ? s.h(x) : s.g(x)].forEach(y => { lo = Math.min(lo, y); hi = Math.max(hi, y); }); }
+    const pad = 0.15 * (hi - lo) + Math.max(2, X / 2), A = mkAx(-X, X, lo - pad, hi + pad, 6, 2.3, 0, 1.45); axes(v, A, 'x', 'y');
+    fplot(v, A, s.g, C.c1, 1.8, 800, s.h ? 0 : -X, X); if (s.h) fplot(v, A, s.h, C.c5, 1.8, 800, -X, 0);
+    fplot(v, A, s.f, C.c2, 2.6, 2000);
+    const B = mkAx(-X, X, -1.5, 1.5, 6, 1.05, 0, 0); axes(v, B, 'x', 'f − g', null, 1);
+    const d = x => s.f(x) - (s.h && x < 0 ? s.h(x) : s.g(x)); fplot(v, B, d, C.c3, 2.2, 2000);
+    MW.info(infoEl, s.gt, [['f(X) − g(X), X = ' + fmt(X, 1), fmt(d(X), 6)], ['f(−X) − g(−X)', fmt(d(-X), 6)]], s.note);
+  });
+  MW.select(ctl, 'Beispiel', Object.entries(S).map(([k, s]) => [k, s.name]), x => { key = x; view.redraw(); }).set(key);
+  MW.slider(ctl, { label: 'Fenster ±X', min: 3, max: 60, step: 0.5, value: X, onInput: x => { X = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>
