@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gas laws and the ideal gas law PV = nRT</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Gas laws and the ideal gas law PV = nRT</h1>
+  <p class="sub">Boyle (n, T fixed): PV = const. Charles (n, P fixed): V/T = const. Avogadro (P, T fixed): V/n = const. Together: PV = nRT with R = 8.314 L·kPa/(mol·K). T always in kelvin.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>current n, T or P</div><div><span class="sw" style="background:var(--line)"></span>other values for comparison</div><div><span class="sw" style="background:var(--c1)"></span>current state</div></div>
+    <div class="hint">Choose a law, then move the sliders.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  const R = 8.314;
+  const L = {
+    boyle: { name: 'Boyle: P–V at fixed n, T', x: 'V (L)', y: 'P (kPa)', xr: [0, 50], yr: [0, 600] },
+    charles: { name: 'Charles: V–T at fixed n, P', x: 'T (K)', y: 'V (L)', xr: [0, 800], yr: [0, 80] },
+    avo: { name: 'Avogadro: V–n at fixed P, T', x: 'n (mol)', y: 'V (L)', xr: [0, 5], yr: [0, 150] },
+  };
+  let key = 'boyle', n = 1, T = 273.15, P = 101.325, Vol = 22.41;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, s = L[key], A = mkAx(s.xr[0], s.xr[1], s.yr[0], s.yr[1]); axes(v, A, s.x, s.y);
+    let pt, rows, head, note;
+    if (key === 'boyle') {
+      [0.5, 2].forEach(k => fplot(v, A, x => n * R * T * k / x, C.line, 1.4, 600, 0.3, 50));
+      fplot(v, A, x => n * R * T / x, C.c2, 2.6, 800, 0.3, 50);
+      P = n * R * T / Vol; pt = [Vol, P];
+      head = 'P = nRT / V = ' + fmt(P, 1) + ' kPa'; rows = [['P · V', fmt(P * Vol, 0) + ' L·kPa (constant)'], ['n, T', fmt(n, 2) + ' mol, ' + fmt(T, 1) + ' K']];
+      note = 'Halve V and P doubles. Grey curves: same n at T/2 and 2T.';
+    } else if (key === 'charles') {
+      [0.5, 2].forEach(k => fplot(v, A, x => n * R * x / (P * k), C.line, 1.4, 200));
+      fplot(v, A, x => n * R * x / P, C.c2, 2.6, 400);
+      Vol = n * R * T / P; pt = [T, Vol];
+      v.text(A.P(0, 0), '0 K = −273.15 °C', C.muted, 8, -18, 11, false);
+      head = 'V = nRT / P = ' + fmt(Vol, 2) + ' L'; rows = [['V / T', fmt(Vol / T, 4) + ' L/K (constant)'], ['T', fmt(T, 1) + ' K = ' + fmt(T - 273.15, 1) + ' °C']];
+      note = 'V is proportional to T only in kelvin. The line extrapolates to V = 0 at 0 K. Grey lines: P/2 and 2P.';
+    } else {
+      [0.5, 2].forEach(k => fplot(v, A, x => x * R * T * k / P, C.line, 1.4, 200));
+      fplot(v, A, x => x * R * T / P, C.c2, 2.6, 400);
+      Vol = n * R * T / P; pt = [n, Vol];
+      head = 'V = nRT / P = ' + fmt(Vol, 2) + ' L'; rows = [['V / n (molar volume)', fmt(Vol / n, 2) + ' L/mol'], ['P, T', fmt(P, 1) + ' kPa, ' + fmt(T, 1) + ' K']];
+      note = 'Equal volumes of any gas at the same P and T contain the same number of molecules. At STP (273.15 K, 101.325 kPa): 22.41 L/mol.';
+    }
+    if (A.inY(pt[1])) { v.line(A.P(pt[0], s.yr[0]), A.P(pt[0], pt[1]), C.c1, 1, [3, 3]); v.line(A.P(s.xr[0], pt[1]), A.P(pt[0], pt[1]), C.c1, 1, [3, 3]); v.dot(A.P(pt[0], pt[1]), C.c1, 6); }
+    MW.info(infoEl, head, rows, note, !A.inY(pt[1]));
+  });
+  function controls() {
+    ctl.innerHTML = '';
+    MW.select(ctl, 'Law', Object.entries(L).map(([k, s]) => [k, s.name]), x => { key = x; controls(); view.redraw(); }).set(key);
+    const sl = (label, lo, hi, step, get, set, unit) => MW.slider(ctl, { label, min: lo, max: hi, step, value: get(), fmt: x => fmt(x, step < 0.1 ? 2 : 1) + ' ' + unit, onInput: x => { set(x); view.redraw(); } });
+    if (key !== 'avo') sl('n', 0.1, 3, 0.01, () => n, x => n = x, 'mol');
+    if (key !== 'charles') sl('T', 100, 800, 0.5, () => T, x => T = x, 'K');
+    if (key !== 'boyle') sl('P', 20, 500, 0.025, () => P, x => P = x, 'kPa');
+    if (key === 'boyle') sl('V', 1, 50, 0.1, () => Vol, x => Vol = x, 'L');
+    if (key === 'charles') sl('T', 1, 800, 0.5, () => T, x => T = x, 'K');
+    if (key === 'avo') sl('n', 0.05, 5, 0.01, () => n, x => n = x, 'mol');
+    MW.button(ctl, 'STP', () => { n = 1; T = 273.15; P = 101.325; Vol = 22.41; controls(); view.redraw(); });
+  }
+  controls();
+
+})();
+</script>
+</body>
+</html>
