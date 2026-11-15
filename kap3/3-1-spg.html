@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Satz der projizierten Geschwindigkeiten</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Satz der projizierten Geschwindigkeiten</h1>
+  <p class="sub">Bei einem starren Körper haben die Geschwindigkeiten zweier Punkte M und N gleiche Projektionen auf die Verbindungsgerade MN: v<sub>M</sub> · MN = v<sub>N</sub> · MN. Sonst würde sich der Abstand MN ändern.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>v_M</div><div><span class="sw" style="background:var(--c2)"></span>v_N</div><div><span class="sw" style="background:var(--c3)"></span>Projektionen v'_M, v'_N</div></div>
+    <div class="hint">Pfeilspitzen und Punkte ziehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let M = [-1.4, -0.3], N = [1.3, 0.5], vM = [0.7, 1.2], vN = [1.1, -0.7];
+  const view = MW.View2D(cv, { xmin: -3, xmax: 3, ymin: -1.8, ymax: 2.2 }, v => {
+    const C = v.C, e = V.unit(V.sub(N, M)), n = [-e[1], e[0]];
+    const cap = []; for (let i = 0; i <= 20; i++) { const a = Math.PI / 2 + Math.PI * i / 20; cap.push(V.add(M, V.add(V.mul(e, 0.45 * Math.cos(a)), V.mul(n, 0.45 * Math.sin(a))))); }
+    for (let i = 0; i <= 20; i++) { const a = -Math.PI / 2 + Math.PI * i / 20; cap.push(V.add(N, V.add(V.mul(e, 0.45 * Math.cos(a)), V.mul(n, 0.45 * Math.sin(a))))); }
+    v.poly(cap, C.line, 1.5, null, true, C.fill); v.text(cap[30], 'K', C.muted, 6, 14, 13, false);
+    v.line(V.sub(M, V.mul(e, 1.2)), V.add(N, V.mul(e, 1.2)), C.muted, 1, [6, 4]);
+    const pM = V.dot(vM, e), pN = V.dot(vN, e);
+    v.line(V.add(M, vM), V.add(M, V.mul(e, pM)), C.line, 1, [3, 3]); v.line(V.add(N, vN), V.add(N, V.mul(e, pN)), C.line, 1, [3, 3]);
+    v.arrow(M, V.mul(e, pM), C.c3, 4); v.arrow(N, V.mul(e, pN), C.c3, 4);
+    v.arrow(M, vM, C.c1, 2.5); v.arrow(N, vN, C.c2, 2.5);
+    v.dot(M, C.fg, 5); v.dot(N, C.fg, 5); v.text(M, 'M', C.fg, -16, 16); v.text(N, 'N', C.fg, 6, 16);
+    v.text(V.add(M, vM), 'v_M', C.c1, 4, -4); v.text(V.add(N, vN), 'v_N', C.c2, 4, -4);
+    const rate = pN - pM, ok = Math.abs(rate) < 0.02;
+    MW.info(infoEl, ok ? 'Satz erfüllt: Der Abstand MN bleibt momentan gleich.' : (rate > 0 ? 'Verletzt: MN wird länger.' : 'Verletzt: MN wird kürzer.') + ' So kann sich kein starrer Körper bewegen.',
+      [["v'_M = v_M · e_MN", fmt(pM)], ["v'_N = v_N · e_MN", fmt(pN)], ['d|MN|/dt = v\'_N − v\'_M', fmt(rate)]],
+      'Die Komponenten senkrecht zu MN dürfen verschieden sein: Sie drehen die Strecke MN, ändern aber ihre Länge nicht.', !ok);
+  });
+  view.handle(() => V.add(M, vM), p => { vM = V.sub(p, M); }); view.handle(() => V.add(N, vN), p => { vN = V.sub(p, N); });
+  view.handle(() => M, p => { M = p; }); view.handle(() => N, p => { N = p; });
+  MW.button(ctl, 'v_N korrigieren (Satz erfüllen)', () => { const e = V.unit(V.sub(N, M)); vN = V.add(vN, V.mul(e, V.dot(vM, e) - V.dot(vN, e))); view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

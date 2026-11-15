@@ -1,0 +1,14 @@
+titel "Stab AB zwischen zwei Führungen (Buch Fig. 3.3): Lösungsskizze mit dem SPG"
+param L=2.4 p=40 v=0.9
+punkte O(0,0) A(-L*cos(p),0) B(0,L*sin(p))
+pfeil von (-2.4,0) nach (0.9,0) "x" grau
+pfeil von (0,-0.4) nach (0,2.4) "y" grau
+stab A-B
+marke O A B
+winkel A zwischen 0 und B "φ" radius 34
+vektor ~v_A bei A richtung +x länge v
+vektor ~v_B bei B richtung +y länge v*cos(p)/sin(p)
+vektor "~v′_A" bei A richtung p länge v*cos(p)
+vektor "~v′_B" bei B richtung p länge v*cos(p)
+linie A+(v,0) A+(v*cos(p)*cos(p),v*cos(p)*sin(p)) gestrichelt
+linie B+(0,v*cos(p)/sin(p)) B+(v*cos(p)*cos(p),v*cos(p)*sin(p)) gestrichelt

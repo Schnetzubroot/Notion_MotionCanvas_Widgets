@@ -1,0 +1,12 @@
+titel "Querschnitt einer rotierenden Welle: v = R ω, linear im Abstand zur Achse"
+param R1=0.6 R2=1.2 k=0.8
+punkte O(0,0) P(0,R1) Q(0,R2)
+körper Welle = kreis O radius R2
+bogen O radius R1 von 0 bis 360 gestrichelt
+marke P Q
+aus O "~ω" lage u
+vektor "R_1 ω" bei P richtung 180 länge k*R1
+vektor "R_2 ω" bei Q richtung 180 länge k*R2
+linie O Q+(-k*R2*1.15,0.15*R2) punktiert
+linie O Q punktiert
+kante O-P "R_1" rechts

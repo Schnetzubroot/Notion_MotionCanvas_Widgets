@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beispiel aus dem Buch: Stab AB zwischen zwei Führungen (Fig. 3.3)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Beispiel aus dem Buch: Stab AB zwischen zwei Führungen (Fig. 3.3)</h1>
+  <p class="sub">A gleitet auf der x-Achse mit v<sub>A</sub> = v e<sub>x</sub>, B auf der y-Achse. Der Satz der projizierten Geschwindigkeiten liefert v<sub>B</sub> = v cot φ e<sub>y</sub>, ganz ohne Ableiten.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>v_A</div><div><span class="sw" style="background:var(--c2)"></span>v_B</div><div><span class="sw" style="background:var(--c3)"></span>gleiche Projektionen auf AB</div></div>
+    <div class="hint">φ ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const L = 2.4; let phi = 40;
+  const view = MW.View2D(cv, { xmin: -2.8, xmax: 1.4, ymin: -0.6, ymax: 2.9 }, v => {
+    const C = v.C, f = phi * MW.deg, A = [-L * Math.cos(f), 0], B = [0, L * Math.sin(f)], e = [Math.cos(f), Math.sin(f)];
+    v.arrow([-2.7, 0], [3.9, 0], C.muted, 1.2, 8); v.arrow([0, -0.5], [0, 3.3], C.muted, 1.2, 8);
+    v.text([1.2, 0], 'x', C.muted, -4, -8, 13, false); v.text([0, 2.8], 'y', C.muted, 8, 4, 13, false); v.text([0, 0], 'O', C.muted, 6, 16, 12, false);
+    v.line(A, B, C.fg, 6);
+    const vA = [1, 0], vB = [0, 1 / Math.tan(f)], p = Math.cos(f);
+    v.line(V.add(A, vA), V.add(A, V.mul(e, p)), C.line, 1, [3, 3]); v.line(V.add(B, vB), V.add(B, V.mul(e, p)), C.line, 1, [3, 3]);
+    v.arrow(A, V.mul(e, p), C.c3, 4.5); v.arrow(B, V.mul(e, p), C.c3, 4.5);
+    v.arrow(A, vA, C.c1, 2.5); v.arrow(B, vB, C.c2, 2.5);
+    v.arc(A, 0.45, 0, f, C.muted, 1.2); v.text(A, 'φ', C.muted, 34, -6, 13, false);
+    v.dot(A, C.fg, 5); v.dot(B, C.fg, 5); v.text(A, 'A', C.fg, -6, 18); v.text(B, 'B', C.fg, -18, 0);
+    MW.info(infoEl, 'v_B = v cot φ = ' + fmt(1 / Math.tan(f)) + ' v', [["v'_A = v cos φ", fmt(Math.cos(f)) + ' v'], ["v'_B = v_B sin φ", fmt(Math.sin(f) / Math.tan(f)) + ' v'], ['φ', fmt(phi, 0) + '°']],
+      'Für φ → 0 (Stab liegt auf der x-Achse) würde v_B unendlich gross. Darum muss dort v = 0 sein (Buch S. 39).');
+  });
+  MW.slider(ctl, { label: 'φ', min: 8, max: 85, step: 1, value: phi, unit: '°', onInput: x => { phi = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

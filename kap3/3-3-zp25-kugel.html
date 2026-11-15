@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZP1 2025 A2: Rotierende Kugel</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>ZP1 2025 A2: Rotierende Kugel</h1>
+  <p class="sub">A = (0, 0, R) liegt auf der Achse, B = (−R, 0, 0), v<sub>B</sub> = v e<sub>y</sub>, AB ist die kürzeste Verbindung von B zur Achse, ω<sub>z</sub> = −v/(2R). Finde ω<sub>x</sub> und ω<sub>y</sub> mit den Reglern (R = v = 1).</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c5)"></span>ω und Achse</div><div><span class="sw" style="background:var(--c1)"></span>v_B = ω × AB</div><div><span class="sw" style="background:var(--c3)"></span>Soll: v e_y</div></div>
+    <div class="hint">Regler verschieben, ziehen zum Drehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let wx = 0, wy = 0; const wz = -0.5;
+  const A = [0, 0, 1], B = [-1, 0, 0], Cp = [1, 0, 0];
+  const view = MW.View3D(cv, { extent: 1.7, yaw: -30, pitch: 18 }, v => {
+    const C = v.C, om = [wx, wy, wz];
+    v.axes(1.6);
+    [[0, 0, 1], [1, 0, 0], [0, 1, 0]].forEach(n => v.poly(v.circlePts([0, 0, 0], n, 1, 0, 2 * Math.PI, 90), C.line, 1));
+    if (V.norm(om) > 1e-9) { const e = V.unit(om); v.line(V.sub(A, V.mul(e, 1.4)), V.add(A, V.mul(e, 2.4)), C.c5, 1.4, [8, 3, 2, 3]); v.arrow(A, V.mul(om, 1.2), C.c5, 3); v.text(V.add(A, V.mul(om, 1.2)), 'ω', C.c5, 6, 0); }
+    const vB = V.cross(om, V.sub(B, A)), vC = V.cross(om, V.sub(Cp, A));
+    v.arrow(B, [0, 1, 0], C.c3, 4); v.arrow(B, vB, C.c1, 2.4); v.arrow(Cp, vC, C.c1, 2.4);
+    [[A, 'A'], [B, 'B'], [Cp, 'C']].forEach(([p, n]) => { v.dot(p, C.fg, 4.5); v.text(p, n, C.fg, 6, -6); });
+    const err = V.norm(V.sub(vB, [0, 1, 0])), ok = err < 1e-9;
+    MW.info(infoEl, ok ? 'Gefunden: ω = (v/2R, 0, −v/2R), Antwort d' : 'v_B stimmt noch nicht mit v e_y überein', [['ω', fv(om)], ['v_B = ω × AB', fv(vB)], ['ω · AB', fmt(V.dot(om, V.sub(B, A)))], ['v_C = ω × AC', fv(vC)]],
+      ok ? 'v_C = 0: C liegt auch auf der Achse. Die Achse geht durch A und C, Richtung (1, 0, −1), darum sind a) und b) richtig in A2.3.' :
+      'Komponentenweise: ω × (−R, 0, −R) = (−Rω_y, R(ω_x − ω_z), Rω_y) = (0, v, 0). Also ω_y = 0 und ω_x = v/R + ω_z.', !ok);
+  });
+  MW.slider(ctl, { label: 'ω_x', min: -1, max: 1, step: 0.25, value: wx, onInput: x => { wx = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'ω_y', min: -1, max: 1, step: 0.25, value: wy, onInput: x => { wy = x; view.redraw(); } });
+  MW.button(ctl, 'Ansicht zurücksetzen', () => view.resetView());
+
+})();
+</script>
+</body>
+</html>

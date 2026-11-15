@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Viergelenk: kreisförmige Translation (Fig. 3.5)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Viergelenk: kreisförmige Translation (Fig. 3.5)</h1>
+  <p class="sub">OA und O'A' sind gleich lang und drehen um O bzw. O'. Der Koppelstab AA' bleibt parallel zu OO': kreisförmige Translation, alle seine Punkte haben dieselbe Geschwindigkeit. Mach O'A' länger und vergleiche.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>Geschwindigkeiten auf AA'</div><div><span class="sw" style="background:var(--c2)"></span>Bahn der Mitte von AA'</div></div>
+    <div class="hint">Abspielen, Länge von O'A' ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const d = 2.4, r1 = 1; let r2 = 1, phi = 1.0;
+  const O = [0, 0], O2 = [d, 0];
+  function pose(f) {
+    const A = [r1 * Math.cos(f), r1 * Math.sin(f)], q = V.sub(O2, A), L = V.norm(q);
+    if (L > d + r2 || L < Math.abs(d - r2)) return null;
+    const a = (d * d - r2 * r2 + L * L) / (2 * L), h = Math.sqrt(Math.max(0, d * d - a * a)), u = V.unit(q), n = [-u[1], u[0]];
+    const c1 = V.add(A, V.add(V.mul(u, a), V.mul(n, h))), c2 = V.add(A, V.sub(V.mul(u, a), V.mul(n, h))), ref = V.add(A, [d, 0]);
+    return { A, A2: V.norm(V.sub(c1, ref)) < V.norm(V.sub(c2, ref)) ? c1 : c2 };
+  }
+  const view = MW.View2D(cv, { xmin: -1.6, xmax: 4.2, ymin: -1.7, ymax: 1.9 }, v => {
+    const C = v.C;
+    v.circle(O, r1, C.grid, 1, [4, 4]); v.circle(O2, r2, C.grid, 1, [4, 4]);
+    const tr = []; for (let i = 0; i <= 180; i++) { const s = pose(2 * Math.PI * i / 180); if (s) tr.push(V.mul(V.add(s.A, s.A2), 0.5)); else if (tr.length) { v.poly(tr, C.c2, 1.4, [5, 4]); tr.length = 0; } }
+    v.poly(tr, C.c2, 1.4, [5, 4]);
+    const s = pose(phi); v.dot(O, C.fg, 5); v.dot(O2, C.fg, 5); v.text(O, 'O', C.fg, -16, 16); v.text(O2, "O'", C.fg, 6, 16);
+    if (!s) { MW.info(infoEl, 'Diese Lage ist mit diesen Stablängen nicht möglich.', [], 'Mit O\'A\' ≠ OA kann die Kurbel OA nicht ganz umlaufen.', true); return; }
+    const { A, A2 } = s, vA = [-r1 * Math.sin(phi), r1 * Math.cos(phi)];
+    const p2 = V.sub(A2, O2), t2 = [-p2[1], p2[0]], e = V.unit(V.sub(A2, A));
+    const k = V.dot(vA, e) / V.dot(t2, e), vA2 = V.mul(t2, k), Mid = V.mul(V.add(A, A2), 0.5), vMid = V.mul(V.add(vA, vA2), 0.5);
+    v.line(O, A, C.fg, 4); v.line(O2, A2, C.fg, 4); v.line(A, A2, C.fg, 6);
+    [[A, vA], [Mid, vMid], [A2, vA2]].forEach(([p, w]) => v.arrow(p, V.mul(w, 0.8), C.c1, 2.6));
+    [A, A2].forEach(p => v.dot(p, C.bg, 4.5, true)); v.text(A, 'A', C.fg, -14, -8); v.text(A2, "A'", C.fg, 6, -8); v.dot(Mid, C.fg, 3);
+    const ang = Math.atan2(A2[1] - A[1], A2[0] - A[0]) / MW.deg, tr2 = Math.abs(r2 - r1) < 1e-9;
+    MW.info(infoEl, tr2 ? "Kreisförmige Translation: AA' bleibt horizontal." : "Keine Translation: AA' dreht sich.", [['|v_A|', fmt(V.norm(vA))], ["|v_A'|", fmt(V.norm(vA2))], ["Winkel von AA' zu OO'", fmt(ang, 1) + '°']],
+      tr2 ? "Alle Punkte von AA' laufen auf gleich grossen Kreisen, deren Mittelpunkte auf OO' liegen (Buch S. 41)." : "Die Geschwindigkeiten auf AA' sind verschieden, die Bahn der Mitte ist kein Kreis mehr.", !tr2);
+  });
+  MW.player(ctl, { t0: 0, t1: 2 * Math.PI, duration: 6, value: phi, label: 'φ', fmt: x => fmt(x / MW.deg, 0) + '°', onTime: x => { phi = x; view.redraw(); } });
+  MW.slider(ctl, { label: "O'A'", min: 0.8, max: 1.3, step: 0.05, value: 1, onInput: x => { r2 = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

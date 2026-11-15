@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MechSkizze</title>
+<link rel="stylesheet" href="../lib/core.css">
+<style>
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; justify-content: center; }
+  .card svg { width: 100%; height: auto; max-height: 460px; }
+  details { margin-top: 8px; font-size: 13px; }
+  summary { cursor: pointer; color: var(--muted); }
+  pre { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; overflow: auto; font: 12px/1.45 ui-monospace, Menlo, monospace; }
+  a { color: var(--c2); }
+  .err { color: var(--warn); font-size: 13px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title">MechSkizze</h1>
+  <div class="card" id="out"></div>
+  <div class="err" id="warn"></div>
+  <details><summary>MechSkizze-Text anzeigen</summary><pre id="src"></pre>
+    <a id="edit" target="_blank" rel="noopener">Im Editor öffnen</a></details>
+</div>
+<script src="../lib/mechskizze.js"></script>
+<script>
+(async () => {
+  const s = new URLSearchParams(location.search).get('s') || '';
+  const out = document.getElementById('out'), warn = document.getElementById('warn');
+  if (!/^[\w\-\/]+$/.test(s)) { warn.textContent = 'Keine Skizze angegeben (?s=kap3/3-1-spg).'; return; }
+  try {
+    const r = await fetch('../skizzen/' + s + '.mech'); if (!r.ok) throw new Error('Skizze ' + s + ' nicht gefunden');
+    const text = await r.text(), res = MechSkizze.render(text);
+    out.innerHTML = res.svg; warn.textContent = res.warnings.join('\n');
+    document.getElementById('src').textContent = text;
+    const t = (text.match(/^\s*titel\s+"([^"]*)"/m) || [])[1]; if (t) { document.getElementById('title').textContent = t; document.title = t; }
+    document.getElementById('edit').href = 'index.html?s=' + encodeURIComponent(s);
+  } catch (e) { warn.textContent = 'Fehler: ' + e.message; }
+})();
+</script>
+</body>
+</html>

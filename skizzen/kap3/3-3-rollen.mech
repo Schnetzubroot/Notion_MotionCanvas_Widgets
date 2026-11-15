@@ -1,0 +1,14 @@
+titel "Rollen ohne Gleiten: Z ist momentan in Ruhe, v = ω × ZM"
+param r=1 s=0.55
+punkte Z(0,0) C(0,r) T(0,2r) M(r*cos(30),r+r*sin(30))
+boden (-1.6,0) (2.4,0) schraffur unten
+körper Rad = kreis C radius r
+marke Z C T M
+moment ω bei C uhrzeiger lage l
+vektor ~v_C bei C richtung +x länge s*r
+vektor ~v_T bei T richtung +x länge s*2r
+linie Z T+(s*2r,0) gestrichelt
+linie Z M punktiert
+vektor ~v_M bei M richtung (1.5,-0.866) länge s*sqrt(3)
+rechtwinklig M zwischen Z und M+(1.5,-0.866)
+text Z "~v_Z = ~0" lage ur

@@ -1,0 +1,14 @@
+titel "Satz der projizierten Geschwindigkeiten (Übungsheft Abb. 2.1)"
+param a1=13.2
+punkte M(0,0)  N(3.4,0.8)
+kurve (-0.5,-0.7) (2,-0.5) (4.6,1.0) (4.3,2.3) (2.4,1.6) (0.6,2.0) (-0.7,1.2) geschlossen grau
+text (0.2,-0.55) "K" grau
+linie M N ; marke M N
+vektor ~v_M bei M richtung 55° länge 1.61
+vektor ~v_{M'} bei M richtung a1 länge 1.21
+linie M+(1.61*cos(55),1.61*sin(55)) M+(1.21*cos(a1),1.21*sin(a1)) gestrichelt
+winkel M zwischen a1 und 55 "α" radius 28
+vektor ~v_{N'} bei N richtung a1 länge 1.21
+vektor ~v_N bei N richtung -10 länge 1.31
+linie N+(1.21*cos(a1),1.21*sin(a1)) N+(1.31*cos(-10),1.31*sin(-10)) gestrichelt
+winkel N zwischen a1 und -10 "β" radius 30

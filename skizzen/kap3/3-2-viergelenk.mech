@@ -1,0 +1,17 @@
+titel "Viergelenk (Buch Fig. 3.5): AA' führt eine kreisförmige Translation aus"
+param r=1 d=2.4 p=60
+punkte O(0,0) Q(d,0) A(r*cos(p),r*sin(p)) B(d+r*cos(p),r*sin(p)) M(d/2+r*cos(p),r*sin(p))
+beschrifte Q "O'" lage r
+beschrifte B "A'" lage o
+festlager O
+festlager Q
+stab O-A Q-B
+balken A B
+gelenk A B
+bogen O radius r von 0 bis 360 punktiert
+bogen Q radius r von 0 bis 360 punktiert
+bogen (d/2,0) radius r von 20 bis 160 gestrichelt
+moment ω bei O lage l
+vektor ~v_A bei A richtung p+90 länge 0.6
+vektor ~v_M bei M richtung p+90 länge 0.6
+vektor ~v_{A'} bei B richtung p+90 länge 0.6
