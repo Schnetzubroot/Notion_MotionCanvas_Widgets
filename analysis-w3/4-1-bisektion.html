@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beweisidee als Verfahren: Intervallhalbierung (Bisektion)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Beweisidee als Verfahren: Intervallhalbierung (Bisektion)</h1>
+  <p class="sub">x₁ = a, y₁ = b. Mitte c = ½(x<sub>i</sub> + y<sub>i</sub>): ist f(c) ≥ m, wird c das neue y, sonst das neue x. Die Intervalle halbieren sich, x<sub>n</sub> wächst, y<sub>n</sub> fällt, beide konvergieren gegen dasselbe ξ.</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>Graph von f</div><div><span class="sw" style="background:var(--c3)"></span>x_i</div><div><span class="sw" style="background:var(--c4)"></span>y_i</div><div><span class="sw" style="background:var(--c1)"></span>Intervall [x_i, y_i]</div></div>
+    <div class="hint">Schritt i erhöhen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  const S = {
+    exp: { name: 'x = e^(−x): f(x) = x − e^(−x) auf [0, 1]', f: x => x - Math.exp(-x), a: 0, b: 1, y: [-1.1, 0.75] },
+    cos: { name: 'x² = cos x: f(x) = x² − cos x auf [0, π/2]', f: x => x * x - Math.cos(x), a: 0, b: Math.PI / 2, y: [-1.1, 2.6] },
+  };
+  let key = 'exp', n = 4;
+  const seq = s => { const X = [s.a], Y = [s.b]; for (let i = 1; i < 20; i++) { const c = (X[i - 1] + Y[i - 1]) / 2;
+    if (s.f(c) >= 0) { X.push(X[i - 1]); Y.push(c); } else { X.push(c); Y.push(Y[i - 1]); } } return [X, Y]; };
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.75 }, v => {
+    const C = v.C, s = S[key], [X, Y] = seq(s), A = mkAx(s.a, s.b, s.y[0], s.y[1], 6, 2.15, 0, 1.55); axes(v, A, 'x', 'f(x)');
+    fplot(v, A, s.f, C.c2, 2.5, 600);
+    const xi = X[n - 1], yi = Y[n - 1];
+    v.poly([A.P(xi, s.y[0]), A.P(yi, s.y[0]), A.P(yi, s.y[1]), A.P(xi, s.y[1])], null, 1, null, true, 'rgba(209,69,59,0.10)');
+    v.dot(A.P(xi, s.f(xi)), C.c3, 6); v.dot(A.P(yi, s.f(yi)), C.c4, 6);
+    // Intervall-Leiter
+    const B = mkAx(s.a, s.b, 0, 1, 6, 1.3, 0, 0);
+    v.text(B.P(s.a, 0), 'Intervalle [x_i, y_i], i = 1 … ' + n, C.muted, 0, 14, 11, false);
+    for (let i = 1; i <= n; i++) { const yy = 1.02 - i / 21; v.line(B.P(X[i - 1], yy), B.P(Y[i - 1], yy), i === n ? C.c1 : C.line, i === n ? 4 : 3);
+      v.dot(B.P(X[i - 1], yy), C.c3, 2.5); v.dot(B.P(Y[i - 1], yy), C.c4, 2.5); }
+    const rows = []; for (let i = Math.max(1, n - 4); i <= n; i++) rows.push(['i = ' + i, 'x = ' + X[i - 1].toFixed(10) + ',  y = ' + Y[i - 1].toFixed(10)]);
+    MW.info(infoEl, 'y_i − x_i = (b − a)/2^(i−1) = ' + ((s.b - s.a) / 2 ** (n - 1)).toExponential(2), rows,
+      key === 'exp' ? 'Gleiche Werte wie die Tabelle im Skript (Teil A, S. 35). Grenzwert ξ ≈ 0.56714.' : 'Beispiel aus der Vorlesung (Notizen Kap. I, S. 19). Der Satz liefert nur die Existenz, das Verfahren eine Näherung.');
+  });
+  MW.select(ctl, 'Gleichung', Object.entries(S).map(([k, s]) => [k, s.name]), x => { key = x; view.redraw(); }).set(key);
+  MW.slider(ctl, { label: 'i', min: 1, max: 20, step: 1, value: n, fmt: x => String(x), onInput: x => { n = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

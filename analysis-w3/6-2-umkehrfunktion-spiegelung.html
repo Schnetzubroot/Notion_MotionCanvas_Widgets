@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Umkehrfunktion: Spiegelung an der Winkelhalbierenden y = x</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Umkehrfunktion: Spiegelung an der Winkelhalbierenden y = x</h1>
+  <p class="sub">Ist (a, b) auf dem Graphen von f, also f(a) = b, dann ist a = f<sup>−1</sup>(b) und (b, a) liegt auf dem Graphen von f<sup>−1</sup>. Die beiden Punkte liegen spiegelbildlich zu y = x.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>f</div><div><span class="sw" style="background:var(--c3)"></span>f⁻¹</div><div><span class="sw" style="background:var(--muted)"></span>y = x</div></div>
+    <div class="hint">Funktion wählen, a verschieben oder den Punkt ziehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  function gplot(v, f, a, b, color, w = 2.2, ylo = -1e9, yhi = 1e9, N = 600, dash) {
+    let seg = [];
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w, dash); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y) || y < ylo || y > yhi) { flush(); continue; } seg.push([x, y]); }
+    flush();
+  }
+
+  const S = {
+    lin: { name: 'f(x) = 2x + 3  ⟶  f⁻¹(x) = (x − 3)/2', f: x => 2 * x + 3, g: x => (x - 3) / 2, D: [-6, 6], Dg: [-6, 9], Dt: 'ℝ', Wt: 'ℝ', a: -1 },
+    exp: { name: 'f(x) = 2^x  ⟶  f⁻¹(x) = log₂ x', f: x => Math.pow(2, x), g: x => Math.log2(x), D: [-6, 3], Dg: [0.001, 8], Dt: 'ℝ', Wt: '(0, ∞)', a: 1 },
+    sqP: { name: 'f(x) = x², D = [0, ∞)  ⟶  f⁻¹(x) = √x', f: x => x * x, g: Math.sqrt, D: [0, 3], Dg: [0, 9], Dt: '[0, ∞)', Wt: '[0, ∞)', a: 1.5 },
+    sqN: { name: 'f(x) = x², D = (−∞, 0]  ⟶  f⁻¹(x) = −√x', f: x => x * x, g: x => -Math.sqrt(x), D: [-3, 0], Dg: [0, 9], Dt: '(−∞, 0]', Wt: '[0, ∞)', a: -1.5 },
+    hyp: { name: 'f(x) = √(x² − 1), D = [1, ∞)  ⟶  f⁻¹(x) = √(x² + 1)', f: x => Math.sqrt(x * x - 1), g: x => Math.sqrt(x * x + 1), D: [1, 6], Dg: [0, 6], Dt: '[1, ∞)', Wt: '[0, ∞)', a: 2 },
+  };
+  let key = 'sqP', a = 1.5, inv = true;
+  const box = { xmin: -3.6, xmax: 4.6, ymin: -2.6, ymax: 4.4 };
+  const view = MW.View2D(cv, box, v => {
+    const C = v.C, s = S[key]; v.grid(1);
+    v.line([box.xmin, box.xmin], [box.ymax, box.ymax], C.muted, 1.3, [6, 4]); v.text([3.6, 3.6], 'y = x', C.muted, 6, 14, 12, false);
+    gplot(v, s.f, s.D[0], s.D[1], C.c2, 2.8, -3, 5);
+    if (s.D[0] > -6 && key !== 'hyp') v.dot([s.D[0], s.f(s.D[0])], C.c2, 4);
+    if (inv) gplot(v, s.g, s.Dg[0], s.Dg[1], C.c3, 2.8, -3, 5);
+    const b = s.f(a), P = [a, b], Q = [b, a];
+    v.dot(P, C.c2, 6); v.text(P, '(a, b)', C.c2, 8, -6, 12);
+    if (inv) { v.line(P, Q, C.c1, 1.2, [3, 3]); v.dot(Q, C.c3, 6); v.text(Q, '(b, a)', C.c3, 8, 16, 12); }
+    MW.info(infoEl, s.name, [['D(f) = W(f⁻¹)', s.Dt], ['W(f) = D(f⁻¹)', s.Wt], ['a, b = f(a)', fmt(a, 3) + ', ' + fmt(b, 3)], ['f⁻¹(b)', fmt(s.g(b), 3)]],
+      key === 'sqP' || key === 'sqN' ? 'x² auf ganz ℝ ist nicht injektiv, also nicht umkehrbar. Je nach Einschränkung von D(f) erhält man √x oder −√x, nicht „±√x“.'
+      : key === 'hyp' ? 'Skript: f ist gerade, erst die Einschränkung auf [1, ∞) macht f injektiv.' : 'f⁻¹(f(a)) = a und f(f⁻¹(y)) = y.');
+  });
+  view.handle(() => [a, S[key].f(a)], p => { const s = S[key]; a = Math.max(s.D[0], Math.min(s.D[1], p[0])); sl.set(a); });
+  const sl = MW.slider(ctl, { label: 'a', min: -3, max: 3, step: 0.01, value: a, onInput: x => { const s = S[key]; a = Math.max(s.D[0], Math.min(s.D[1], x)); view.redraw(); } });
+  MW.select(ctl, 'Funktion', Object.entries(S).map(([k, s]) => [k, s.name]), x => { key = x; a = S[key].a; sl.set(a); view.redraw(); }).set(key);
+  MW.check(ctl, 'f⁻¹ zeigen', inv, x => { inv = x; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>
