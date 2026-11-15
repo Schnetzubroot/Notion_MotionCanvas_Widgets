@@ -47,6 +47,14 @@ for (folder, key), name in ANA.items():
     items = ''.join(f'<li><a href="{folder}/{f.name}">{title(f)}</a></li>' for f in files)
     parts.append(f'<h2>{html.escape(name)}</h2><ul>{items}</ul>')
 
+# Chemistry (Brown, Chemistry: The Central Science)
+CHEM = {('chemistry-w2', '10-4'): 'Chemistry 10.3–10.4 Gas laws and ideal gas law', ('chemistry-w2', '10-6'): 'Chemistry 10.6 Kinetic-molecular theory'}
+parts.append('<h1 style="margin-top:32px">Chemistry</h1><p class="sub">Companion widgets for 151-0909-00L Chemistry (ETH Zürich), Brown et al.: Chemistry: The Central Science.</p>')
+for (folder, key), name in CHEM.items():
+    files = sorted((ROOT / folder).glob(f'{key}-*.html'))
+    items = ''.join(f'<li><a href="{folder}/{f.name}">{title(f)}</a></li>' for f in files)
+    parts.append(f'<h2>{html.escape(name)}</h2><ul>{items}</ul>')
+
 page = f"""<!doctype html>
 <html lang="de">
 <head>
