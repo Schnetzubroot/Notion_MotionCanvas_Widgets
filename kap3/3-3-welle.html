@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rotierende Welle: v = R ω (Fig. 3.9)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Rotierende Welle: v = R ω (Fig. 3.9)</h1>
+  <p class="sub">Alle Punkte drehen mit derselben Rotationsschnelligkeit ω. Die Schnelligkeit wächst linear mit dem Abstand zur Achse. Aus der Drehzahl n in U/min: ω = 2π n / 60.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>v_i = R_i ω</div><div><span class="sw" style="background:var(--c5)"></span>ω (aus der Ebene)</div></div>
+    <div class="hint">Drehzahl ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const R = [1, 2, 3, 4]; let n = 600;
+  const view = MW.View2D(cv, { xmin: -5.6, xmax: 5.6, ymin: -4.6, ymax: 5 }, v => {
+    const C = v.C, w = 2 * Math.PI * n / 60, sc = 1.2 * n / 3000;
+    R.slice().reverse().forEach((r, i) => v.circle([0, 0], r, C.line, 1.5, null, i % 2 ? null : C.fill));
+    v.line([0, 0], [0, 4.6], C.muted, 1, [6, 3, 2, 3]);
+    R.forEach((r, i) => { const p = [0, r], vel = r * 0.01 * w; v.arrow(p, [-r * sc, 0], C.c1, 2.6); v.dot(p, C.fg, 4); v.text(p, 'v' + (i + 1), C.c1, 6, -6, 12); });
+    const tip = [-R[3] * sc, R[3]]; v.line([0, 0], V.mul(tip, 1.12), C.c1, 1, [4, 4]);
+    v.circle([0, 0], 0.18, C.c5, 2); v.dot([0, 0], C.c5, 2.5); v.text([0, 0], 'ω', C.c5, 10, 16);
+    MW.info(infoEl, 'ω = 2π · ' + fmt(n, 0) + ' / 60 = ' + fmt(w) + ' rad/s', R.map((r, i) => ['v' + (i + 1) + ' bei R' + (i + 1) + ' = ' + r + ' cm', fmt(r * 0.01 * w) + ' m/s']),
+      'Gleiches ω, doppelter Radius gibt doppelte Schnelligkeit. Die Spitzen liegen auf einer Geraden durch die Achse (gestrichelt): v ist linear in r.');
+  });
+  MW.slider(ctl, { label: 'n', min: 0, max: 3000, step: 10, value: n, unit: ' U/min', onInput: x => { n = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

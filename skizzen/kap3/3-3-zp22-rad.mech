@@ -1,0 +1,12 @@
+titel "ZP1 2022 A2: Geschwindigkeitsverteilung auf dem senkrechten Durchmesser (Lösung d)"
+param r1=0.8  r2=1.0
+punkte M(0,0)  A(0,r2)  B(0,-r2)  Z(0,-r1)
+körper Kranz = kreis M radius r2
+körper Lauf = kreis M radius r1 dünn
+linie (-1.4,-r1) (1.6,-r1) dick
+marke A B M Z
+beschrifte Z "Z" lage ul
+last von B nach A q (-0.11,1) richtung 0° nachaussen höhe 0.9
+text A+(0.95,0) "(r_1+r_2) ω" lage r
+text M+(0.45,0.1) "r_1 ω" lage r
+text B+(0,-0.05) "(r_1−r_2) ω" lage l

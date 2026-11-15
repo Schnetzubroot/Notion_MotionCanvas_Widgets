@@ -1,0 +1,38 @@
+[
+ {
+  "s": "kap3/3-1-leiter",
+  "titel": "Stab AB zwischen zwei Führungen (Buch Fig. 3.3): Lösungsskizze mit dem SPG"
+ },
+ {
+  "s": "kap3/3-1-spg",
+  "titel": "Satz der projizierten Geschwindigkeiten (Übungsheft Abb. 2.1)"
+ },
+ {
+  "s": "kap3/3-2-translation",
+  "titel": "Translation (Übungsheft Abb. 2.2): alle Punkte haben dieselbe Geschwindigkeit"
+ },
+ {
+  "s": "kap3/3-2-viergelenk",
+  "titel": "Viergelenk (Buch Fig. 3.5): AA' führt eine kreisförmige Translation aus"
+ },
+ {
+  "s": "kap3/3-3-rollen",
+  "titel": "Rollen ohne Gleiten: Z ist momentan in Ruhe, v = ω × ZM"
+ },
+ {
+  "s": "kap3/3-3-rotation",
+  "titel": "Rotation eines starren Körpers (Übungsheft Abb. 2.3): v_M = ω × AM"
+ },
+ {
+  "s": "kap3/3-3-welle",
+  "titel": "Querschnitt einer rotierenden Welle: v = R ω, linear im Abstand zur Achse"
+ },
+ {
+  "s": "kap3/3-3-zp22-rad",
+  "titel": "ZP1 2022 A2: Geschwindigkeitsverteilung auf dem senkrechten Durchmesser (Lösung d)"
+ },
+ {
+  "s": "kap3/3-3-zp25-kugel",
+  "titel": "ZP1 2025 A2: Die Rotationsachse geht durch A und C"
+ }
+]

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZP1 2022 A2: Eisenbahnrad mit Spurkranz</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>ZP1 2022 A2: Eisenbahnrad mit Spurkranz</h1>
+  <p class="sub">Das Rad rollt auf dem Laufkreis r<sub>1</sub>, der Spurkranz r<sub>2</sub> > r<sub>1</sub> ragt unter die Schienenkante. ω = (0, 0, −ω). Wähle den ruhenden Punkt und vergleiche die Geschwindigkeitsverteilung auf dem senkrechten Durchmesser.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>v auf dem Durchmesser AB</div><div><span class="sw" style="background:var(--c5)"></span>ruhender Punkt</div></div>
+    <div class="hint">Ruhenden Punkt wählen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const r1 = 0.8, r2 = 1.0, w = 1; let rest = 'r1';
+  const view = MW.View2D(cv, { xmin: -2.4, xmax: 2.6, ymin: -1.5, ymax: 1.5 }, v => {
+    const C = v.C, y0 = { r1: -r1, r2: -r2, m: 0 }[rest];
+    v.circle([0, 0], r2, C.fg, 2, null, C.fill); v.circle([0, 0], r1, C.line, 1.2, [5, 4]);
+    v.line([-2.4, -r1], [2.6, -r1], C.fg, 2.2); v.line([-2.4, -r1 - 0.28], [2.6, -r1 - 0.28], C.line, 1.4);
+    const vel = y => w * (y - y0), sc = 0.9;
+    for (let i = 0; i <= 10; i++) { const y = -r2 + 2 * r2 * i / 10; v.arrow([0, y], [vel(y) * sc, 0], C.c1, 1.8, 7); }
+    v.line([vel(-r2) * sc, -r2], [vel(r2) * sc, r2], C.c1, 1, [4, 4]);
+    v.dot([0, r2], C.fg, 4); v.text([0, r2], 'A', C.fg, -16, -4); v.dot([0, -r2], C.fg, 4); v.text([0, -r2], 'B', C.fg, -16, 14);
+    v.dot([0, 0], C.fg, 3); v.text([0, 0], 'M', C.fg, -16, -4); v.dot([0, y0], C.c5, 6);
+    v.text([-2.3, -r1], 'Schiene (Kontakt bei r₁)', C.muted, 0, -6, 12, false);
+    const ok = rest === 'r1';
+    MW.info(infoEl, ok ? 'Richtig: Ruhe im Kontaktpunkt des Laufkreises (Option d bzw. f)' : rest === 'r2' ? 'Falsch: Der Spurkranz berührt die Schiene nicht auf der Lauffläche' : 'Falsch: Das wäre eine reine Rotation um M, der Wagen stünde still',
+      [['v_A (oben)', fmt(vel(r2)) + ' · ω e_x  →  (r₁ + r₂) ω'], ['v_M', fmt(vel(0)) + ' · ω e_x  →  r₁ ω'], ['v_B (Spurkranz unten)', fmt(vel(-r2)) + ' · ω e_x  →  (r₁ − r₂) ω']],
+      'Mit r₁ = 0,8 und r₂ = 1. Der tiefste Punkt B liegt unter dem Kontaktpunkt und läuft darum rückwärts. Kinemate in B: {(r₁ − r₂) ω e_x, −ω e_z}.', !ok);
+  });
+  MW.select(ctl, 'Ruhender Punkt', [['r1', 'Kontakt Laufkreis (y = −r₁)'], ['r2', 'unterster Punkt B (y = −r₂)'], ['m', 'Mittelpunkt M']], x => { rest = x; view.redraw(); }).set('r1');
+
+})();
+</script>
+</body>
+</html>

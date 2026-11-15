@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MechSkizze-Editor</title>
+<link rel="stylesheet" href="../lib/core.css">
+<style>
+  main { max-width: 1200px; margin: 0 auto; padding: 14px 16px 40px; }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 10px 0 14px; }
+  nav a { padding: 6px 12px; text-decoration: none; color: var(--muted); border-bottom: 2px solid transparent; }
+  nav a.on { color: var(--fg); border-color: var(--acc); font-weight: 600; }
+  .ed { display: grid; grid-template-columns: minmax(300px, 1fr) 1.2fr; gap: 14px; }
+  @media (max-width: 800px) { .ed { grid-template-columns: 1fr; } }
+  textarea { width: 100%; height: 520px; font: 13px/1.45 ui-monospace, Menlo, monospace; padding: 10px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--bg); color: var(--fg); resize: vertical; }
+  .out { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-height: 520px; display: flex; align-items: center; justify-content: center; overflow: auto; }
+  .out svg { width: 100%; height: auto; max-height: 620px; }
+  .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .warn { color: var(--warn); font-size: 13px; white-space: pre-wrap; margin-top: 6px; min-height: 1em; }
+  .hidden { display: none; }
+  #ref table { border-collapse: collapse; width: 100%; font-size: 13.5px; margin: 6px 0 14px; }
+  #ref td, #ref th { border: 1px solid var(--line); padding: 4px 8px; vertical-align: top; text-align: left; }
+  #ref code, #ref pre { font: 12.5px/1.45 ui-monospace, Menlo, monospace; }
+  #ref pre { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; overflow: auto; }
+  #ref h2 { font-size: 16px; margin: 18px 0 4px; }
+  #list li { margin: 3px 0; } a { color: var(--c2); }
+</style>
+</head>
+<body>
+<main>
+  <h1>MechSkizze</h1>
+  <p class="sub">Textsprache für Mechanik-Skizzen: Text links eingeben, die Skizze erscheint rechts. Jede Skizze in den Notion-Guides lässt sich hier öffnen und ändern.</p>
+  <nav><a href="#editor" id="t-editor">Editor</a><a href="#skizzen" id="t-skizzen">Skizzen</a><a href="#referenz" id="t-referenz">Referenz</a></nav>
+  <section id="v-editor">
+    <div class="ed">
+      <div>
+        <div class="bar"><select id="ex"><option value="">Skizze laden …</option></select>
+          <button id="copy">Text kopieren</button><button id="copysvg">SVG kopieren</button></div>
+        <textarea id="src" spellcheck="false" wrap="off"></textarea>
+        <div class="warn" id="warn"></div>
+      </div>
+      <div class="out" id="out"></div>
+    </div>
+  </section>
+  <section id="v-skizzen" class="hidden"><ul id="list"></ul></section>
+  <section id="v-referenz" class="hidden"><div id="ref">Lade …</div></section>
+</main>
+<script src="../lib/mechskizze.js"></script>
+<script>
+(async () => {
+  const src = document.getElementById('src'), out = document.getElementById('out'), warn = document.getElementById('warn'), ex = document.getElementById('ex');
+  let lastSvg = '', tm;
+  const draw = () => {
+    try { const r = MechSkizze.render(src.value); out.innerHTML = r.svg; lastSvg = r.svg; warn.textContent = r.warnings.join('\n'); }
+    catch (e) { warn.textContent = 'Fehler: ' + e.message; }
+    try { localStorage.setItem('mech-src', src.value); } catch (e) {}
+  };
+  const load = async s => { const r = await fetch('../skizzen/' + s + '.mech'); if (r.ok) { src.value = await r.text(); draw(); } };
+  src.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(draw, 150); });
+  const copy = (t, b) => navigator.clipboard.writeText(t).then(() => { const o = b.textContent; b.textContent = 'Kopiert'; setTimeout(() => b.textContent = o, 1200); }).catch(() => { b.textContent = 'Kopieren nicht erlaubt'; });
+  document.getElementById('copy').onclick = e => copy(src.value, e.target);
+  document.getElementById('copysvg').onclick = e => copy(lastSvg, e.target);
+  let items = []; try { items = await (await fetch('../skizzen/index.json')).json(); } catch (e) {}
+  ex.innerHTML += items.map(i => `<option value="${i.s}">${i.titel}</option>`).join('');
+  ex.addEventListener('change', () => ex.value && (load(ex.value), location.hash = 'editor'));
+  document.getElementById('list').innerHTML = items.map(i => `<li><a href="ansicht.html?s=${i.s}">${i.titel}</a> · <a href="index.html?s=${i.s}">bearbeiten</a></li>`).join('');
+  const s = new URLSearchParams(location.search).get('s');
+  let saved = null; try { saved = localStorage.getItem('mech-src'); } catch (e) {}
+  if (s && /^[\w\-\/]+$/.test(s)) await load(s); else { src.value = saved || 'titel "Beispiel"\nparam a=1\npunkte A(0,0) B(2a,0)\nstab A-B\nfestlager A\nloslager B\nkraft F bei mitte(A,B) richtung -y dick'; draw(); }
+  // Referenz: kleines Markdown (Überschriften, Tabellen, Listen, Codeblöcke)
+  try {
+    const md = await (await fetch('REFERENZ.md')).text(), esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const inl = t => esc(t).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    let html = '', inCode = false, tbl = null, list = false;
+    const flush = () => { if (tbl) { html += '<table>' + tbl.join('') + '</table>'; tbl = null; } if (list) { html += '</ul>'; list = false; } };
+    for (const line of md.split('\n')) {
+      if (line.startsWith('```')) { flush(); html += inCode ? '</pre>' : '<pre>'; inCode = !inCode; continue; }
+      if (inCode) { html += esc(line) + '\n'; continue; }
+      if (/^\|/.test(line)) { if (/^\|\s*-/.test(line)) continue; const cells = line.replace(/\\\|/g, '\u0000').split('|').slice(1, -1).map(c => inl(c.trim().replace(/\u0000/g, '|')));
+        if (!tbl) { tbl = []; tbl.push('<tr>' + cells.map(c => `<th>${c}</th>`).join('') + '</tr>'); } else tbl.push('<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>'); continue; }
+      if (/^- /.test(line)) { if (tbl) flush(); if (!list) { html += '<ul>'; list = true; } html += '<li>' + inl(line.slice(2)) + '</li>'; continue; }
+      flush();
+      if (/^# /.test(line)) continue;
+      if (/^## /.test(line)) html += '<h2>' + inl(line.slice(3)) + '</h2>'; else if (line.trim()) html += '<p>' + inl(line) + '</p>';
+    }
+    flush(); document.getElementById('ref').innerHTML = html;
+  } catch (e) { document.getElementById('ref').textContent = 'Referenz konnte nicht geladen werden.'; }
+  const route = () => { const h = (location.hash || '#editor').slice(1), v = ['editor', 'skizzen', 'referenz'].includes(h) ? h : 'editor';
+    for (const k of ['editor', 'skizzen', 'referenz']) { document.getElementById('v-' + k).classList.toggle('hidden', k !== v); document.getElementById('t-' + k).classList.toggle('on', k === v); } };
+  window.addEventListener('hashchange', route); route();
+})();
+</script>
+</body>
+</html>

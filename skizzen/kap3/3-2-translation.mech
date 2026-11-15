@@ -1,0 +1,7 @@
+titel "Translation (Übungsheft Abb. 2.2): alle Punkte haben dieselbe Geschwindigkeit"
+punkte M(0,0)  N(1.5,0.65)
+kurve (-0.3,-0.3) (0.7,-0.3) (1.4,0.2) (2.2,0.6) (1.7,1.0) (0.5,0.95) (-0.3,0.4) geschlossen grau
+text (0.5,-0.4) "K" grau
+marke M N
+vektor ~v_M bei M richtung 45° länge 0.75
+vektor ~v_N bei N richtung 45° länge 0.75

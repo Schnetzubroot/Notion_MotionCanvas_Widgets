@@ -9,6 +9,7 @@ SECTIONS = {
     '1-4': '1.4 Sphärische Koordinaten', '1-5': '1.5 Vektorielle Darstellung der Bewegung',
     '2-1': '2.1 Vektorfunktion einer skalaren Variable', '2-2': '2.2 Schnelligkeit und Geschwindigkeit',
     '2-3': '2.3 Ortsvektor und Geschwindigkeit', '2-4': '2.4 Komponenten der Geschwindigkeit',
+    '3-1': '3.1 Satz der projizierten Geschwindigkeiten', '3-2': '3.2 Translation', '3-3': '3.3 Rotation',
 }
 
 def title(p):
@@ -17,7 +18,8 @@ def title(p):
 parts = ['<h2>Werkzeuge</h2><ul>'
          '<li><a href="werkzeuge/vektorrechner.html">Vektorrechner</a> (Addition, Skalar-, Kreuz- und Spatprodukt, Projektionen, Zentralachse)</li>'
          '<li><a href="werkzeuge/rechenblatt.html">Rechenblatt</a> (eigene Rechnungen wie in GeoGebra, mit 3D-Ansicht)</li>'
-         '<li><a href="werkzeuge/koordinaten-spielplatz.html">Koordinaten-Spielplatz</a> (Punkte, Koordinatenlinien, Flächen, Bahnkurven)</li></ul>']
+         '<li><a href="werkzeuge/koordinaten-spielplatz.html">Koordinaten-Spielplatz</a> (Punkte, Koordinatenlinien, Flächen, Bahnkurven)</li>'
+         '<li><a href="mechskizze/index.html">MechSkizze-Editor</a> (Skizzen als Text: Freikörperbilder, Lager, Kräfte, Geschwindigkeiten; <a href="mechskizze/index.html#skizzen">alle Skizzen</a>)</li></ul>']
 for key, name in SECTIONS.items():
     files = sorted((ROOT / f'kap{key[0]}').glob(f'{key}-*.html'))
     items = ''.join(f'<li><a href="kap{key[0]}/{f.name}">{title(f)}</a></li>' for f in files)

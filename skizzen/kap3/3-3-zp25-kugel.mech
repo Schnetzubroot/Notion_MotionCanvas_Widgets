@@ -1,0 +1,12 @@
+titel "ZP1 2025 A2: Die Rotationsachse geht durch A und C"
+3d achsen (-0.75,-0.18) (0.62,-0.42) (0,1)
+param R=1
+punkte O(0,0,0) A(0,0,R) B(-R,0,0) C(R,0,0)
+kugel O radius R
+pfeil von (0,0,-R) nach (0,0,1.5R) "z" ; pfeil von O nach (1.6R,0,0) "x" ; pfeil von O nach (0,1.7R,0) "y"
+linie A B gestrichelt
+marke O A B C
+achse "μ" mitte(A,C) richtung (1,0,-1) länge 3.6R
+vektor ~v_B bei B richtung +y länge 0.8R
+vektor ~ω bei A richtung (1,0,-1) länge 0.7R
+text C "~v_C = ~0" lage ur
