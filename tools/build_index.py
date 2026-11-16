@@ -18,6 +18,7 @@ def title(p):
 parts = ['<h2>Werkzeuge</h2><ul>'
          '<li><a href="werkzeuge/vektorrechner.html">Vektorrechner</a> (Addition, Skalar-, Kreuz- und Spatprodukt, Projektionen, Zentralachse)</li>'
          '<li><a href="werkzeuge/rechenblatt.html">Rechenblatt</a> (eigene Rechnungen wie in GeoGebra, mit 3D-Ansicht)</li>'
+         '<li><a href="werkzeuge/funktionsplotter.html">Funktionsplotter</a> (Graphen y = f(x) wie in GeoGebra, mit Reglern, Ableitungen und Zoom)</li>'
          '<li><a href="werkzeuge/koordinaten-spielplatz.html">Koordinaten-Spielplatz</a> (Punkte, Koordinatenlinien, Flächen, Bahnkurven)</li>'
          '<li><a href="mechskizze/index.html">MechSkizze-Editor</a> (Skizzen als Text: Freikörperbilder, Lager, Kräfte, Geschwindigkeiten; <a href="mechskizze/index.html#skizzen">alle Skizzen</a>)</li></ul>']
 for key, name in SECTIONS.items():
