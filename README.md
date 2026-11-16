@@ -15,7 +15,7 @@ Die Seiten werden über GitHub Pages ausgeliefert und in Notion eingebettet. Üb
 | `analysis-w2/` | Analysis I, Woche 2, Kapitel I.2–3: Funktionen, Grenzwerte, Stetigkeit |
 | `analysis-w3/` | Analysis I, Woche 3, Kapitel I.4–7: Zwischenwertsatz, Koordinatentransformationen, Umkehrfunktion, Asymptoten |
 | `chemistry-w2/` | Chemistry (151-0909-00L), Woche 2, Brown Kap. 10: Gasgesetze, Geschwindigkeitsverteilung |
-| `werkzeuge/` | Vektorrechner, Rechenblatt (eigene Rechnungen) und Koordinaten-Spielplatz (freie Werkzeuge, Szenario per `?szenario=zp25` wählbar) |
+| `werkzeuge/` | Vektorrechner, Rechenblatt (eigene Rechnungen), Funktionsplotter (2D-Graphen wie in GeoGebra, Beispiele per `?beispiel=2`) und Koordinaten-Spielplatz (freie Werkzeuge, Szenario per `?szenario=zp25` wählbar) |
 | `lib/` | gemeinsame Bibliothek (`core.js`, `core.css`) und MechSkizze-Renderer (`mechskizze.js`, läuft auch in Node) |
 | `tools/` | Build-Skripte: `python3 tools/build_kap1.py`, `build_kap2.py`, `build_kap3.py`, `build_skizzen.py`, `build_analysis_w1.py`, `build_analysis_w2.py`, `build_analysis_w3.py`, `build_chemistry_w2.py`, `build_index.py` |
 
@@ -26,3 +26,8 @@ Jedes Widget zeigt genau eine Situation. Die HTML-Dateien in `kap1/`, `kap2/`, `
 MechSkizze ist eine Textsprache für Mechanik-Skizzen (Sprache: `mechskizze/REFERENZ.md`). Eine Skizze ist eine `.mech`-Datei in `skizzen/`.
 In Notion bettet man sie so ein: `https://schnetzubroot.github.io/Notion_MotionCanvas_Widgets/mechskizze/ansicht.html?s=kap3/3-1-spg`.
 Die Ansicht zeigt den Text und einen Link in den Editor. Neue Skizze: Datei anlegen, dann `python3 tools/build_skizzen.py`.
+
+## Funktionsplotter
+
+`werkzeuge/funktionsplotter.html` zeichnet Funktionen einer Variablen: eine Zeile pro Objekt, z. B. `f(x) = a x^2 + b`, `a = regler(-3, 3, 1)`, `f'(x)`, `P = (1, f(1))`, `x = 2`, `f(x) = sqrt(x), 0 <= x <= 4`.
+In Notion einbetten: Blatt bauen, „Link mit diesem Blatt kopieren“ klicken und den Link mit `/embed` einfügen. Der Link enthält Eingabe, Reglerstände, Farben und Ausschnitt.

@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Funktionsplotter</title>
+<link rel="stylesheet" href="../lib/core.css">
+<style>
+  .wrap.wide { max-width: 1200px; }
+  a { color: var(--c2); }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.25fr); gap: 14px; align-items: start; }
+  @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } .sticky { position: static !important; order: -1; } }
+  .sticky { position: sticky; top: 8px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .card h2 { font-size: 13px; margin: 0 0 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  textarea { width: 100%; box-sizing: border-box; min-height: 170px; resize: vertical; font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); tab-size: 2; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: 6px 0; }
+  .res { display: flex; flex-direction: column; gap: 3px; }
+  .ln { display: flex; align-items: center; gap: 6px; padding: 3px 6px; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    border-radius: 6px; background: var(--bg); border: 1px solid var(--line); }
+  .ln .no { color: var(--muted); min-width: 20px; text-align: right; }
+  .ln .v { flex: 1; overflow-wrap: anywhere; }
+  .ln .v b { font-weight: 600; }
+  .ln.hid .v { opacity: .45; }
+  .ln.err { border-color: var(--warn); } .ln.err .v { color: var(--warn); }
+  .ln input[type=checkbox] { margin: 0; }
+  .ln input[type=color] { width: 24px; height: 20px; padding: 0; border: 1px solid var(--line); border-radius: 5px; background: none; cursor: pointer; }
+  .ex { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 4px 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--fg); min-width: 0; }
+  .ex.bad { border-color: var(--warn); outline: 1px solid var(--warn); }
+  .xs { display: flex; align-items: center; gap: 6px; font-size: 13px; margin: 3px 0; }
+  .xs .n { min-width: 40px; font-family: ui-monospace, monospace; }
+  .xs input[type=range] { flex: 1; min-width: 70px; }
+  .xs input.ex { width: 80px; }
+  .xs button { padding: 1px 8px; }
+  .help { font-size: 13px; }
+  .help code { font-size: 12px; }
+  .help table { border-collapse: collapse; width: 100%; }
+  .help td { padding: 3px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+  .help td:first-child { width: 42%; overflow-wrap: anywhere; }
+  details summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+  #cv { height: 540px; cursor: crosshair; }
+  @media (max-width: 600px) { #cv { height: 380px; } }
+  .readout { position: absolute; left: 8px; top: 7px; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--bg); opacity: .94;
+    border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; pointer-events: none; display: none; max-width: 70%; }
+  .readout span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zoom { position: absolute; right: 8px; bottom: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .zoom button { width: 30px; height: 30px; padding: 0; font-size: 16px; line-height: 1; }
+</style>
+</head>
+<body>
+<div class="wrap wide">
+  <h1>Funktionsplotter</h1>
+  <p class="sub">Funktionen zeichnen wie in GeoGebra: eine Zeile pro Funktion, z. B. <code>f(x) = x^2 − a</code>, mit Reglern wie <code>a = regler(−3, 3, 1)</code>. Ableitungen mit <code>f'(x)</code>. Ziehen verschiebt, Mausrad oder zwei Finger zoomen. Für Vektoren in 3D: <a href="rechenblatt.html">Rechenblatt</a>.</p>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h2>Beispiel laden</h2>
+        <select id="ex" style="width:100%"></select>
+      </div>
+      <div class="card">
+        <h2>Eingabe</h2>
+        <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+        <div class="row"><button id="share">Link mit diesem Blatt kopieren</button><span class="help" id="shareMsg"></span></div>
+        <div id="sliders"></div>
+      </div>
+      <div class="card">
+        <h2>Objekte</h2>
+        <div class="res" id="res"></div>
+      </div>
+      <div class="card help">
+        <details>
+          <summary>Syntax und Funktionen</summary>
+          <table>
+            <tr><td><code>f(x) = x^3 − 2x</code></td><td>Funktion mit Namen; danach überall verwendbar: <code>g(x) = f(x − 1) + 2</code></td></tr>
+            <tr><td><code>y = 2x + 1</code>, <code>sin(x)/x</code></td><td>Graph ohne Namen (eine Zeile mit <code>x</code> ohne <code>=</code> geht auch)</td></tr>
+            <tr><td><code>f'(x)</code>, <code>f''(x)</code></td><td>erste und zweite Ableitung einer benannten Funktion (numerisch)</td></tr>
+            <tr><td><code>a = regler(−3, 3)</code></td><td>Schieberegler; optional Startwert und Schritt: <code>regler(0, 5, 1, 0.5)</code>. ▶ animiert ihn</td></tr>
+            <tr><td><code>c = 2</code>, <code>x0 = pi/4</code></td><td>Konstante; darf in allen Zeilen benutzt werden</td></tr>
+            <tr><td><code>P = (x0, f(x0))</code></td><td>Punkt</td></tr>
+            <tr><td><code>x = 2</code></td><td>senkrechte Gerade</td></tr>
+            <tr><td><code>f(x) = sqrt(x), 0 ≤ x ≤ 4</code></td><td>Funktion nur auf einem Intervall zeichnen (auch <code>&lt;</code>, <code>&lt;=</code>)</td></tr>
+            <tr><td><code>+ − * / ^</code>, <code>|x|</code></td><td>Rechnen; <code>2x</code>, <code>2pi</code>, <code>3(x+1)</code>, <code>x(x−1)</code> sind Produkte</td></tr>
+            <tr><td><code>sin cos tan asin acos atan sinh cosh tanh sqrt exp ln log abs sign floor ceil min max</code></td><td>Standardfunktionen (<code>log</code> = Zehnerlogarithmus, <code>arcsin</code> usw. gehen auch); Konstanten <code>pi</code>, <code>e</code></td></tr>
+            <tr><td><code># Kommentar</code></td><td>wird ignoriert</td></tr>
+          </table>
+          <p class="help">Wo eine Funktion nicht definiert ist (z. B. <code>ln(x)</code> für x ≤ 0) oder springt (z. B. <code>tan(x)</code>), bleibt der Graph offen. Fährst du mit der Maus über das Bild, siehst du x und die Funktionswerte an dieser Stelle.</p>
+        </details>
+      </div>
+    </div>
+    <div class="sticky">
+      <div class="stage"><canvas id="cv"></canvas><div class="readout" id="ro"></div><div class="hint">Ziehen: verschieben · Mausrad/zwei Finger: zoomen</div>
+        <div class="zoom"><button id="zin" title="hineinzoomen">+</button><button id="zout" title="herauszoomen">−</button></div></div>
+      <div class="row"><button id="reset">Ansicht zurücksetzen</button><label class="help"><input type="checkbox" id="eq" checked> x und y gleich skaliert</label>
+        <label class="help"><input type="checkbox" id="piAx"> x-Achse in π</label></div>
+    </div>
+  </div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const PI = Math.PI;
+  const PALETTE = ['--c2', '--c1', '--c3', '--c4', '--c5'];
+  const fmt = x => MW.fmt(x, 4);
+  class E extends Error {}
+
+  // ---------- tokenizer ----------
+  const ID0 = /[A-Za-z_À-ÖØ-öø-ɏͰ-Ͽ]/, ID = /[A-Za-z0-9_'À-ÖØ-öø-ɏͰ-Ͽ]/;
+  function lex(s) {
+    const t = []; let i = 0;
+    while (i < s.length) {
+      const c = s[i];
+      if (/\s/.test(c)) { i++; continue; }
+      if (/[0-9.]/.test(c)) { let j = i; while (j < s.length && /[0-9.]/.test(s[j])) j++;
+        if (s[j] === 'e' && /[-+0-9]/.test(s[j + 1] || '') && /[0-9]/.test(s[j + 1] === '-' || s[j + 1] === '+' ? s[j + 2] || '' : s[j + 1])) { j += 2; while (/[0-9]/.test(s[j] || '')) j++; }
+        const n = Number(s.slice(i, j)); if (!isFinite(n)) throw new E('Zahl „' + s.slice(i, j) + '“ unlesbar'); t.push({ k: 'n', v: n }); i = j; continue; }
+      if (ID0.test(c)) { let j = i + 1; while (j < s.length && ID.test(s[j])) j++; t.push({ k: 'id', v: s.slice(i, j) }); i = j; continue; }
+      if (c === '√') { t.push({ k: 'op', v: '√' }); i++; continue; }
+      if (c === '²' || c === '³') { t.push({ k: 'op', v: '^' }); t.push({ k: 'n', v: c === '²' ? 2 : 3 }); i++; continue; }
+      const map = { '−': '-', '⋅': '*', '·': '*', '•': '*', '∗': '*', '×': '*', '÷': '/' }, o = map[c] || c;
+      if ('+-*/^(),|'.includes(o)) { t.push({ k: 'op', v: o }); i++; continue; }
+      throw new E('Zeichen „' + c + '“ unbekannt');
+    }
+    return t;
+  }
+
+  // ---------- functions ----------
+  const sc = f => [1, f];
+  const FUN = {
+    sin: sc(Math.sin), cos: sc(Math.cos), tan: sc(Math.tan), cot: sc(x => 1 / Math.tan(x)),
+    asin: sc(Math.asin), acos: sc(Math.acos), atan: sc(Math.atan), arcsin: sc(Math.asin), arccos: sc(Math.acos), arctan: sc(Math.atan),
+    sinh: sc(Math.sinh), cosh: sc(Math.cosh), tanh: sc(Math.tanh), arsinh: sc(Math.asinh), arcosh: sc(Math.acosh), artanh: sc(Math.atanh),
+    sqrt: sc(Math.sqrt), wurzel: sc(Math.sqrt), cbrt: sc(Math.cbrt), exp: sc(Math.exp), ln: sc(Math.log), log: sc(Math.log10), lg: sc(Math.log10), log2: sc(Math.log2),
+    abs: sc(Math.abs), betrag: sc(Math.abs), sign: sc(Math.sign), sgn: sc(Math.sign), floor: sc(Math.floor), ceil: sc(Math.ceil), round: sc(Math.round),
+    atan2: [2, Math.atan2], min: [-1, Math.min], max: [-1, Math.max], mod: [2, (a, b) => a - b * Math.floor(a / b)],
+    nroot: [2, (x, n) => (x < 0 && n % 2 === 1) ? -Math.pow(-x, 1 / n) : Math.pow(x, 1 / n)],
+  };
+  const CONST = { pi: PI, π: PI, e: Math.E };
+  const RESERVED = new Set(['x', 'y', 'pi', 'π', 'e', 'regler', 'slider']);
+
+  // ---------- parser (Pratt) -> AST; userFns: names that may be called ----------
+  function parse(tokens, userFns) {
+    let p = 0;
+    const peek = () => tokens[p], next = () => tokens[p++];
+    const isOp = v => peek() && peek().k === 'op' && peek().v === v;
+    const expect = v => { if (!isOp(v)) throw new E('„' + v + '“ erwartet'); p++; };
+    const BIN = { '+': 1, '-': 1, '*': 2, '/': 2 };
+    const startsAtom = t => t && (t.k === 'id' || t.k === 'n' || (t.k === 'op' && (t.v === '(' || t.v === '√')));
+    function expr(minP = 0, inAbs = false) {
+      let left = unary(inAbs);
+      for (;;) {
+        const t = peek(); if (!t) break;
+        let op = null, consume = false;
+        if (t.k === 'op' && BIN[t.v]) { op = t.v; consume = true; }
+        else if (startsAtom(t) && t.k !== 'n') op = '*';   // implicit product: 2x, a x^2, x(x - 1), 2 sin(x)
+        const prec = consume ? BIN[op] : 2;
+        if (!op || prec < minP) break;
+        if (consume) p++;
+        left = { t: 'bin', op, a: left, b: expr(prec + 1, inAbs) };
+      }
+      return left;
+    }
+    function unary(inAbs) {
+      if (isOp('-')) { p++; return { t: 'neg', a: expr(2, inAbs) }; }
+      if (isOp('+')) { p++; return expr(2, inAbs); }
+      return power(inAbs);
+    }
+    function power(inAbs) {
+      const base = atom(inAbs);
+      if (isOp('^')) { p++; const ex = isOp('-') ? (p++, { t: 'neg', a: power(inAbs) }) : power(inAbs); return { t: 'bin', op: '^', a: base, b: ex, implicit: true }; }
+      return base;
+    }
+    function args() { const items = []; if (isOp(')')) { p++; return items; }
+      for (;;) { items.push(expr()); if (isOp(',')) { p++; continue; } expect(')'); return items; } }
+    function atom(inAbs) {
+      const t = next(); if (!t) throw new E('Ausdruck unvollständig');
+      if (t.k === 'n') return { t: 'num', v: t.v, implicit: true };
+      if (t.k === 'op' && t.v === '√') return { t: 'call', f: 'sqrt', args: [power(inAbs)], implicit: true };
+      if (t.k === 'id') {
+        const m = t.v.match(/^(.*?)('*)$/), base = m[1], d = m[2].length;
+        if (FUN[t.v]) { if (!isOp('(')) throw new E(t.v + ' braucht Klammern: ' + t.v + '(x)'); p++; return { t: 'call', f: t.v, args: args(), implicit: true }; }
+        if (userFns.has(base) && (d > 0 || isOp('('))) { if (!isOp('(')) throw new E(t.v + ' braucht ein Argument: ' + t.v + '(x)'); p++;
+          return { t: 'ucall', f: base, d, args: args(), implicit: true }; }
+        if (d) throw new E('„' + base + '“ ist keine Funktion; Ableitung geht nur für benannte Funktionen wie f(x) = …');
+        return { t: 'var', v: t.v, implicit: true };
+      }
+      if (t.v === '(') { const it = args(); if (it.length === 1) return { ...it[0], implicit: true }; if (it.length === 2) return { t: 'pt', items: it, implicit: true };
+        throw new E('Punkt braucht genau 2 Koordinaten: (x, y)'); }
+      if (t.v === '|' && !inAbs) { const a = expr(0, true); expect('|'); return { t: 'call', f: 'abs', args: [a], implicit: true }; }
+      throw new E('„' + t.v + '“ an dieser Stelle unerwartet');
+    }
+    const ast = expr();
+    if (p < tokens.length) throw new E('„' + tokens[p].v + '“ an dieser Stelle unerwartet');
+    return ast;
+  }
+  const usesVar = (n, v) => !n ? false : n.t === 'var' ? n.v === v : [n.a, n.b, ...(n.args || []), ...(n.items || [])].some(c => usesVar(c, v));
+
+  // ---------- program ----------
+  // ctx: { fns: name -> {params, ast}, consts: name -> ast, sl: name -> slider, cache, busy }
+  let P = null;
+  function lookup(name, loc) {
+    if (loc && name in loc) return loc[name];
+    if (name in P.sl) return P.sl[name].value;
+    if (name in P.cache) return P.cache[name];
+    if (name in P.consts) {
+      if (P.busy.has(name)) throw new E('„' + name + '“ hängt von sich selbst ab');
+      P.busy.add(name); try { const v = ev(P.consts[name], {}); if (typeof v !== 'number') throw new E('„' + name + '“ ist ein Punkt, keine Zahl'); return (P.cache[name] = v); } finally { P.busy.delete(name); }
+    }
+    if (name in CONST) return CONST[name];
+    if (name === 'x' || name === 'y') throw new E('„' + name + '“ ist hier nicht frei; in Funktionen f(x) = … verwenden');
+    if (P.fns[name]) throw new E(name + ' ist eine Funktion: ' + name + '(…)');
+    throw new E('„' + name + '“ ist nicht definiert');
+  }
+  let depth = 0;
+  function callUser(name, d, xs) {
+    const F = P.fns[name];
+    if (xs.length !== F.params.length) throw new E(name + '() braucht ' + F.params.length + ' Argument' + (F.params.length === 1 ? '' : 'e'));
+    if (d > 0) { if (F.params.length !== 1) throw new E('Ableitung nur für Funktionen einer Variablen');
+      const x = xs[0], h = 1e-4 * Math.max(1, Math.abs(x)), f = u => callUser(name, d - 1, [u]);
+      return (f(x + h) - f(x - h)) / (2 * h); }
+    if (++depth > 60) { depth = 0; throw new E(name + ' ruft sich selbst auf'); }
+    try { const loc = {}; F.params.forEach((q, i) => { loc[q] = xs[i]; });
+      if (F.dom && !F.dom.every(c => c(loc))) return NaN;
+      return ev(F.ast, loc); } finally { depth--; }
+  }
+  function ev(n, loc) {
+    switch (n.t) {
+      case 'num': return n.v;
+      case 'var': return lookup(n.v, loc);
+      case 'neg': return -ev(n.a, loc);
+      case 'pt': return n.items.map(x => ev(x, loc));
+      case 'call': { const [ar, f] = FUN[n.f], a = n.args.map(x => ev(x, loc));
+        if (ar >= 0 && a.length !== ar) throw new E(n.f + '() braucht ' + ar + ' Argument' + (ar === 1 ? '' : 'e'));
+        if (a.some(v => typeof v !== 'number')) throw new E(n.f + '() erwartet Zahlen'); return f(...a); }
+      case 'ucall': return callUser(n.f, n.d, n.args.map(x => ev(x, loc)));
+      case 'bin': { const a = ev(n.a, loc), b = ev(n.b, loc);
+        if (typeof a !== 'number' || typeof b !== 'number') throw new E('mit Punkten kann man nicht rechnen');
+        switch (n.op) { case '+': return a + b; case '-': return a - b; case '*': return a * b; case '/': return a / b;
+          case '^': return (a < 0 && !Number.isInteger(b)) ? oddRoot(a, b) : Math.pow(a, b); } }
+    }
+  }
+  // (−8)^(1/3) = −2: odd roots of negative numbers, as in the lecture
+  function oddRoot(a, b) { for (const q of [3, 5, 7, 9]) { const pq = Math.round(b * q); if (Math.abs(b * q - pq) < 1e-9 && pq % 2 !== 0) return -Math.pow(-a, b); } return NaN; }
+
+  const sliders = {};   // persistent slider state: name -> {min,max,step,value,playing}
+  const NAME = '[A-Za-z_À-ÖØ-öø-ɏͰ-Ͽ][A-Za-z0-9_À-ÖØ-öø-ɏͰ-Ͽ]*';
+  const FN_RE = new RegExp('^(' + NAME + ')\\s*\\(([^)]*)\\)\\s*=(?!=)(.*)$'), AS_RE = new RegExp('^(' + NAME + ')\\s*=(?!=)(.*)$');
+  // domain restriction "…, 0 ≤ x ≤ 4" or "…, x > 0"
+  function splitDomain(rhs) {
+    const parts = []; let d = 0, cur = '';
+    for (const ch of rhs) { if (ch === '(') d++; if (ch === ')') d--; if (ch === ',' && d === 0) { parts.push(cur); cur = ''; } else cur += ch; }
+    parts.push(cur); const conds = [];
+    while (parts.length > 1 && /[<>≤≥]/.test(parts[parts.length - 1])) conds.unshift(parts.pop());
+    return { body: parts.join(','), conds: conds.join(',') };
+  }
+  function compileCond(s, userFns) {
+    const toks = s.replace(/<=/g, '≤').replace(/>=/g, '≥').split(/([<>≤≥])/).map(x => x.trim());
+    if (toks.length < 3) throw new E('Bedingung unvollständig');
+    const exprs = []; const ops = [];
+    toks.forEach((x, i) => i % 2 ? ops.push(x) : exprs.push(parse(lex(x), userFns)));
+    return loc => { const v = exprs.map(a => ev(a, loc));
+      return ops.every((o, i) => o === '<' ? v[i] < v[i + 1] : o === '>' ? v[i] > v[i + 1] : o === '≤' ? v[i] <= v[i + 1] + 1e-12 : v[i] >= v[i + 1] - 1e-12); };
+  }
+  function run(src) {
+    const lines = [], fns = {}, consts = {}, sl = {};
+    const raw = src.split('\n').map((s, i) => ({ no: i + 1, s: s.replace(/#.*$/, '').trim() })).filter(L => L.s);
+    // pass 1: names of user functions (so that f(…) parses as a call everywhere)
+    const userFns = new Set();
+    raw.forEach(L => { const m = L.s.match(FN_RE); if (m && !FUN[m[1]] && !RESERVED.has(m[1])) userFns.add(m[1]);
+      const a = L.s.match(AS_RE); if (a && !userFns.has(a[1]) && /(^|[^A-Za-z_'])x([^A-Za-z_0-9']|$)/.test(a[2]) && !/^\s*\(/.test(a[2]) && !/regler|slider/.test(a[2]) && !RESERVED.has(a[1]) && !FUN[a[1]]) userFns.add(a[1]); });
+    let anon = 0;
+    raw.forEach(L => {
+      const r = { no: L.no, src: L.s };
+      try {
+        let m;
+        if ((m = L.s.match(FN_RE)) && !FUN[m[1]] && !RESERVED.has(m[1])) {
+          const params = m[2].split(',').map(x => x.trim()).filter(Boolean);
+          if (!params.length) throw new E('Parameter fehlt: ' + m[1] + '(x) = …');
+          params.forEach(q => { if (!new RegExp('^' + NAME + '$').test(q)) throw new E('Parameter „' + q + '“ ist kein Name'); });
+          if (fns[m[1]]) throw new E(m[1] + ' ist schon definiert');
+          const { body, conds } = splitDomain(m[3]); if (!body.trim()) throw new E('rechte Seite fehlt');
+          const F = fns[m[1]] = { params, ast: parse(lex(body), userFns), dom: conds ? conds.split(',').map(c => compileCond(c, userFns)) : null };
+          Object.assign(r, { kind: params.length === 1 ? 'graph' : 'fn', name: m[1], label: m[1] + '(' + params.join(', ') + ')', F });
+        } else if ((m = L.s.match(AS_RE))) {
+          const name = m[1], rhs = m[2].trim(); if (!rhs) throw new E('rechte Seite fehlt');
+          if (name === 'y') { const { body, conds } = splitDomain(rhs); const F = { params: ['x'], ast: parse(lex(body), userFns), dom: conds ? conds.split(',').map(c => compileCond(c, userFns)) : null };
+            Object.assign(r, { kind: 'graph', label: 'y', F, anon: anon++ }); }
+          else if (name === 'x') Object.assign(r, { kind: 'vline', ast: parse(lex(rhs), userFns) });
+          else {
+            if (FUN[name]) throw new E('„' + name + '“ ist ein Funktionsname'); if (RESERVED.has(name)) throw new E('„' + name + '“ ist reserviert');
+            if (fns[name] || consts[name] || sl[name]) throw new E(name + ' ist schon definiert');
+            const sm = rhs.match(/^(regler|slider)\s*\((.*)\)$/);
+            if (sm) { const a = sm[2].split(',').map(x => ev(parse(lex(x), userFns), {}));
+              if (a.length < 2 || a.length > 4 || a.some(v => typeof v !== 'number' || !isFinite(v))) throw new E('regler(min, max), regler(min, max, start) oder regler(min, max, start, schritt)');
+              if (!(a[1] > a[0])) throw new E('regler(min, max) mit min < max');
+              let s = sliders[name]; const sig = a.join(',');
+              if (!s || s.sig !== sig) s = sliders[name] = { min: a[0], max: a[1], value: a[2] ?? a[0], step: a[3] || 0, sig, playing: s ? s.playing : false };
+              s.value = Math.min(Math.max(s.value, s.min), s.max); sl[name] = s;
+              Object.assign(r, { kind: 'slider', name }); }
+            else if (userFns.has(name)) { const { body, conds } = splitDomain(rhs);
+              const F = fns[name] = { params: ['x'], ast: parse(lex(body), userFns), dom: conds ? conds.split(',').map(c => compileCond(c, userFns)) : null };
+              Object.assign(r, { kind: 'graph', name, label: name + '(x)', F }); }
+            else { const ast = parse(lex(rhs), userFns);
+              if (ast.t === 'pt') Object.assign(r, { kind: 'point', name, ast });
+              else { consts[name] = ast; Object.assign(r, { kind: 'const', name }); } }
+          }
+        } else {
+          const { body, conds } = splitDomain(L.s); const ast = parse(lex(body), userFns);
+          if (usesVar(ast, 'x')) Object.assign(r, { kind: 'graph', label: body.trim(), F: { params: ['x'], ast, dom: conds ? conds.split(',').map(c => compileCond(c, userFns)) : null }, anon: anon++ });
+          else if (ast.t === 'pt') Object.assign(r, { kind: 'point', ast });
+          else Object.assign(r, { kind: 'value', ast });
+        }
+      } catch (e) { r.err = e instanceof E ? e.message : 'Fehler: ' + e.message; }
+      lines.push(r);
+    });
+    for (const k in sliders) if (!sl[k]) delete sliders[k];
+    return { lines, fns, consts, sl, cache: {}, busy: new Set() };
+  }
+  // evaluate everything that does not depend on x (values, points, vertical lines); graphs get a quick sanity check
+  function evaluate() {
+    P.cache = {}; P.busy = new Set();
+    P.lines.forEach(r => {
+      if (r.err && !r.perr) return; r.err = r.perr ? null : r.err; r.perr = false;
+      try {
+        if (r.kind === 'const') r.val = lookup(r.name);
+        else if (r.kind === 'value') r.val = ev(r.ast, {});
+        else if (r.kind === 'vline') { r.val = ev(r.ast, {}); if (typeof r.val !== 'number') throw new E('x = Zahl erwartet'); }
+        else if (r.kind === 'point') { r.val = ev(r.ast, {}); }
+        else if (r.kind === 'slider') r.val = P.sl[r.name].value;
+        else if (r.kind === 'graph') { const xs = [0.123, 1.37, -2.71, 0.5]; let ok = false;
+          for (const x of xs) { try { const v = callUser0(r, x); if (isFinite(v)) { ok = true; break; } } catch (e) { if (e instanceof E) throw e; } } r.val = null; }
+        if (typeof r.val === 'number' && !isFinite(r.val)) throw new E('Ergebnis undefiniert');
+      } catch (e) { r.err = e instanceof E ? e.message : 'Fehler: ' + e.message; r.perr = true; }
+    });
+  }
+  const callUser0 = (r, x) => { depth = 0; const F = r.F, loc = { [F.params[0]]: x }; if (F.dom && !F.dom.every(c => c(loc))) return NaN; return ev(F.ast, loc); };
+  const fnOf = r => x => { try { const v = callUser0(r, x); return typeof v === 'number' ? v : NaN; } catch (e) { return NaN; } };
+
+  // ---------- view ----------
+  const cv = document.getElementById('cv'), ctx = cv.getContext('2d'), ro = document.getElementById('ro');
+  let W = 0, H = 0;
+  const DEF = { cx: 0, cy: 0, sx: 50, sy: 50 };   // center in world coords, pixels per unit
+  const view = { ...DEF };
+  const eqEl = document.getElementById('eq'), piEl = document.getElementById('piAx');
+  const X = x => W / 2 + (x - view.cx) * view.sx, Y = y => H / 2 - (y - view.cy) * view.sy;
+  const iX = px => view.cx + (px - W / 2) / view.sx, iY = py => view.cy - (py - H / 2) / view.sy;
+  function resetView() { const s = Math.max(30, Math.min(W, H) / 12); Object.assign(view, { cx: 0, cy: 0, sx: s, sy: s }); }
+  let raf = 0, mouse = null;
+  const redraw = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); };
+  new ResizeObserver(() => { const dpr = window.devicePixelRatio || 1, b = cv.getBoundingClientRect(); const first = !W;
+    W = b.width; H = b.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (first && !initView) resetView(); redraw(); }).observe(cv);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
+
+  function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
+  const tickText = v => { const a = Math.abs(v); if (a < 1e-12) return '0'; const s = a >= 1e5 || a < 1e-3 ? v.toExponential(1) : String(+v.toPrecision(6)); return s.replace('-', '−'); };
+  function draw() {
+    if (!W) return; const C = { fg: MW.css('--fg'), muted: MW.css('--muted'), grid: MW.css('--grid'), line: MW.css('--line'), bg: MW.css('--bg') };
+    ctx.clearRect(0, 0, W, H);
+    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    // grid
+    const x0 = iX(0), x1 = iX(W), y0 = iY(H), y1 = iY(0);
+    const usePi = piEl.checked;
+    let stx = usePi ? niceStepPi(90 / view.sx) : niceStep(90 / view.sx), sty = niceStep(70 / view.sy);
+    const minor = (st, n) => st / n;
+    ctx.lineWidth = 1;
+    const vlines = (st, col) => { ctx.strokeStyle = col; ctx.beginPath(); for (let k = Math.ceil(x0 / st); k * st <= x1; k++) { const px = Math.round(X(k * st)) + 0.5; ctx.moveTo(px, 0); ctx.lineTo(px, H); } ctx.stroke(); };
+    const hlines = (st, col) => { ctx.strokeStyle = col; ctx.beginPath(); for (let k = Math.ceil(y0 / st); k * st <= y1; k++) { const py = Math.round(Y(k * st)) + 0.5; ctx.moveTo(0, py); ctx.lineTo(W, py); } ctx.stroke(); };
+    ctx.globalAlpha = 0.5; vlines(minor(stx, usePi ? 2 : 5), C.grid); hlines(minor(sty, 5), C.grid); ctx.globalAlpha = 1;
+    vlines(stx, C.line); hlines(sty, C.line);
+    // axes
+    const ax = Math.min(Math.max(Y(0), 0), H), ay = Math.min(Math.max(X(0), 0), W);
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(0, ax); ctx.lineTo(W, ax); ctx.moveTo(ay, 0); ctx.lineTo(ay, H); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    const lblY = ax > H - 18 ? ax - 16 : ax + 4;
+    for (let k = Math.ceil(x0 / stx); k * stx <= x1; k++) { if (k === 0) continue; const v = k * stx, px = X(v); if (px > W - 18 || px < 12) continue;
+      const t = usePi ? piText(v) : tickText(v); halo(t, px, lblY, C.bg); }
+    ctx.textAlign = ay < 30 ? 'left' : 'right'; ctx.textBaseline = 'middle';
+    for (let k = Math.ceil(y0 / sty); k * sty <= y1; k++) { if (k === 0) continue; const v = k * sty, py = Y(v); if (py < 12 || py > H - 12) continue; halo(tickText(v), ay < 30 ? ay + 5 : ay - 5, py, C.bg); }
+    ctx.textAlign = 'right'; ctx.textBaseline = 'top'; halo('0', ay - 4, ax + 4, C.bg);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillStyle = C.fg; ctx.fillText('x', W - 6, ax - 4); ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText('y', ay + 6, 4);
+
+    // objects
+    const vis = P.lines.filter(r => !r.err && r.col && !hidden.has(r.key));
+    vis.forEach(r => {
+      ctx.strokeStyle = r.col; ctx.fillStyle = r.col; ctx.lineWidth = 2.4; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      if (r.kind === 'graph') plot(fnOf(r));
+      else if (r.kind === 'vline') { const px = X(r.val); ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke(); }
+      else if (r.kind === 'point') { const [px, py] = [X(r.val[0]), Y(r.val[1])]; if (!isFinite(px + py)) return;
+        ctx.beginPath(); ctx.arc(px, py, 4.5, 0, 2 * PI); ctx.fill();
+        ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        if (r.name) halo(r.name, px + 7, py - 4, C.bg, r.col);
+        ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; }
+    });
+    // graph labels at the right edge
+    ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    vis.filter(r => r.kind === 'graph' && r.name).forEach(r => { const f = fnOf(r);
+      for (let px = W - 46; px > W * 0.4; px -= 12) { const v = f(iX(px)), py = Y(v); if (isFinite(py) && py > 18 && py < H - 6) { halo(r.name, px, py - 5, C.bg, r.col); break; } } });
+    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    // trace
+    if (mouse && !drag) {
+      const x = iX(mouse[0]); const rows = ['x = ' + fmt(x)];
+      ctx.strokeStyle = C.muted; ctx.globalAlpha = 0.5; ctx.setLineDash([4, 4]); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(mouse[0] + 0.5, 0); ctx.lineTo(mouse[0] + 0.5, H); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      vis.filter(r => r.kind === 'graph').forEach(r => { const v = fnOf(r)(x); rows.push([r.name ? r.name + '(x)' : r.label, isFinite(v) ? fmt(v) : 'nicht definiert', r.col]);
+        if (isFinite(v)) { ctx.fillStyle = r.col; ctx.beginPath(); ctx.arc(mouse[0], Y(v), 4, 0, 2 * PI); ctx.fill(); } });
+      ro.innerHTML = ''; rows.forEach(t => { const s = document.createElement('span'); if (Array.isArray(t)) { s.textContent = t[0] + ' = ' + t[1]; s.style.color = t[2]; } else s.textContent = t; ro.appendChild(s); });
+      ro.style.display = 'block';
+    } else ro.style.display = 'none';
+  }
+  function halo(t, x, y, bg, col) { ctx.save(); ctx.lineWidth = 3; ctx.strokeStyle = bg; ctx.strokeText(t, x, y); ctx.restore(); if (col) { ctx.save(); ctx.fillStyle = col; ctx.fillText(t, x, y); ctx.restore(); } else ctx.fillText(t, x, y); }
+  function niceStepPi(raw) { const u = raw / PI; const cands = [1 / 12, 1 / 6, 1 / 4, 1 / 2, 1, 2, 4, 5, 10, 20, 50, 100]; for (const c of cands) if (c >= u) return c * PI; return niceStep(u) * PI; }
+  function piText(v) { const q = v / PI; for (const d of [1, 2, 3, 4, 6, 12]) { const n = Math.round(q * d); if (Math.abs(q * d - n) < 1e-6) {
+      const g = (a, b) => b ? g(b, a % b) : a, k = g(Math.abs(n), d), nn = n / k, dd = d / k;
+      return (nn < 0 ? '−' : '') + (Math.abs(nn) === 1 ? '' : Math.abs(nn)) + 'π' + (dd === 1 ? '' : '/' + dd); } } return tickText(v); }
+  // adaptive-ish sampling with breaks at poles, jumps and gaps in the domain
+  function plot(f) {
+    const N = Math.ceil(W * 2), dx = W / N, LIM = H * 4;
+    const clampY = py => Math.max(-LIM, Math.min(H + LIM, py));
+    ctx.beginPath(); let pen = false, px0 = 0, y0 = NaN, yv0 = NaN;
+    for (let i = 0; i <= N; i++) {
+      const px = i * dx, x = iX(px), v = f(x), py = Y(v);
+      if (!isFinite(v)) {
+        if (pen && isFinite(yv0)) { // run up to the domain boundary by bisection
+          let a = iX(px0), b = x; for (let k = 0; k < 30; k++) { const m = (a + b) / 2; isFinite(f(m)) ? a = m : b = m; } const ya = f(a); if (isFinite(ya)) ctx.lineTo(X(a), clampY(Y(ya))); }
+        pen = false; px0 = px; yv0 = v; continue; }
+      if (!pen) {
+        if (i > 0 && !isFinite(yv0)) { // came out of a gap: start at the boundary
+          let a = iX(px0), b = x; for (let k = 0; k < 30; k++) { const m = (a + b) / 2; isFinite(f(m)) ? b = m : a = m; } const yb = f(b); ctx.moveTo(X(b), clampY(Y(yb))); ctx.lineTo(px, clampY(py)); }
+        else ctx.moveTo(px, clampY(py));
+        pen = true;
+      } else if (Math.abs(py - y0) > H * 0.5) { // steep: pole or jump?
+        const xm = iX(px - dx / 2), vm = f(xm), ym = Y(vm);
+        const between = isFinite(vm) && ym >= Math.min(py, y0) - 2 && ym <= Math.max(py, y0) + 2;
+        const steep2 = between && Math.abs(Y(f(iX(px - dx / 4))) - Y(f(iX(px - 3 * dx / 4)))) > Math.abs(py - y0) * 0.9;
+        if (!between || steep2) ctx.moveTo(px, clampY(py)); // pole or jump: break the curve
+        else ctx.lineTo(px, clampY(py));
+      } else ctx.lineTo(px, clampY(py));
+      px0 = px; y0 = py; yv0 = v;
+    }
+    ctx.stroke();
+  }
+
+  // ---------- interaction ----------
+  let drag = null; const ptrs = new Map(); let pinch = null;
+  const pos = e => { const b = cv.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, pos(e));
+    if (ptrs.size === 1) { drag = { p: pos(e), cx: view.cx, cy: view.cy, moved: false }; if (e.pointerType !== 'mouse') mouse = pos(e); }
+    else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; drag = null;
+      pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), dx: Math.abs(a[0] - b[0]), dy: Math.abs(a[1] - b[1]), sx: view.sx, sy: view.sy, m: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], w: [iX((a[0] + b[0]) / 2), iY((a[1] + b[1]) / 2)] }; }
+    redraw(); });
+  cv.addEventListener('pointermove', e => {
+    const p = pos(e);
+    if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, p);
+    if (pinch && ptrs.size === 2) { const [a, b] = [...ptrs.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), k = d / Math.max(pinch.d, 1);
+      view.sx = pinch.sx * k; view.sy = pinch.sy * k; const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      view.cx = pinch.w[0] - (m[0] - W / 2) / view.sx; view.cy = pinch.w[1] + (m[1] - H / 2) / view.sy; mouse = null; redraw(); return; }
+    if (drag) { const dx = p[0] - drag.p[0], dy = p[1] - drag.p[1]; if (Math.hypot(dx, dy) > 3) drag.moved = true;
+      if (drag.moved && e.pointerType === 'mouse') { view.cx = drag.cx - dx / view.sx; view.cy = drag.cy + dy / view.sy; }
+      else if (drag.moved) { view.cx = drag.cx - dx / view.sx; view.cy = drag.cy + dy / view.sy; }
+      redraw(); return; }
+    mouse = p; redraw(); });
+  const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
+    if (drag && !drag.moved && e.pointerType !== 'mouse') mouse = pos(e); else if (e.pointerType !== 'mouse') mouse = null;
+    drag = null; redraw(); };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !drag) { mouse = null; redraw(); } });
+  function zoomAt(px, py, k, onlyX, onlyY) { const wx = iX(px), wy = iY(py);
+    if (!onlyY) view.sx *= k; if (!onlyX) view.sy *= k;
+    if (eqEl.checked && (onlyX || onlyY)) { view.sx = view.sy = onlyX ? view.sx : view.sy; }
+    view.sx = Math.min(Math.max(view.sx, 1e-4), 1e7); view.sy = Math.min(Math.max(view.sy, 1e-4), 1e7);
+    view.cx = wx - (px - W / 2) / view.sx; view.cy = wy + (py - H / 2) / view.sy; redraw(); saveSoon(); }
+  cv.addEventListener('wheel', e => { e.preventDefault(); const p = pos(e), k = Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.0015));
+    // Shift: only x, Alt: only y (if not equal scaling)
+    zoomAt(p[0], p[1], k, e.shiftKey && !eqEl.checked, e.altKey && !eqEl.checked); }, { passive: false });
+  document.getElementById('zin').addEventListener('click', () => zoomAt(W / 2, H / 2, 1.4));
+  document.getElementById('zout').addEventListener('click', () => zoomAt(W / 2, H / 2, 1 / 1.4));
+  document.getElementById('reset').addEventListener('click', () => { resetView(); redraw(); saveSoon(); });
+  eqEl.addEventListener('change', () => { if (eqEl.checked) view.sy = view.sx; redraw(); saveSoon(); });
+  piEl.addEventListener('change', () => { redraw(); saveSoon(); });
+
+  // ---------- UI ----------
+  const srcEl = document.getElementById('src'), resEl = document.getElementById('res'), slEl = document.getElementById('sliders');
+  const hidden = new Set(); let colors = {};   // key -> hex
+  const elm = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+  const toHex = c => { c = (c || '').trim(); if (c[0] === '#') return c.length === 4 ? '#' + c.slice(1).split('').map(x => x + x).join('') : c.slice(0, 7);
+    const m = c.match(/\d+/g); return m ? '#' + m.slice(0, 3).map(x => (+x).toString(16).padStart(2, '0')).join('') : '#888888'; };
+  let sliderKey = '', sliderUI = {};
+  function render() {
+    P = run(srcEl.value); evaluate();
+    let k = 0;
+    P.lines.forEach(r => { r.key = r.name || ('#' + (r.kind === 'graph' ? 'g' + r.anon : r.no));
+      if (!r.err && (r.kind === 'graph' || r.kind === 'point' || r.kind === 'vline')) { r.col = colors[r.key] || MW.css(PALETTE[k % PALETTE.length]); k++; } });
+    renderRows(); renderSliders(); save(); redraw();
+  }
+  function soft() { evaluate(); updateRows(); redraw(); }
+  function valText(r) {
+    if (r.err) return r.src + '  →  ' + r.err;
+    switch (r.kind) {
+      case 'graph': return r.src;
+      case 'fn': return r.src;
+      case 'vline': return 'senkrechte Gerade x = ' + fmt(r.val);
+      case 'point': return (r.name ? r.name + ' = ' : '') + '(' + r.val.map(fmt).join(', ') + ')';
+      case 'slider': return r.name + ' = ' + fmt(r.val) + '   (Regler)';
+      case 'const': return r.name + ' = ' + fmt(r.val);
+      case 'value': return r.src + ' = ' + fmt(r.val);
+    }
+    return r.src;
+  }
+  let rowEls = {};
+  function renderRows() {
+    resEl.innerHTML = ''; rowEls = {};
+    if (!P.lines.length) { resEl.appendChild(elm('p', 'help', 'Noch nichts eingegeben. Schreibe z. B. f(x) = x^2.')); return; }
+    P.lines.forEach(r => {
+      const d = elm('div', 'ln' + (r.err ? ' err' : '') + (r.col && hidden.has(r.key) ? ' hid' : ''));
+      if (r.col) {
+        const cb = elm('input'); cb.type = 'checkbox'; cb.checked = !hidden.has(r.key); cb.title = 'ein-/ausblenden';
+        cb.addEventListener('change', () => { hidden.has(r.key) ? hidden.delete(r.key) : hidden.add(r.key); d.classList.toggle('hid', hidden.has(r.key)); redraw(); save(); });
+        const col = elm('input'); col.type = 'color'; col.value = toHex(r.col); col.title = 'Farbe';
+        col.addEventListener('input', () => { colors[r.key] = col.value; r.col = col.value; redraw(); save(); });
+        d.appendChild(cb); d.appendChild(col);
+      }
+      d.appendChild(elm('span', 'no', r.no)); const v = elm('span', 'v', valText(r)); d.appendChild(v);
+      rowEls[r.no] = { d, v, r }; resEl.appendChild(d);
+    });
+  }
+  function updateRows() { P.lines.forEach(r => { const o = rowEls[r.no]; if (!o) return; o.v.textContent = valText(r); o.d.classList.toggle('err', !!r.err); }); }
+  function renderSliders() {
+    const key = Object.entries(P.sl).map(([n, s]) => n + s.sig).join('|');
+    if (key === sliderKey) { for (const [n, s] of Object.entries(P.sl)) sliderUI[n] && sliderUI[n].set(s.value); return; }
+    sliderKey = key; slEl.innerHTML = ''; sliderUI = {};
+    for (const [n, s] of Object.entries(P.sl)) {
+      const w = elm('div', 'xs'); w.appendChild(elm('span', 'n', n));
+      const rg = elm('input'); rg.type = 'range'; rg.min = s.min; rg.max = s.max; rg.step = s.step || 'any'; rg.value = s.value;
+      const t = elm('input', 'ex'); t.value = fmt(s.value); t.title = 'Zahl oder Ausdruck, z. B. pi/2';
+      const pb = elm('button', '', s.playing ? '❚❚' : '▶'); pb.title = 'Regler animieren';
+      w.appendChild(rg); w.appendChild(t); w.appendChild(pb); slEl.appendChild(w);
+      rg.addEventListener('input', () => { s.value = +rg.value; t.value = fmt(s.value); t.classList.remove('bad'); soft(); saveSoon(); });
+      t.addEventListener('input', () => { let v; try { v = ev(parse(lex(t.value), new Set()), {}); if (typeof v !== 'number' || !isFinite(v)) throw 0; } catch (e) { t.classList.add('bad'); return; }
+        t.classList.remove('bad'); s.value = v; rg.value = Math.min(Math.max(v, s.min), s.max); soft(); saveSoon(); });
+      pb.addEventListener('click', () => { s.playing = !s.playing; pb.textContent = s.playing ? '❚❚' : '▶'; if (s.playing) { s.dir = s.dir || 1; tick(); } });
+      sliderUI[n] = { set(v) { rg.value = v; if (document.activeElement !== t) t.value = fmt(v); } };
+    }
+  }
+  let last = 0, tickRaf = 0;
+  function tick() { cancelAnimationFrame(tickRaf); last = 0;
+    const step = ts => { const dt = last ? Math.min((ts - last) / 1000, 0.1) : 0; last = ts; let any = false;
+      for (const [n, s] of Object.entries(P.sl)) { if (!s.playing) continue; any = true;
+        s.value += (s.dir || 1) * dt * (s.max - s.min) / 6;
+        if (s.value >= s.max) { s.value = s.max; s.dir = -1; } if (s.value <= s.min) { s.value = s.min; s.dir = 1; }
+        sliderUI[n] && sliderUI[n].set(s.value); }
+      if (any) { soft(); tickRaf = requestAnimationFrame(step); } };
+    tickRaf = requestAnimationFrame(step); }
+
+  // ---------- examples ----------
+  const EX = [
+    ['Parabel mit Reglern', `a = regler(-3, 3, 1)
+b = regler(-5, 5, 0)
+f(x) = a x^2 + b
+S = (0, f(0))`],
+    ['Tangente und Ableitung', `f(x) = x^3 - 3x
+x0 = regler(-2.5, 2.5, 1.5)
+t(x) = f(x0) + f'(x0) (x - x0)
+f'(x)
+P = (x0, f(x0))`],
+    ['Koordinatentransformationen (I.5)', `a = regler(-4, 4, 1)
+b = regler(-4, 4, 0)
+c = regler(-3, 3, 1)
+d = regler(-3, 3, 1)
+f(x) = x^2 - 1
+g(x) = d f(c (x - a)) + b`],
+    ['sin(x)/x → 1', `f(x) = sin(x)/x
+y = cos(x)
+h(x) = 1/cos(x), -pi/2 < x < pi/2
+y = 1`],
+    ['Asymptoten (I.7)', `f(x) = (x^2 + 1)/(x - 1)
+g(x) = x + 1
+x = 1
+d(x) = f(x) - g(x)`],
+    ['Umkehrfunktion (I.6)', `f(x) = exp(x)
+g(x) = ln(x)
+y = x
+a = regler(-2, 1.5, 0.5)
+P = (a, f(a))
+Q = (f(a), a)`],
+    ['Arcus-Funktionen (I.6)', `f(x) = sin(x), -pi/2 ≤ x ≤ pi/2
+g(x) = arcsin(x)
+y = x`],
+    ['Schwingung A cos(ωt + φ)', `A = regler(0.5, 3, 2)
+ω = regler(0.5, 4, 1)
+φ = regler(-3.14, 3.14, 0)
+s(x) = A cos(ω x + φ)
+y = cos(x)`],
+    ['Exponential gegen Potenz', `f(x) = 2^x
+g(x) = x^10, x ≥ 0`],
+    ['Zwischenwertsatz (I.4)', `f(x) = x^3 - 2x - 1
+m = regler(-3, 3, 0.5)
+y = m
+a = -1.8
+b = 2
+A = (a, f(a))
+B = (b, f(b))`],
+    ['Leeres Blatt', ``],
+  ];
+  const exSel = document.getElementById('ex');
+  const o0 = elm('option', '', '– Beispiel wählen –'); o0.value = ''; exSel.appendChild(o0);
+  EX.forEach(([n], i) => { const o = elm('option', '', n); o.value = i; exSel.appendChild(o); });
+  exSel.addEventListener('change', () => { if (exSel.value === '') return; srcEl.value = EX[+exSel.value][1];
+    for (const k in sliders) delete sliders[k]; hidden.clear(); colors = {}; resetView(); render(); });
+  let tt = 0; srcEl.addEventListener('input', () => { clearTimeout(tt); tt = setTimeout(render, 150); });
+
+  // ---------- persistence & sharing ----------
+  const enc = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const dec = s => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
+  const state = () => ({ v: [view.cx, view.cy, view.sx, view.sy].map(x => +x.toPrecision(6)), eq: eqEl.checked, pi: piEl.checked,
+    sl: Object.fromEntries(Object.entries(sliders).map(([n, s]) => [n, +s.value.toPrecision(6)])), hid: [...hidden], col: colors });
+  function save() { try { localStorage.setItem('plotter-src', srcEl.value); localStorage.setItem('plotter-state', JSON.stringify(state())); } catch (e) {} }
+  let st = 0; const saveSoon = () => { clearTimeout(st); st = setTimeout(save, 300); };
+  function applyState(o) { if (!o) return false;
+    if (o.v && o.v.length === 4 && o.v.every(isFinite)) [view.cx, view.cy, view.sx, view.sy] = o.v;
+    eqEl.checked = o.eq !== false; piEl.checked = !!o.pi; (o.hid || []).forEach(k => hidden.add(k)); colors = o.col || {};
+    pendingSl = o.sl || {}; return !!o.v; }
+  let pendingSl = {};
+  document.getElementById('share').addEventListener('click', async () => {
+    const url = location.href.split('#')[0].split('?')[0] + '#r=' + enc(srcEl.value) + '&s=' + enc(JSON.stringify(state())), msg = document.getElementById('shareMsg');
+    try { await navigator.clipboard.writeText(url); msg.textContent = 'Kopiert. In Notion mit /embed einfügen.'; }
+    catch (e) { history.replaceState(null, '', url); msg.textContent = 'Link steht jetzt in der Adresszeile.'; }
+  });
+  let start = null, initView = false;
+  const h = location.hash.match(/#r=([\w-]*)/); if (h) { try { start = dec(h[1]); } catch (e) {} }
+  const hs = location.hash.match(/[#&]s=([\w-]+)/);
+  try { if (hs) initView = applyState(JSON.parse(dec(hs[1]))); } catch (e) {}
+  const q = new URLSearchParams(location.search).get('beispiel');
+  if (start === null && q !== null && EX[+q]) { start = EX[+q][1]; exSel.value = q; }
+  if (start === null) { try { start = localStorage.getItem('plotter-src'); if (start !== null) initView = applyState(JSON.parse(localStorage.getItem('plotter-state') || 'null')); } catch (e) {} }
+  if (start === null) { start = EX[0][1]; exSel.value = '0'; }
+  srcEl.value = start;
+  // first run creates sliders; then apply saved slider values
+  P = run(srcEl.value); for (const [n, v] of Object.entries(pendingSl)) if (sliders[n] && isFinite(v)) sliders[n].value = Math.min(Math.max(v, sliders[n].min), sliders[n].max);
+  render();
+  window.plotterTest = { values: () => P.lines.map(r => [r.no, r.kind, r.err || (r.val == null ? null : r.val)]), setSrc: s => { srcEl.value = s; render(); }, f: (i, x) => fnOf(P.lines[i])(x) };
+})();
+</script>
+</body>
+</html>
