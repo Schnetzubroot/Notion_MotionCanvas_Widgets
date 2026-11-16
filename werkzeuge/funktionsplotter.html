@@ -51,7 +51,7 @@
 <body>
 <div class="wrap wide">
   <h1>Funktionsplotter</h1>
-  <p class="sub">Funktionen zeichnen wie in GeoGebra: eine Zeile pro Funktion, z. B. <code>f(x) = x^2 − a</code>, mit Reglern wie <code>a = regler(−3, 3, 1)</code>. Ableitungen mit <code>f'(x)</code>. Ziehen verschiebt, Mausrad oder zwei Finger zoomen. Für Vektoren in 3D: <a href="rechenblatt.html">Rechenblatt</a>.</p>
+  <p class="sub">Funktionen zeichnen wie in GeoGebra: eine Zeile pro Funktion, z. B. <code>f(x) = x^2 − a</code>, mit Reglern wie <code>a = regler(−3, 3, 1)</code>. Ableitungen mit <code>f'(x)</code>, Vektorfunktionen wie <code>r(t) = (cos(t), sin(t))</code> und Vektorfelder <code>F(x, y) = (−y, x)</code>. Ziehen verschiebt, Mausrad oder zwei Finger zoomen. Für Vektoren in 3D: <a href="rechenblatt.html">Rechenblatt</a>.</p>
   <div class="grid2">
     <div>
       <div class="card">
@@ -77,7 +77,10 @@
             <tr><td><code>f'(x)</code>, <code>f''(x)</code></td><td>erste und zweite Ableitung einer benannten Funktion (numerisch)</td></tr>
             <tr><td><code>a = regler(−3, 3)</code></td><td>Schieberegler; optional Startwert und Schritt: <code>regler(0, 5, 1, 0.5)</code>. ▶ animiert ihn</td></tr>
             <tr><td><code>c = 2</code>, <code>x0 = pi/4</code></td><td>Konstante; darf in allen Zeilen benutzt werden</td></tr>
-            <tr><td><code>P = (x0, f(x0))</code></td><td>Punkt</td></tr>
+            <tr><td><code>P = (x0, f(x0))</code></td><td>Punkt; mit Punkten (Vektoren) darf man rechnen: <code>P + 2(1, 0)</code>, <code>t·v</code></td></tr>
+            <tr><td><code>r(t) = (cos(t), sin(t)), 0 ≤ t ≤ 2pi</code></td><td>Vektorfunktion (Parameterkurve) t ↦ (x(t), y(t)); ohne Bereich läuft t von 0 bis 2π. <code>r(t0)</code> ist ein Punkt, <code>r'(t0)</code> der Tangentenvektor</td></tr>
+            <tr><td><code>F(x, y) = (−y, x)</code></td><td>Vektorfeld: Pfeile auf einem Gitter, Länge proportional zu |F|</td></tr>
+            <tr><td><code>v = pfeil(P, (1, 2))</code></td><td>Pfeil (Vektor) mit Fusspunkt P; <code>pfeil((1, 2))</code> startet im Ursprung</td></tr>
             <tr><td><code>x = 2</code></td><td>senkrechte Gerade</td></tr>
             <tr><td><code>f(x) = sqrt(x), 0 ≤ x ≤ 4</code></td><td>Funktion nur auf einem Intervall zeichnen (auch <code>&lt;</code>, <code>&lt;=</code>)</td></tr>
             <tr><td><code>+ − * / ^</code>, <code>|x|</code></td><td>Rechnen; <code>2x</code>, <code>2pi</code>, <code>3(x+1)</code>, <code>x(x−1)</code> sind Produkte</td></tr>
@@ -204,7 +207,7 @@
     if (name in P.cache) return P.cache[name];
     if (name in P.consts) {
       if (P.busy.has(name)) throw new E('„' + name + '“ hängt von sich selbst ab');
-      P.busy.add(name); try { const v = ev(P.consts[name], {}); if (typeof v !== 'number') throw new E('„' + name + '“ ist ein Punkt, keine Zahl'); return (P.cache[name] = v); } finally { P.busy.delete(name); }
+      P.busy.add(name); try { return (P.cache[name] = ev(P.consts[name], {})); } finally { P.busy.delete(name); }
     }
     if (name in CONST) return CONST[name];
     if (name === 'x' || name === 'y') throw new E('„' + name + '“ ist hier nicht frei; in Funktionen f(x) = … verwenden');
@@ -217,7 +220,8 @@
     if (xs.length !== F.params.length) throw new E(name + '() braucht ' + F.params.length + ' Argument' + (F.params.length === 1 ? '' : 'e'));
     if (d > 0) { if (F.params.length !== 1) throw new E('Ableitung nur für Funktionen einer Variablen');
       const x = xs[0], h = 1e-4 * Math.max(1, Math.abs(x)), f = u => callUser(name, d - 1, [u]);
-      return (f(x + h) - f(x - h)) / (2 * h); }
+      const a = f(x + h), b = f(x - h);
+      return Array.isArray(a) && Array.isArray(b) ? a.map((v, i) => (v - b[i]) / (2 * h)) : (a - b) / (2 * h); }
     if (++depth > 60) { depth = 0; throw new E(name + ' ruft sich selbst auf'); }
     try { const loc = {}; F.params.forEach((q, i) => { loc[q] = xs[i]; });
       if (F.dom && !F.dom.every(c => c(loc))) return NaN;
@@ -227,17 +231,26 @@
     switch (n.t) {
       case 'num': return n.v;
       case 'var': return lookup(n.v, loc);
-      case 'neg': return -ev(n.a, loc);
+      case 'neg': { const a = ev(n.a, loc); return Array.isArray(a) ? a.map(v => -v) : -a; }
       case 'pt': return n.items.map(x => ev(x, loc));
       case 'call': { const [ar, f] = FUN[n.f], a = n.args.map(x => ev(x, loc));
         if (ar >= 0 && a.length !== ar) throw new E(n.f + '() braucht ' + ar + ' Argument' + (ar === 1 ? '' : 'e'));
-        if (a.some(v => typeof v !== 'number')) throw new E(n.f + '() erwartet Zahlen'); return f(...a); }
+        if (a.some(v => typeof v !== 'number')) { if (a.length === 1 && (n.f === 'abs' || n.f === 'betrag')) return Math.hypot(...a[0]); throw new E(n.f + '() erwartet Zahlen'); } return f(...a); }
       case 'ucall': return callUser(n.f, n.d, n.args.map(x => ev(x, loc)));
       case 'bin': { const a = ev(n.a, loc), b = ev(n.b, loc);
-        if (typeof a !== 'number' || typeof b !== 'number') throw new E('mit Punkten kann man nicht rechnen');
+        if (Array.isArray(a) || Array.isArray(b)) return vecOp(n.op, a, b);
         switch (n.op) { case '+': return a + b; case '-': return a - b; case '*': return a * b; case '/': return a / b;
           case '^': return (a < 0 && !Number.isInteger(b)) ? oddRoot(a, b) : Math.pow(a, b); } }
     }
+  }
+  // points/vectors: + − between vectors, * and / with numbers, * between two vectors = dot product
+  function vecOp(op, a, b) {
+    const A = Array.isArray(a), B = Array.isArray(b);
+    if (A && B) { if (op === '+') return [a[0] + b[0], a[1] + b[1]]; if (op === '-') return [a[0] - b[0], a[1] - b[1]];
+      if (op === '*') return a[0] * b[0] + a[1] * b[1]; throw new E('„' + op + '“ geht nicht zwischen zwei Vektoren'); }
+    if (op === '*') return A ? a.map(v => v * b) : b.map(v => v * a);
+    if (op === '/' && A) return a.map(v => v / b);
+    throw new E('„' + op + '“ geht nicht zwischen Zahl und Vektor');
   }
   // (−8)^(1/3) = −2: odd roots of negative numbers, as in the lecture
   function oddRoot(a, b) { for (const q of [3, 5, 7, 9]) { const pq = Math.round(b * q); if (Math.abs(b * q - pq) < 1e-9 && pq % 2 !== 0) return -Math.pow(-a, b); } return NaN; }
@@ -258,9 +271,25 @@
     if (toks.length < 3) throw new E('Bedingung unvollständig');
     const exprs = []; const ops = [];
     toks.forEach((x, i) => i % 2 ? ops.push(x) : exprs.push(parse(lex(x), userFns)));
-    return loc => { const v = exprs.map(a => ev(a, loc));
+    const c = loc => { const v = exprs.map(a => ev(a, loc));
       return ops.every((o, i) => o === '<' ? v[i] < v[i + 1] : o === '>' ? v[i] > v[i + 1] : o === '≤' ? v[i] <= v[i + 1] + 1e-12 : v[i] >= v[i + 1] - 1e-12); };
+    c.exprs = exprs; c.ops = ops; return c;
   }
+  function splitTop(str) { const out = []; let d = 0, cur = '';
+    for (const ch of str) { if (ch === '(') d++; if (ch === ')') d--; if (ch === ',' && d === 0) { out.push(cur); cur = ''; } else cur += ch; }
+    out.push(cur); return out.map(x => x.trim()); }
+  // parameter range of a curve from "a ≤ t ≤ b" (or t ≥ a, t ≤ b); default [0, 2π]
+  function curveRange(F) {
+    let lo = 0, hi = 2 * PI, q = F.params[0]; const isP = n => n.t === 'var' && n.v === q;
+    (F.dom || []).forEach(c => { const e = c.exprs, o = c.ops; try {
+      if (e.length === 3 && isP(e[1])) { const a = ev(e[0], {}), b = ev(e[2], {}); if ('<≤'.includes(o[0])) { lo = a; hi = b; } else { lo = b; hi = a; } }
+      else if (e.length === 2) { const pl = isP(e[0]), v = ev(pl ? e[1] : e[0], {}); const up = pl ? '<≤'.includes(o[0]) : '>≥'.includes(o[0]); up ? hi = v : lo = v; }
+    } catch (err) {} });
+    if (!(isFinite(lo) && isFinite(hi) && hi > lo)) throw new E('Parameterbereich unklar: z. B. ' + q + '(…), 0 ≤ ' + q + ' ≤ 2pi');
+    return [lo, hi];
+  }
+  function arrowArgs(str, userFns) { const g = splitTop(str); if (g.length < 1 || g.length > 2 || !g[0]) throw new E('pfeil(v) oder pfeil(A, v)'); return g.map(x => parse(lex(x), userFns)); }
+  const ARROW_RE = /^(pfeil|vektor|arrow)\s*\((.*)\)$/;
   function run(src) {
     const lines = [], fns = {}, consts = {}, sl = {};
     const raw = src.split('\n').map((s, i) => ({ no: i + 1, s: s.replace(/#.*$/, '').trim() })).filter(L => L.s);
@@ -290,7 +319,9 @@
             if (FUN[name]) throw new E('„' + name + '“ ist ein Funktionsname'); if (RESERVED.has(name)) throw new E('„' + name + '“ ist reserviert');
             if (fns[name] || consts[name] || sl[name]) throw new E(name + ' ist schon definiert');
             const sm = rhs.match(/^(regler|slider)\s*\((.*)\)$/);
-            if (sm) { const a = sm[2].split(',').map(x => ev(parse(lex(x), userFns), {}));
+            const am = rhs.match(ARROW_RE);
+            if (am) Object.assign(r, { kind: 'arrow', name, args: arrowArgs(am[2], userFns) });
+            else if (sm) { const a = sm[2].split(',').map(x => ev(parse(lex(x), userFns), {}));
               if (a.length < 2 || a.length > 4 || a.some(v => typeof v !== 'number' || !isFinite(v))) throw new E('regler(min, max), regler(min, max, start) oder regler(min, max, start, schritt)');
               if (!(a[1] > a[0])) throw new E('regler(min, max) mit min < max');
               let s = sliders[name]; const sig = a.join(',');
@@ -301,10 +332,10 @@
               const F = fns[name] = { params: ['x'], ast: parse(lex(body), userFns), dom: conds ? conds.split(',').map(c => compileCond(c, userFns)) : null };
               Object.assign(r, { kind: 'graph', name, label: name + '(x)', F }); }
             else { const ast = parse(lex(rhs), userFns);
-              if (ast.t === 'pt') Object.assign(r, { kind: 'point', name, ast });
-              else { consts[name] = ast; Object.assign(r, { kind: 'const', name }); } }
+              consts[name] = ast; Object.assign(r, { kind: ast.t === 'pt' ? 'point' : 'const', name }); }
           }
-        } else {
+        } else if ((m = L.s.match(ARROW_RE))) Object.assign(r, { kind: 'arrow', args: arrowArgs(m[2], userFns) });
+        else {
           const { body, conds } = splitDomain(L.s); const ast = parse(lex(body), userFns);
           if (usesVar(ast, 'x')) Object.assign(r, { kind: 'graph', label: body.trim(), F: { params: ['x'], ast, dom: conds ? conds.split(',').map(c => compileCond(c, userFns)) : null }, anon: anon++ });
           else if (ast.t === 'pt') Object.assign(r, { kind: 'point', ast });
@@ -322,18 +353,26 @@
     P.lines.forEach(r => {
       if (r.err && !r.perr) return; r.err = r.perr ? null : r.err; r.perr = false;
       try {
-        if (r.kind === 'const') r.val = lookup(r.name);
+        if (r.kind === 'const' || (r.kind === 'point' && r.name)) { r.val = lookup(r.name); r.kind = Array.isArray(r.val) ? 'point' : 'const'; }
         else if (r.kind === 'value') r.val = ev(r.ast, {});
+        else if (r.kind === 'arrow') { const g = r.args.map(a => ev(a, {})); if (!g.every(Array.isArray)) throw new E('pfeil braucht Vektoren: pfeil((1, 2)) oder pfeil(P, v)');
+          r.val = g.length === 1 ? { A: [0, 0], v: g[0] } : { A: g[0], v: g[1] }; if (![...r.val.A, ...r.val.v].every(isFinite)) throw new E('Pfeil undefiniert'); }
         else if (r.kind === 'vline') { r.val = ev(r.ast, {}); if (typeof r.val !== 'number') throw new E('x = Zahl erwartet'); }
         else if (r.kind === 'point') { r.val = ev(r.ast, {}); }
+        if (r.kind === 'point' && !r.val.every(isFinite)) throw new E('Punkt undefiniert');
         else if (r.kind === 'slider') r.val = P.sl[r.name].value;
-        else if (r.kind === 'graph') { const xs = [0.123, 1.37, -2.71, 0.5]; let ok = false;
-          for (const x of xs) { try { const v = callUser0(r, x); if (isFinite(v)) { ok = true; break; } } catch (e) { if (e instanceof E) throw e; } } r.val = null; }
+        else if (r.kind === 'graph' || r.kind === 'curve') { r.kind = 'graph'; r.val = null;
+          for (const x of [0.123, 1.37, -2.71, 0.5, 3, 10, -10]) { const v = callUser0(r, x); if (Array.isArray(v)) { r.kind = 'curve'; break; } if (isFinite(v)) break; }
+          if (r.kind === 'curve') r.range = curveRange(r.F); }
+        else if (r.kind === 'fn' || r.kind === 'field') { r.kind = 'fn';
+          if (r.F.params.length === 2) for (const xy of [[0.37, 0.61], [1.3, -0.7], [-2.1, 1.9]]) { const v = callUserN(r, xy); if (Array.isArray(v)) { r.kind = 'field'; break; } if (isFinite(v)) break; } }
         if (typeof r.val === 'number' && !isFinite(r.val)) throw new E('Ergebnis undefiniert');
       } catch (e) { r.err = e instanceof E ? e.message : 'Fehler: ' + e.message; r.perr = true; }
     });
   }
   const callUser0 = (r, x) => { depth = 0; const F = r.F, loc = { [F.params[0]]: x }; if (F.dom && !F.dom.every(c => c(loc))) return NaN; return ev(F.ast, loc); };
+  const callUserN = (r, xs) => { depth = 0; const F = r.F, loc = {}; F.params.forEach((q, i) => { loc[q] = xs[i]; }); if (F.dom && !F.dom.every(c => c(loc))) return NaN; return ev(F.ast, loc); };
+  const vecOf = r => (...xs) => { try { const v = callUserN(r, xs); return Array.isArray(v) && isFinite(v[0]) && isFinite(v[1]) ? v : null; } catch (e) { return null; } };
   const fnOf = r => x => { try { const v = callUser0(r, x); return typeof v === 'number' ? v : NaN; } catch (e) { return NaN; } };
 
   // ---------- view ----------
@@ -391,6 +430,11 @@
         ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         if (r.name) halo(r.name, px + 7, py - 4, C.bg, r.col);
         ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; }
+      else if (r.kind === 'curve') plotCurve(r, C);
+      else if (r.kind === 'field') plotField(r);
+      else if (r.kind === 'arrow') { const a = [X(r.val.A[0]), Y(r.val.A[1])], b = [X(r.val.A[0] + r.val.v[0]), Y(r.val.A[1] + r.val.v[1])]; arrow(a, b, 2.4, 11);
+        if (r.name) { ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+          halo(r.name, (a[0] + b[0]) / 2 + 6, (a[1] + b[1]) / 2 - 4, C.bg, r.col); ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; } }
     });
     // graph labels at the right edge
     ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
@@ -412,6 +456,34 @@
   function piText(v) { const q = v / PI; for (const d of [1, 2, 3, 4, 6, 12]) { const n = Math.round(q * d); if (Math.abs(q * d - n) < 1e-6) {
       const g = (a, b) => b ? g(b, a % b) : a, k = g(Math.abs(n), d), nn = n / k, dd = d / k;
       return (nn < 0 ? '−' : '') + (Math.abs(nn) === 1 ? '' : Math.abs(nn)) + 'π' + (dd === 1 ? '' : '/' + dd); } } return tickText(v); }
+  function arrow(p, q, w, head) { const dx = q[0] - p[0], dy = q[1] - p[1], L = Math.hypot(dx, dy); if (!(L > 1)) return;
+    const h = Math.min(head, L * 0.45), ux = dx / L, uy = dy / L; ctx.lineWidth = w;
+    ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0] - ux * h * 0.8, q[1] - uy * h * 0.8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(q[0] - ux * h - uy * h * 0.45, q[1] - uy * h + ux * h * 0.45);
+    ctx.lineTo(q[0] - ux * h + uy * h * 0.45, q[1] - uy * h - ux * h * 0.45); ctx.closePath(); ctx.fill(); }
+  // parametric curve t -> (x(t), y(t)); breaks where undefined or where it jumps
+  function plotCurve(r, C) {
+    const f = vecOf(r), [a, b] = r.range, N = 2400, LIM = 4 * Math.max(W, H), cl = v => Math.max(-LIM, Math.min(LIM + Math.max(W, H), v));
+    ctx.beginPath(); let pen = false, q0 = null, mid = null;
+    for (let i = 0; i <= N; i++) { const t = a + (b - a) * i / N, v = f(t); if (!v) { pen = false; continue; }
+      const q = [cl(X(v[0])), cl(Y(v[1]))];
+      if (pen && Math.hypot(q[0] - q0[0], q[1] - q0[1]) > Math.max(W, H) * 0.6) pen = false;
+      pen ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); pen = true; q0 = q;
+      if (i === Math.round(N * 0.62) && q[0] > 10 && q[0] < W - 20 && q[1] > 16 && q[1] < H - 6) mid = q; }
+    ctx.stroke();
+    if (r.name && mid) { ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      halo(r.name, mid[0] + 6, mid[1] - 4, C.bg, r.col); ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; }
+  }
+  // vector field on a grid: arrow length proportional to |F|, longest arrow ≈ grid spacing
+  function plotField(r) {
+    const f = vecOf(r), gap = 42, pts = [];
+    for (let py = gap / 2; py < H; py += gap) for (let px = gap / 2; px < W; px += gap) { const v = f(iX(px), iY(py)); if (v) pts.push([px, py, v[0] * view.sx, -v[1] * view.sy]); }
+    const m = Math.max(...pts.map(p => Math.hypot(p[2], p[3])), 1e-12), k = gap * 0.85 / m;
+    ctx.save(); ctx.globalAlpha = 0.85;
+    pts.forEach(([px, py, vx, vy]) => { const L = Math.hypot(vx, vy) * k; if (L < 1.5) { ctx.beginPath(); ctx.arc(px, py, 1.3, 0, 2 * PI); ctx.fill(); return; }
+      arrow([px - vx * k / 2, py - vy * k / 2], [px + vx * k / 2, py + vy * k / 2], 1.5, 7); });
+    ctx.restore();
+  }
   // adaptive-ish sampling with breaks at poles, jumps and gaps in the domain
   function plot(f) {
     const N = Math.ceil(W * 2), dx = W / N, LIM = H * 4;
@@ -489,7 +561,7 @@
     P = run(srcEl.value); evaluate();
     let k = 0;
     P.lines.forEach(r => { r.key = r.name || ('#' + (r.kind === 'graph' ? 'g' + r.anon : r.no));
-      if (!r.err && (r.kind === 'graph' || r.kind === 'point' || r.kind === 'vline')) { r.col = colors[r.key] || MW.css(PALETTE[k % PALETTE.length]); k++; } });
+      if (!r.err && ['graph', 'point', 'vline', 'curve', 'field', 'arrow'].includes(r.kind)) { r.col = colors[r.key] || MW.css(PALETTE[k % PALETTE.length]); k++; } });
     renderRows(); renderSliders(); save(); redraw();
   }
   function soft() { evaluate(); updateRows(); redraw(); }
@@ -498,11 +570,14 @@
     switch (r.kind) {
       case 'graph': return r.src;
       case 'fn': return r.src;
+      case 'curve': return r.src + '   (Kurve, ' + r.F.params[0] + ' von ' + fmt(r.range[0]) + ' bis ' + fmt(r.range[1]) + ')';
+      case 'field': return r.src + '   (Vektorfeld)';
+      case 'arrow': return (r.name ? r.name + ' = ' : '') + 'Pfeil (' + r.val.v.map(fmt).join(', ') + ') ab (' + r.val.A.map(fmt).join(', ') + '), Länge ' + fmt(Math.hypot(...r.val.v));
       case 'vline': return 'senkrechte Gerade x = ' + fmt(r.val);
       case 'point': return (r.name ? r.name + ' = ' : '') + '(' + r.val.map(fmt).join(', ') + ')';
       case 'slider': return r.name + ' = ' + fmt(r.val) + '   (Regler)';
       case 'const': return r.name + ' = ' + fmt(r.val);
-      case 'value': return r.src + ' = ' + fmt(r.val);
+      case 'value': return r.src + ' = ' + (Array.isArray(r.val) ? '(' + r.val.map(fmt).join(', ') + ')' : fmt(r.val));
     }
     return r.src;
   }
@@ -599,6 +674,17 @@ a = -1.8
 b = 2
 A = (a, f(a))
 B = (b, f(b))`],
+    ['Vektorfunktion: Ellipse mit Tangentenvektor', `a = regler(0.5, 4, 3)
+b = regler(0.5, 4, 2)
+r(t) = (a cos(t), b sin(t)), 0 ≤ t ≤ 2pi
+t0 = regler(0, 6.28, 0.8)
+P = r(t0)
+v = pfeil(P, r'(t0))`],
+    ['Vektorfunktionen: Spirale, Lissajous, Zykloide', `s(t) = t/4 (cos(t), sin(t)), 0 ≤ t ≤ 6pi
+L(t) = (3 sin(2t), 3 cos(3t))
+z(t) = (t - sin(t), 1 - cos(t)), -2pi ≤ t ≤ 4pi`],
+    ['Vektorfeld', `F(x, y) = (-y, x)
+r(t) = 2 (cos(t), sin(t))`],
     ['Leeres Blatt', ``],
   ];
   const exSel = document.getElementById('ex');
