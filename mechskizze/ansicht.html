@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MechSkizze</title>
 <link rel="stylesheet" href="../lib/core.css">
+<link rel="stylesheet" href="../lib/fonts/hand.css">
 <style>
   .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; justify-content: center; }
   .card svg { width: 100%; height: auto; max-height: 460px; }
@@ -26,16 +27,20 @@
 <script src="../lib/mechskizze.js"></script>
 <script>
 (async () => {
-  const s = new URLSearchParams(location.search).get('s') || '';
+  const q = new URLSearchParams(location.search), s = q.get('s') || '';
+  // ?stil=hand: wie von Hand mit Gel-Marker gezeichnet; &farben=aus: einfarbig
+  const opts = {}; if (/^(hand|sauber)$/.test(q.get('stil') || '')) opts.stil = q.get('stil'); if (q.get('farben') === 'aus') opts.farben = false;
   const out = document.getElementById('out'), warn = document.getElementById('warn');
   if (!/^[\w\-\/]+$/.test(s)) { warn.textContent = 'Keine Skizze angegeben (?s=kap3/3-1-spg).'; return; }
   try {
     const r = await fetch('../skizzen/' + s + '.mech'); if (!r.ok) throw new Error('Skizze ' + s + ' nicht gefunden');
-    const text = await r.text(), res = MechSkizze.render(text);
-    out.innerHTML = res.svg; warn.textContent = res.warnings.join('\n');
+    const text = await r.text();
+    const draw = () => { const res = MechSkizze.render(text, opts); out.innerHTML = res.svg; warn.textContent = res.warnings.join('\n'); return res; };
+    const res = draw();
+    if ((opts.stil || res.model.stil) === 'hand' && document.fonts) document.fonts.load('22px "Zen Kurenaido"', 'Aω').then(draw, () => {});
     document.getElementById('src').textContent = text;
     const t = (text.match(/^\s*titel\s+"([^"]*)"/m) || [])[1]; if (t) { document.getElementById('title').textContent = t; document.title = t; }
-    document.getElementById('edit').href = 'index.html?s=' + encodeURIComponent(s);
+    document.getElementById('edit').href = 'index.html?s=' + encodeURIComponent(s) + (opts.stil ? '&stil=' + opts.stil : '');
   } catch (e) { warn.textContent = 'Fehler: ' + e.message; }
 })();
 </script>

@@ -26,6 +26,7 @@ Jedes Widget zeigt genau eine Situation. Die HTML-Dateien in `kap1/`, `kap2/`, `
 MechSkizze ist eine Textsprache für Mechanik-Skizzen (Sprache: `mechskizze/REFERENZ.md`). Eine Skizze ist eine `.mech`-Datei in `skizzen/`.
 In Notion bettet man sie so ein: `https://schnetzubroot.github.io/Notion_MotionCanvas_Widgets/mechskizze/ansicht.html?s=kap3/3-1-spg`.
 Die Ansicht zeigt den Text und einen Link in den Editor. Neue Skizze: Datei anlegen, dann `python3 tools/build_skizzen.py`.
+Als Handskizze (Gel-Marker-Look, farbig): `…/ansicht.html?s=kap3/3-1-spg&stil=hand` oder `stil hand` in der Skizze; die Handschrift liegt in `lib/fonts/` (Zen Kurenaido, OFL).
 
 ## Funktionsplotter
 

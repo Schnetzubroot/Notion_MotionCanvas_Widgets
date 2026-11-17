@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MechSkizze-Editor</title>
 <link rel="stylesheet" href="../lib/core.css">
+<link rel="stylesheet" href="../lib/fonts/hand.css">
 <style>
   main { max-width: 1200px; margin: 0 auto; padding: 14px 16px 40px; }
   h1 { font-size: 20px; margin: 0 0 2px; }
@@ -37,7 +38,9 @@
     <div class="ed">
       <div>
         <div class="bar"><select id="ex"><option value="">Skizze laden …</option></select>
-          <button id="copy">Text kopieren</button><button id="copysvg">SVG kopieren</button></div>
+          <button id="copy">Text kopieren</button><button id="copysvg">SVG kopieren</button>
+          <label title="Wie von Hand mit Gel-Marker gezeichnet, Farben nach Bedeutung (Befehl: stil hand)"><input type="checkbox" id="hand"> Handskizze</label>
+          <label title="Handskizze ohne Farben" id="monoL"><input type="checkbox" id="mono"> einfarbig</label></div>
         <textarea id="src" spellcheck="false" wrap="off"></textarea>
         <div class="warn" id="warn"></div>
       </div>
@@ -51,14 +54,21 @@
 <script>
 (async () => {
   const src = document.getElementById('src'), out = document.getElementById('out'), warn = document.getElementById('warn'), ex = document.getElementById('ex');
-  let lastSvg = '', tm;
+  const handBox = document.getElementById('hand'), monoBox = document.getElementById('mono'), monoL = document.getElementById('monoL');
+  let lastSvg = '', tm, fontOk = false;
   const draw = () => {
-    try { const r = MechSkizze.render(src.value); out.innerHTML = r.svg; lastSvg = r.svg; warn.textContent = r.warnings.join('\n'); }
+    monoL.style.display = handBox.checked ? '' : 'none';
+    const opts = handBox.checked ? { stil: 'hand', farben: !monoBox.checked } : {};
+    try { const r = MechSkizze.render(src.value, opts); out.innerHTML = r.svg;
+      if (!fontOk && (opts.stil || r.model.stil) === 'hand' && document.fonts) document.fonts.load('22px "Zen Kurenaido"', 'Aω').then(() => { fontOk = true; draw(); }, () => {}); lastSvg = r.svg; warn.textContent = r.warnings.join('\n'); }
     catch (e) { warn.textContent = 'Fehler: ' + e.message; }
     try { localStorage.setItem('mech-src', src.value); } catch (e) {}
   };
   const load = async s => { const r = await fetch('../skizzen/' + s + '.mech'); if (r.ok) { src.value = await r.text(); draw(); } };
   src.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(draw, 150); });
+  const q0 = new URLSearchParams(location.search);
+  try { handBox.checked = q0.get('stil') ? q0.get('stil') === 'hand' : localStorage.getItem('mech-stil') === 'hand'; monoBox.checked = localStorage.getItem('mech-mono') === '1'; } catch (e) {}
+  for (const b of [handBox, monoBox]) b.addEventListener('change', () => { try { localStorage.setItem('mech-stil', handBox.checked ? 'hand' : ''); localStorage.setItem('mech-mono', monoBox.checked ? '1' : ''); } catch (e) {} draw(); });
   const copy = (t, b) => navigator.clipboard.writeText(t).then(() => { const o = b.textContent; b.textContent = 'Kopiert'; setTimeout(() => b.textContent = o, 1200); }).catch(() => { b.textContent = 'Kopieren nicht erlaubt'; });
   document.getElementById('copy').onclick = e => copy(src.value, e.target);
   document.getElementById('copysvg').onclick = e => copy(lastSvg, e.target);

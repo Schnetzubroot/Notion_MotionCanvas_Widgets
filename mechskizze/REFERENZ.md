@@ -22,6 +22,7 @@ MechSkizze ist eine Textsprache für Mechanik-Skizzen (Körper, Lager, Kräfte, 
 | `untereinander` / `nebeneinander` | Anordnung der Teilbilder |
 | `ohne namen [A B]` | keine (bzw. diese) Punktnamen anzeigen |
 | `beschrifte E "E ≡ (0,2R,√3R)" lage r` | Beschriftung eines Punktes ändern/platzieren (lage: r l o u or ol ur ul) |
+| `stil hand [einfarbig]` | Handskizze: wie von Hand mit Gel-Marker gezeichnet (siehe unten); `stil sauber` = Standard |
 
 ## Punkte und Richtungen
 | Form | Bedeutung |
@@ -80,6 +81,26 @@ MechSkizze ist eine Textsprache für Mechanik-Skizzen (Körper, Lager, Kräfte, 
 | `winkel B zwischen A und W "45°" [radius 30]` | Winkelbogen; auch `horizontal`, `vertikal`, Winkelwerte, `+z`; in 3D in der Ebene der beiden Richtungen |
 | `text P "G_2" [lage r] [kasten] [grau] [normal]` | Text |
 | `diagramm "Q" basis (0,-2) länge 11 skala 0.25 punkte (0,0.67) (6,0.67) (6,-2.33) …` | Schnittgrössen-Diagramm (positiv nach unten, Sprünge durch gleiche x-Werte) |
+
+## Handskizze (`stil hand`)
+Die Skizze sieht aus wie von Hand mit Gel-Marker gezeichnet: leicht gewellte, ungleich dicke Linien, Handschrift und Farben nach Bedeutung. Gleiche Skizze = gleiches Bild (die Wellen hängen nur vom Element ab). Ohne `stil hand` bleibt alles wie bisher.
+
+| Farbe | Elemente |
+|---|---|
+| Rot | Kräfte (`kraft`) und Streckenlasten (`last`) |
+| Violett | Momente (`moment`, auch als Momentvektor) |
+| Blau | Kinematik: `vektor`, `geschwindigkeit`, `drehpfeil` |
+| Grün | Hilfselemente: `mass`, `kante`, `winkel`, `rechtwinklig`, `pfeil`, `koordinaten`, `basis`, gestrichelte Linien, Achsen |
+| Dunkelblau | Körper, Stäbe, Linien, Texte, Punktnamen |
+| Graublau | Lager, Boden, Wände |
+
+| Befehl / Zusatz | Bedeutung |
+|---|---|
+| `stil hand` | Handskizze für diese Skizze |
+| `stil hand einfarbig` | Handskizze ohne Farben (alles dunkelblau) |
+| `… farbe rot` | Farbe eines Elements selbst wählen, an jede Anweisung anhängbar (`kraft A_x bei A richtung -x farbe orange`); gilt auch im normalen Stil. Farben: rot, blau, grün, violett, orange, braun, türkis, pink, grau, schwarz oder `#rrggbb` |
+
+Ohne den Text zu ändern: im Editor das Häkchen **Handskizze** setzen (dazu optional **einfarbig**), in der Einzelansicht `ansicht.html?s=kap3/3-1-spg&stil=hand` (einfarbig: `&farben=aus`). So lässt sich jede Skizze in Notion als Handskizze einbetten.
 
 ## 3D
 | Befehl | Bedeutung |
