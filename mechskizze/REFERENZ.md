@@ -23,6 +23,7 @@ MechSkizze ist eine Textsprache für Mechanik-Skizzen (Körper, Lager, Kräfte, 
 | `ohne namen [A B]` | keine (bzw. diese) Punktnamen anzeigen |
 | `beschrifte E "E ≡ (0,2R,√3R)" lage r` | Beschriftung eines Punktes ändern/platzieren (lage: r l o u or ol ur ul) |
 | `stil hand [einfarbig]` | Handskizze: wie von Hand mit Gel-Marker gezeichnet (siehe unten); `stil sauber` = Standard |
+| `schrift norm` | Beschriftung in Normschrift nach ISO 3098 (wie in einer Ingenieurzeichnung); auch `schrift hand`, `schrift standard`; mit jedem Stil kombinierbar |
 
 ## Punkte und Richtungen
 | Form | Bedeutung |
@@ -99,6 +100,8 @@ Die Skizze sieht aus wie von Hand mit Gel-Marker gezeichnet: leicht gewellte, un
 | `stil hand` | Handskizze für diese Skizze |
 | `stil hand einfarbig` | Handskizze ohne Farben (alles dunkelblau) |
 | `… farbe rot` | Farbe eines Elements selbst wählen, an jede Anweisung anhängbar (`kraft A_x bei A richtung -x farbe orange`); gilt auch im normalen Stil. Farben: rot, blau, grün, violett, orange, braun, türkis, pink, grau, schwarz oder `#rrggbb` |
+
+Normschrift: `schrift norm` (osifont nach ISO 3098, Variablen kursiv wie üblich) passt zum normalen Stil und zur Handskizze. Im Editor über die Auswahl **Schrift**, in der Einzelansicht mit `&schrift=norm`.
 
 Ohne den Text zu ändern: im Editor das Häkchen **Handskizze** setzen (dazu optional **einfarbig**), in der Einzelansicht `ansicht.html?s=kap3/3-1-spg&stil=hand` (einfarbig: `&farben=aus`). So lässt sich jede Skizze in Notion als Handskizze einbetten.
 
