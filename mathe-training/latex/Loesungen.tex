@@ -1,0 +1,166 @@
+\documentclass[11pt]{article}
+\usepackage[a5paper,margin=11mm]{geometry}
+\input{pre}
+\newcommand{\res}[1]{\par\smallskip\fbox{\ensuremath{\displaystyle #1}}\par\smallskip}
+\begin{document}
+{\Large\bfseries\color{eth} Mathe-Training für Mechanik I}\\[2pt]
+{\small Lösungen mit Rechenweg \textbullet\ alle Resultate mit sympy nachgerechnet}
+
+\medskip
+\begin{tipp}
+Vergleiche Schritt für Schritt, nicht nur das Endresultat. Der Kasten \fbox{\ldots} ist das Resultat; \textbf{Zusammenhang} markiert den Trick, den die Aufgabe prüft.
+\end{tipp}
+
+\sect{A \quad Ableiten}
+\auf{A} Kettenregel: $f'=2\sin(\omega t)\cdot\cos(\omega t)\cdot\omega$.\\
+\textbf{Zusammenhang:} $2\sin u\cos u=\sin2u$.
+\res{f'(t)=\omega\sin(2\omega t)}
+
+\auf{A} Kettenregel dreifach ($\ln$, $\tan$, $x/2$):
+$\dfrac{1}{\tan(x/2)}\cdot\dfrac{1}{\cos^2(x/2)}\cdot\dfrac12=\dfrac{\cos(x/2)}{\sin(x/2)}\cdot\dfrac{1}{2\cos^2(x/2)}=\dfrac{1}{2\sin(x/2)\cos(x/2)}$.\\
+\textbf{Zusammenhang:} Nenner $=\sin x$ (Doppelwinkel). \res{\tfrac{1}{\sin x}}
+
+\auf{A} (a) $g'=\dfrac{1}{1+x^2/a^2}\cdot\dfrac1a$ \res{g'(x)=\frac{a}{a^2+x^2}}
+(b) Allgemein (Quotienten- und Kettenregel): $\dot\varphi=\dfrac{1}{1+(y/x)^2}\cdot\dfrac{\dot y x-y\dot x}{x^2}=\dfrac{x\dot y-y\dot x}{x^2+y^2}$.\\
+Einsetzen: $x\dot y-y\dot x=R^2\omega\cos^2\omega t+R^2\omega\sin^2\omega t=R^2\omega$, $x^2+y^2=R^2$. \res{\dot\varphi=\omega}
+Auffällig: $y/x=\tan\omega t$, also $\varphi=\omega t$ direkt. Die allgemeine Formel $\dot\varphi=\frac{x\dot y-y\dot x}{\rho^2}$ ist aber nützlich, wenn $\varphi$ nicht so offensichtlich ist.
+
+\auf{A} $\dot\rho=\dfrac{1}{2\sqrt{x^2+y^2}}\,(2x\dot x+2y\dot y)=\dfrac{x\dot x+y\dot y}{\rho}$.\\
+\textbf{Zusammenhang:} $\e\rho=\frac1\rho(x,y,0)$ und $\vv v=(\dot x,\dot y,\dot z)$, also
+\res{\dot\rho=\vv v\cdot\e\rho}
+Die Änderung des Abstands ist die \emph{Projektion} der Geschwindigkeit auf die Radialrichtung, genau die Idee hinter dem Satz der projizierten Geschwindigkeiten.
+
+\auf{A} Produktregel:
+\res{\dot x=-e^{-\delta t}\left(\delta\cos\omega t+\omega\sin\omega t\right)}
+\res{\ddot x=e^{-\delta t}\left((\delta^2-\omega^2)\cos\omega t+2\delta\omega\sin\omega t\right)}
+Einsetzen (Faktor $e^{-\delta t}$ weglassen):\\
+$\cos$: $(\delta^2-\omega^2)-2\delta^2+(\delta^2+\omega^2)=0$;\quad $\sin$: $2\delta\omega-2\delta\omega=0$. \checkmark
+
+\auf{A} $\dot x=2Ak\sin(kt)\cos(kt)=Ak\sin(2kt)$ (Doppelwinkel!).\\
+Koeffizientenvergleich mit $v_0\sin(v_0t/b)$ für \emph{alle} $t$:\\
+Kreisfrequenz: $2k=\dfrac{v_0}{b}$; \quad Amplitude: $Ak=v_0$.
+\res{k=\frac{v_0}{2b},\qquad A=2b}
+\textbf{Typischer Fehler:} $k=v_0/b$ ablesen, ohne $\sin^2$ erst in $\sin(2kt)$ umzuschreiben. Zuerst beide Seiten auf dieselbe Form bringen, dann vergleichen.
+
+\auf{A} (a) $\dot{\vv e}_\rho=(-\sin\varphi\,\dot\varphi,\ \cos\varphi\,\dot\varphi,0)=\dot\varphi\,\e\varphi$;\quad
+$\dot{\vv e}_\varphi=(-\cos\varphi\,\dot\varphi,\ -\sin\varphi\,\dot\varphi,0)=-\dot\varphi\,\e\rho$.\\
+(b) Produktregel: $\vv v=\dot\rho\,\e\rho+\rho\,\dot{\vv e}_\rho=\dot\rho\,\e\rho+\rho\dot\varphi\,\e\varphi$. \checkmark\\
+(c) $\vv a=\ddot\rho\,\e\rho+\dot\rho\dot\varphi\,\e\varphi+\dot\rho\dot\varphi\,\e\varphi+\rho\ddot\varphi\,\e\varphi+\rho\dot\varphi(-\dot\varphi\,\e\rho)$
+\res{\vv a=(\ddot\rho-\rho\dot\varphi^2)\,\e\rho+(2\dot\rho\dot\varphi+\rho\ddot\varphi)\,\e\varphi}
+Merke: Einheitsvektoren in bewegten Basen sind \emph{nicht} konstant und müssen mit abgeleitet werden. In der kartesischen Basis darf man komponentenweise ableiten, weil $\e x,\e y,\e z$ konstant sind.
+
+\auf{A} (a) Produktregel für Skalarprodukt: $\dot{\vv r}\cdot\vv r+\vv r\cdot\dot{\vv r}=2\vv r\cdot\vv v$. Ist $|\vv r|^2$ konstant, ist die Ableitung $0$, also $\vv r\cdot\vv v=0$: \res{\vv v\perp\vv r} (Kreisbewegung: Geschwindigkeit tangential.)\\
+(b) $\dot{\vv r}\times\vv v+\vv r\times\dot{\vv v}=\underbrace{\vv v\times\vv v}_{=\vv 0}+\vv r\times\vv a$. \checkmark\ (Reihenfolge im Kreuzprodukt beibehalten!)
+
+\sect{B \quad Integrieren}
+\auf{B} $\sin^2u=\frac12(1-\cos2u)$:
+$\displaystyle\int_0^{2\pi/\omega}\tfrac12\dd t-\tfrac12\int_0^{2\pi/\omega}\cos(2\omega t)\dd t=\frac{\pi}{\omega}-0$ \res{\frac{\pi}{\omega}}
+Merke: Mittelwert von $\sin^2$ über ganze Perioden ist $\tfrac12$.
+
+\auf{B} $u=\sin x$: $\int u\dd u=\tfrac12\sin^2x+C_1$.\quad $u=\cos x$, $\dd u=-\sin x\dd x$: $-\tfrac12\cos^2x+C_2$.\quad Doppelwinkel: $\int\tfrac12\sin2x\dd x=-\tfrac14\cos2x+C_3$.\\
+\textbf{Zusammenhang:} $-\tfrac12\cos^2x=\tfrac12\sin^2x-\tfrac12$ und $-\tfrac14\cos2x=-\tfrac14(1-2\sin^2x)=\tfrac12\sin^2x-\tfrac14$. Die Resultate unterscheiden sich nur um Konstanten, die in $C$ stecken.
+
+\auf{B} (a) $u=-x^2$, $\dd u=-2x\dd x$: \res{-\tfrac12e^{-x^2}+C}
+(b) $u=1+t^2$, $\dd u=2t\dd t$: $\int\frac{1}{2\sqrt u}\dd u$ \res{\sqrt{1+t^2}+C}
+(c) $\tan x=\frac{\sin x}{\cos x}$, $u=\cos x$: $-\int\frac{\dd u}{u}$ \res{-\ln|\cos x|+C}
+Muster: Steht die Ableitung des Inneren als Faktor da ($f'/f$, $x\,e^{-x^2}$), dann substituieren.
+
+\auf{B} $\int uv'=uv-\int u'v$; $u$ = was beim Ableiten einfacher wird.\\
+(a) $u=x$, $v'=\cos x$: $x\sin x-\int\sin x\dd x$ \res{x\sin x+\cos x+C}
+(b) $u=x$, $v'=e^x$: \res{(x-1)e^x+C}
+(c) $u=\ln x$, $v'=1$: $x\ln x-\int x\cdot\frac1x\dd x$ \res{x\ln x-x+C}
+(d) $I=\int e^t\sin t\dd t=e^t\sin t-\int e^t\cos t\dd t=e^t\sin t-e^t\cos t-I$, also $2I=e^t(\sin t-\cos t)$:
+\res{I=\tfrac12e^t(\sin t-\cos t)+C}
+
+\auf{B} (a) $R=\frac{q_0}{L}\frac{L^2}{2}=\frac{q_0L}{2}$, \ $\int_0^Lx\,q\dd x=\frac{q_0L^2}{3}$ \res{R=\tfrac{q_0L}{2},\ x_s=\tfrac{2L}{3}} wie in der Formelsammlung (Dreieckslast).\\
+(b) $R=\frac{q_0}{L^2}\frac{L^3}{3}$, \ $\int_0^Lx\,q\dd x=\frac{q_0L^2}{4}$ \res{R=\tfrac{q_0L}{3},\ x_s=\tfrac{3L}{4}}
+(c) $R=q_0\frac{L}{\pi}\big[-\cos\frac{\pi x}{L}\big]_0^L=q_0\frac{L}{\pi}(1+1)$ \res{R=\tfrac{2q_0L}{\pi},\ x_s=\tfrac L2}
+$x_s$ ohne Rechnung: $q$ ist symmetrisch zu $x=L/2$.
+
+\auf{B} $\vv v=-R\omega\sin\omega t\,\e x+R\omega\cos\omega t\,\e y+c\,\e z$;\\
+$v^2=R^2\omega^2(\sin^2+\cos^2)+c^2$. \res{v=\sqrt{R^2\omega^2+c^2}=\text{konst.}}
+Eine Windung dauert $T=2\pi/\omega$: \res{s=\int_0^Tv\dd t=\frac{2\pi}{\omega}\sqrt{R^2\omega^2+c^2}}
+Kontrolle: $c=0$ gibt den Kreisumfang $2\pi R$.
+
+\auf{B} $\dot x(t)=\int_0^ta_0\cos\omega\tau\dd\tau$ \res{\dot x=\frac{a_0}{\omega}\sin\omega t}
+$x(t)=\int_0^t\frac{a_0}{\omega}\sin\omega\tau\dd\tau$ \res{x=\frac{a_0}{\omega^2}(1-\cos\omega t)}
+Wegen $1-\cos\omega t\ge0$ wird $x$ \emph{nie} negativ: der Punkt pendelt zwischen $0$ und $2a_0/\omega^2$. Anfangsbedingungen bestimmen die Integrationskonstanten. Wer $-\frac{a_0}{\omega^2}\cos\omega t$ ohne Konstante schreibt, verletzt $x(0)=0$.
+
+\auf{B} (a) Substitution $x\to\frac\pi2-x$ führt $\sin$ in $\cos$ über und bildet $[0,\frac\pi2]$ auf sich ab, also sind beide Integrale gleich ($=I$). Summe: $2I=\int_0^{\pi/2}(\sin^2+\cos^2)\dd x=\frac\pi2$. \res{I=\frac\pi4}
+(b) Partiell, $u=x$: $\big[-x\cos x\big]_0^\pi+\int_0^\pi\cos x\dd x=\pi+0$ \res{\pi}
+
+\auf{B} $\frac{\dd}{\dd x}\left(\frac1a\arctan\frac xa\right)=\frac1a\cdot\frac{a}{a^2+x^2}=\frac{1}{a^2+x^2}$ \checkmark\ Das ist A3(a), geteilt durch $a$.
+
+\sect{C \quad Vektoren}
+\auf{C} $|\vv a|=\sqrt{4+1+4}=3$, $|\vv b|=\sqrt{1+4+4}=3$, $\vv a\cdot\vv b=2-2+4=4$, $\cos\varphi=\frac49$.\\
+$\vv a\times\vv b=\big((-1)\cdot2-2\cdot2,\ 2\cdot1-2\cdot2,\ 2\cdot2-(-1)\cdot1\big)$
+\res{\vv a\times\vv b=(-6,-2,5),\quad|\vv a\times\vv b|=\sqrt{65}}
+Kontrolle 1: $\vv a\cdot(\vv a\times\vv b)=-12+2+10=0$ \checkmark\ (ebenso mit $\vv b$: $-6-4+10=0$).\\
+Kontrolle 2: $|\vv a|^2|\vv b|^2-(\vv a\cdot\vv b)^2=81-16=65$ \checkmark\\
+\textbf{Zusammenhang:} $|\vv a\times\vv b|^2+(\vv a\cdot\vv b)^2=|\vv a|^2|\vv b|^2(\sin^2\varphi+\cos^2\varphi)$.
+
+\auf{C} Einheitsvektor $\vv e_a=\vv a/|\vv a|=\frac13(2,-1,2)$. Komponente: $\vv b\cdot\vv e_a=\frac43$.
+\res{\vv b_\parallel=(\vv b\cdot\vv e_a)\,\vv e_a=\tfrac49\vv a=\left(\tfrac89,-\tfrac49,\tfrac89\right)}
+\res{\vv b_\perp=\vv b-\vv b_\parallel=\left(\tfrac19,\tfrac{22}9,\tfrac{10}9\right)}
+Kontrolle: $\vv b_\perp\cdot\vv a=\frac{2-22+20}{9}=0$ \checkmark\\
+Gleiches Muster wie die 2. Invariante $\vv v_\omega=(\vv e_\omega\cdot\vv v_B)\,\vv e_\omega$. \textbf{Fehlerquelle:} durch $|\vv a|$ statt $|\vv a|^2$ teilen, wenn man mit $\vv a$ statt $\vv e_a$ rechnet.
+
+\auf{C} (a) $\e x\times(\e x\times\e y)=\e x\times\e z=-\e y$, aber $(\e x\times\e x)\times\e y=\vv 0\times\e y=\vv 0$. \res{\text{Das Kreuzprodukt ist nicht assoziativ.}}
+(b) $0$: $\vv a\times\vv b$ steht senkrecht auf $\vv a$.\\
+(c) $\vv b(\vv a\cdot\vv c)-\vv c(\vv a\cdot\vv b)$ mit $\vv a=\vv b=\e x$, $\vv c=\e y$: $\e x\cdot0-\e y\cdot1=-\e y$ \checkmark
+
+\auf{C} Komplanar $\Leftrightarrow$ $\vv a\cdot(\vv b\times\vv c)=0$ (Determinante):\\
+$1(-\lambda-1)-2(-2-1)+3(2-\lambda)=11-4\lambda$.
+\res{\lambda=\tfrac{11}{4},\qquad V(\lambda=0)=11}
+
+\auf{C} (a) $\vv{MN}=(3,4,0)$. $\vv v_M\cdot\vv{MN}=6$, \ $\vv v_N\cdot\vv{MN}=4\,v_N$. \res{v_N=1{,}5\ \text{m/s}}
+(b) $\vv\omega\times\vv{MN}=\omega\,\e z\times(3\e x+4\e y)=\omega(-4,3,0)$, also $\vv v_N=(2-4\omega,\ 3\omega,\ 0)$.\\
+$x$-Komponente muss $0$ sein: \res{\omega=0{,}5\ \text{rad/s}} Dann $v_{N,y}=3\cdot0{,}5=1{,}5$ m/s \checkmark
+
+\auf{C} (a) $\vv\omega\times\vv{BM}=(0,0,2)\times(1,1,0)=(-2,2,0)$ \res{\vv v_M=(-1,2,0)\ \text{m/s}}
+(b) Momentanzentrum $P=(x,y,0)$ mit $\vv v_P=\vv 0$: $(1,0,0)+(-2y,2x,0)=\vv 0$ \res{P=(0;\ 0{,}5;\ 0)\ \text{m}}
+Kontrolle: $|\vv{BP}|\,\omega=0{,}5\cdot2=1=|\vv v_B|$ \checkmark
+
+\auf{C} (a) $\vv e_\omega=\e z$, $\vv e_\omega\cdot\vv v_B=3$ \res{\vv v_\omega=3\,\e z\ \text{m/s}}
+(b) $\vv\omega\times\vv{BM}=(0,0,2)\times(1,0,0)=(0,2,0)$ \res{\vv v_M=(1,4,3)\ \text{m/s}}
+$\vv\omega\cdot\vv v_M=6=\vv\omega\cdot\vv v_B$ \checkmark\quad Grund: $\vv\omega\cdot(\vv\omega\times\vv{BM})=0$, das Zusatzglied steht senkrecht auf $\vv\omega$.
+
+\auf{C} (a) $\vv M_O=\vv{OA}\times\vv F=(2,1,0)\times(0,0,-10)$ \res{\vv M_O=(-10,20,0)\ \text{Nm}}
+(b) $\vv R\times\vv{OB}=(0,0,-10)\times(0,1,0)=(10,0,0)$ \res{\vv M_B=(0,20,0)\ \text{Nm}}
+Direkt: $\vv{BA}\times\vv F=(2,0,0)\times(0,0,-10)=(0,20,0)$ \checkmark\ ($A$ liegt auf Höhe von $B$ in $y$, darum fällt die $x$-Komponente weg.)
+
+\auf{C} $\vv v_M=(-1,2,0)$ aus C6: $P=\vv F\cdot\vv v_M=-3-2$ \res{P=-5\ \text{W}}
+
+\sect{D \quad Kinematik}
+\auf{D} $\dot\varphi=\alpha t$. $\vv v=R\alpha t(-\sin\varphi,\cos\varphi)$ \res{v=R\alpha t}
+$\vv a=R\alpha(-\sin\varphi,\cos\varphi)-R\alpha^2t^2(\cos\varphi,\sin\varphi)$
+\res{a_t=R\alpha=\dot v,\qquad a_n=R\alpha^2t^2=\tfrac{v^2}{R}}
+$\vv a\cdot\vv v=R\alpha\cdot R\alpha t=\dot v\,v$ \checkmark\ (nur die Bahnkomponente trägt bei). $\vv a\perp\vv v$ nur wenn $a_t=0$, hier nie (für $t>0$). Geschwindigkeit ist ein Vektor, Schnelligkeit $v=|\vv v|$ ein Skalar; $\dot v$ ist \emph{nicht} $|\vv a|$.
+
+\auf{D} (a) $\ddot{\vv r}=(-a\omega^2\cos\omega t,\ -b\omega^2\sin\omega t)=-\omega^2\vv r$ \checkmark\\
+(b) $v^2=\omega^2(a^2\sin^2\omega t+b^2\cos^2\omega t)$. \res{v_{\max}=a\omega\ \text{bei}\ (0,\pm b),\quad v_{\min}=b\omega\ \text{bei}\ (\pm a,0)}
+(c) $\vv r\cdot\vv v=(b^2-a^2)\omega\sin\omega t\cos\omega t=\tfrac12(b^2-a^2)\omega\sin2\omega t$ \res{\vv v\perp\vv r\ \Leftrightarrow\ \omega t=n\tfrac\pi2\ \text{(Scheitelpunkte)}}
+
+\auf{D} $\dot x=-2ak\sin kt$, $T=2\pi/k$.\\
+Mittlere Geschwindigkeit: $\frac1T[x]_0^T=0$, weil der Punkt wieder am Start ist.\\
+Mittlere Schnelligkeit: Weg pro Periode $=4\cdot2a=8a$.
+\res{\bar v_{\text{Geschw.}}=0,\qquad \bar v_{\text{Schnell.}}=\frac{8a}{T}=\frac{4ak}{\pi}}
+
+\auf{D} (a) $\vv v_P=R\omega(1-\cos\omega t,\ \sin\omega t)$, \ $v_P^2=R^2\omega^2(2-2\cos\omega t)$.\\
+\textbf{Zusammenhang:} $1-\cos u=2\sin^2\frac u2$ \res{|\vv v_P|=2R\omega\left|\sin\tfrac{\omega t}{2}\right|}
+(b) $\vv{CP}=(-R\sin\omega t,\ R(1-\cos\omega t))$, gleiche Rechnung $\Rightarrow|\vv{CP}|=2R|\sin\frac{\omega t}2|$.\\
+$\vv\omega\times\vv{CP}=-\omega\,\e z\times(c_x,c_y,0)=(\omega c_y,-\omega c_x,0)=R\omega(1-\cos\omega t,\sin\omega t)=\vv v_P$ \checkmark\\
+$C$ ist das Momentanzentrum ($\vv v_C=\vv 0$, Rollen ohne Gleiten), vgl.\ Anhang A.3.1.\\
+(c) $s=\int_0^{2\pi/\omega}2R\omega\sin\frac{\omega t}2\dd t=4R\big[-\cos\tfrac{\omega t}2\big]_0^{2\pi/\omega}$ \res{s=8R}
+
+\auf{D} $\dot\rho=c$, $\ddot\rho=0$, $\dot\varphi=\omega$, $\ddot\varphi=0$ in A7:
+\res{\vv v=c\,\e\rho+c\,\omega t\,\e\varphi,\quad|\vv v|=c\sqrt{1+\omega^2t^2}}
+\res{\vv a=-c\,\omega^2t\,\e\rho+2c\,\omega\,\e\varphi}
+
+\sect{E \quad ZP-Stil}
+\auf{E} \textbf{(b)}: $\cos^2x-\sin^2x=\cos2x$.\\
+\auf{E} \textbf{(c)}: $\cos^2=\frac12(1+\cos2x)$, Integral über ganze Perioden von $\cos2x$ ist $0$: $\frac\pi2$.\\
+\auf{E} \textbf{(c)}: $\cos\varphi=\frac{3}{6}=\frac12\Rightarrow\sin\varphi=\frac{\sqrt3}2$, $|\vv a\times\vv b|=6\cdot\frac{\sqrt3}2=3\sqrt3$.\\
+\auf{E} \textbf{(c)}: $\vv\omega\cdot\vv v_M$ (siehe C7). $|\vv v_M|$ ändert sich mit dem Abstand zur Achse.\\
+\auf{E} \textbf{(b)}: $\dot x=-2ak\sin kt$; Frequenzvergleich $k=\frac{v_0}{2a}$, Amplitude $2ak=v_0$ \checkmark
+\end{document}

@@ -1,0 +1,116 @@
+\documentclass[11pt]{article}
+\usepackage[a5paper,margin=11mm]{geometry}
+\input{pre}
+\begin{document}
+{\Large\bfseries\color{eth} Mathe-Training für Mechanik I}\\[2pt]
+{\small Ableiten, Integrieren, Vektoren und Kinematik \textbullet\ Übungsblatt}
+
+\medskip
+\begin{tipp}
+Notation wie im Kurs: Vektoren unterstrichen ($\vv r$, $\e x$), Punkt = Zeitableitung ($\dot x$). Alle Aufgaben gehen ohne Taschenrechner. Die Aufgaben mit \textbf{(Z)} verlangen einen \emph{Zusammenhang} (Identität, Projektion, Koeffizientenvergleich), den du selbst erkennen musst. Formeln: \texttt{Cheatsheet.pdf}; Lösungen: \texttt{Loesungen.pdf}.
+\end{tipp}
+
+\sect{A \quad Ableiten}
+\auf{A} Leite ab und schreibe das Resultat mit \emph{einer} Winkelfunktion: $f(t)=\sin^2(\omega t)$. \hfill(Z)
+
+\auf{A} Zeige: $\dfrac{\dd}{\dd x}\ln\!\left(\tan\dfrac{x}{2}\right)=\dfrac{1}{\sin x}$. \hfill(Z)
+
+\auf{A} (a) Leite $g(x)=\arctan\dfrac{x}{a}$ ab.\\
+(b) Ein Punkt hat $x=R\cos\omega t$, $y=R\sin\omega t$. Berechne $\dot\varphi$ für $\varphi=\arctan\dfrac{y}{x}$ (Formelsammlung: Koordinatentransformation), \emph{ohne} vorher zu vereinfachen. Was fällt dir auf?
+
+\auf{A} Für $\rho=\sqrt{x^2+y^2}$ mit $x=x(t)$, $y=y(t)$: berechne $\dot\rho$ und deute das Resultat als Skalarprodukt $\vv v\cdot\e\rho$. \hfill(Z)
+
+\auf{A} $x(t)=e^{-\delta t}\cos\omega t$. Berechne $\dot x$, $\ddot x$ und zeige
+$\ddot x+2\delta\dot x+(\delta^2+\omega^2)\,x=0$.
+
+\auf{A} Ein Punkt bewegt sich auf der $x$-Achse mit $x(t)=A\sin^2(kt)$ ($A,k>0$ unbekannt). Gemessen wird $\dot x(t)=v_0\sin\!\left(\dfrac{v_0 t}{b}\right)$. Bestimme $k$ und $A$ durch Koeffizientenvergleich. \hfill(Z)
+
+\auf{A} Zylinderkoordinaten: $\e\rho=(\cos\varphi,\sin\varphi,0)$, $\e\varphi=(-\sin\varphi,\cos\varphi,0)$, $\varphi=\varphi(t)$.\\
+(a) Zeige $\dot{\vv e}_\rho=\dot\varphi\,\e\varphi$ und $\dot{\vv e}_\varphi=-\dot\varphi\,\e\rho$.\\
+(b) Leite aus $\vv r=\rho\,\e\rho$ die Formel $\vv v=\dot\rho\,\e\rho+\rho\dot\varphi\,\e\varphi$ der Formelsammlung her.\\
+(c) Berechne damit $\vv a=\ddot{\vv r}$ in $\e\rho,\e\varphi$-Komponenten.
+
+\auf{A} (a) Zeige $\dfrac{\dd}{\dd t}(\vv r\cdot\vv r)=2\,\vv r\cdot\vv v$. Folgere: Ist $|\vv r|$ konstant, so gilt $\vv v\perp\vv r$.\\
+(b) Zeige $\dfrac{\dd}{\dd t}(\vv r\times\vv v)=\vv r\times\vv a$. \hfill(Z)
+
+\sect{B \quad Integrieren}
+\auf{B} $\displaystyle\int_0^{2\pi/\omega}\sin^2(\omega t)\dd t$ \hfill(Z)
+
+\auf{B} Berechne $\int\sin x\cos x\dd x$ auf \emph{drei} Arten: Substitution $u=\sin x$, Substitution $u=\cos x$, Doppelwinkel. Die drei Resultate sehen verschieden aus. Warum sind trotzdem alle richtig? \hfill(Z)
+
+\auf{B} Substitution: (a) $\int x\,e^{-x^2}\dd x$ \quad (b) $\displaystyle\int\frac{t}{\sqrt{1+t^2}}\dd t$ \quad (c) $\int\tan x\dd x$
+
+\auf{B} Partielle Integration: (a) $\int x\cos x\dd x$ \quad (b) $\int x\,e^x\dd x$\\
+(c) $\int\ln x\dd x$ \quad (d) $\int e^t\sin t\dd t$ \ (Tipp: zweimal, dann nach dem Integral auflösen)
+
+\auf{B} Linienverteilte Last auf $0\le x\le L$. Bestimme die Resultierende $R=\int_0^L q\dd x$ und ihre Lage $x_s=\frac1R\int_0^L x\,q\dd x$:\\
+(a) $q=q_0\dfrac{x}{L}$ (vergleiche mit der Formelsammlung) \quad (b) $q=q_0\dfrac{x^2}{L^2}$\\
+(c) $q=q_0\sin\dfrac{\pi x}{L}$ (für $x_s$: geht es ohne Rechnung?) \hfill(Z)
+
+\auf{B} Schraubenlinie $\vv r(t)=R\cos\omega t\,\e x+R\sin\omega t\,\e y+c\,t\,\e z$. Berechne $\vv v$, die Schnelligkeit $v=|\vv v|$ und die Bogenlänge $s$ einer Windung.
+
+\auf{B} Ein Punkt startet in $x(0)=0$ aus der Ruhe mit $\ddot x(t)=a_0\cos\omega t$. Bestimme $\dot x(t)$ und $x(t)$. Wird $x$ je negativ?
+
+\auf{B} (a) Begründe ohne Stammfunktion: $\int_0^{\pi/2}\sin^2x\dd x=\int_0^{\pi/2}\cos^2x\dd x$, und folgere den Wert beider Integrale. \hfill(Z)\\
+(b) $\int_0^\pi x\sin x\dd x$
+
+\auf{B} Leite durch Ableiten nach (Probe!): $\displaystyle\int\frac{\dd x}{a^2+x^2}=\frac1a\arctan\frac xa+C$. Welche Aufgabe aus Teil A steckt dahinter?
+
+\sect{C \quad Vektoren}
+\auf{C} $\vv a=(2,-1,2)$, $\vv b=(1,2,2)$. Berechne $|\vv a|$, $|\vv b|$, $\vv a\cdot\vv b$, $\cos\varphi$, $\vv a\times\vv b$, $|\vv a\times\vv b|$. Kontrolliere $\vv a\times\vv b$ zweimal: mit einem Skalarprodukt und mit $|\vv a|^2|\vv b|^2-(\vv a\cdot\vv b)^2$. Woher kommt die zweite Kontrolle? \hfill(Z)
+
+\auf{C} Gleiche Vektoren wie C1. Zerlege $\vv b$ in einen Anteil $\vv b_\parallel$ parallel zu $\vv a$ und einen Anteil $\vv b_\perp$ senkrecht dazu. Wie gross ist die Komponente von $\vv b$ in Richtung $\vv a$? \hfill(Z)
+
+\auf{C} Ohne Komponenten: (a) $\e x\times(\e x\times\e y)$ und $(\e x\times\e x)\times\e y$. Was folgt daraus?\\
+(b) $(\vv a\times\vv b)\cdot\vv a=\,?$ \quad (c) Prüfe (a) mit $\vv a\times(\vv b\times\vv c)=\vv b(\vv a\cdot\vv c)-\vv c(\vv a\cdot\vv b)$.
+
+\auf{C} $\vv a=(1,2,3)$, $\vv b=(2,\lambda,1)$, $\vv c=(1,1,-1)$. Für welches $\lambda$ liegen die drei Vektoren in einer Ebene? Wie gross ist das Volumen des Spats für $\lambda=0$?
+
+\auf{C} Starrer Stab $MN$ in der $xy$-Ebene, $M=(0,0,0)$, $N=(3,4,0)$\,m. $\vv v_M=2\,\e x$\,m/s, $\vv v_N$ zeigt in $\e y$-Richtung.\\
+(a) Bestimme $|\vv v_N|$ mit dem Satz der projizierten Geschwindigkeiten.\\
+(b) Bestimme $\vv\omega=\omega\,\e z$ aus $\vv v_N=\vv v_M+\vv\omega\times\vv{MN}$ und kontrolliere (a). \hfill(Z)
+
+\auf{C} Ebene Bewegung: $\vv v_B=1\,\e x$\,m/s im Ursprung $B$, $\vv\omega=2\,\e z$\,rad/s.\\
+(a) Geschwindigkeit von $M=(1,1,0)$\,m? \quad (b) Wo liegt das Momentanzentrum?
+
+\auf{C} Kinemate in $B=(0,0,0)$: $\vv v_B=(1,2,3)$\,m/s, $\vv\omega=(0,0,2)$\,rad/s.\\
+(a) Berechne die 2. Invariante $\vv v_\omega$.\\
+(b) Berechne $\vv v_M$ für $M=(1,0,0)$\,m und zeige, dass $\vv\omega\cdot\vv v_M=\vv\omega\cdot\vv v_B$. Warum muss das so sein? \hfill(Z)
+
+\auf{C} Kraft $\vv F=-10\,\e z$\,N greift in $A=(2,1,0)$\,m an.\\
+(a) $\vv M_O$? \quad (b) $\vv M_B$ für $B=(0,1,0)$\,m, einmal mit $\vv M_B=\vv M_O+\vv R\times\vv{OB}$ und einmal direkt.
+
+\auf{C} Eine Kraft $\vv F=(3,-1,0)$\,N greift im Punkt $M$ aus C6 an. Leistung $P$?
+
+\sect{D \quad Kinematik: Ort $\to$ Geschwindigkeit $\to$ Beschleunigung}
+\auf{D} Kreisbahn $\vv r=R(\cos\varphi\,\e x+\sin\varphi\,\e y)$ mit $\varphi=\tfrac12\alpha t^2$.\\
+Berechne $\vv v$, $v=|\vv v|$, $\vv a$ und zerlege $\vv a$ in Bahn- und Normalkomponente.\\
+Zeige $\vv a\cdot\vv v=\dot v\,v$. Wann ist $\vv a\perp\vv v$? \hfill(Z)
+
+\auf{D} Ellipse $\vv r=a\cos\omega t\,\e x+b\sin\omega t\,\e y$ ($a>b$).\\
+(a) Zeige $\vv a=-\omega^2\vv r$. \quad (b) Wo ist die Schnelligkeit maximal, wo minimal?\\
+(c) Wann gilt $\vv v\perp\vv r$? (Doppelwinkel!) \hfill(Z)
+
+\auf{D} \textbf{Geschwindigkeit vs. Schnelligkeit.} $x(t)=2a\cos kt$. Berechne über eine Periode $T$ die mittlere Geschwindigkeit $\frac1T\int_0^T\dot x\dd t$ und die mittlere Schnelligkeit $\frac1T\int_0^T|\dot x|\dd t$. \hfill(Z)
+
+\auf{D} Rollendes Rad (Radius $R$, rollt nach $+x$, $\vv\omega=-\omega\,\e z$). Ein Randpunkt $P$ beschreibt die Zykloide $\vv r_P=R(\omega t-\sin\omega t)\,\e x+R(1-\cos\omega t)\,\e y$.\\
+(a) Berechne $\vv v_P$ und zeige $|\vv v_P|=2R\omega\left|\sin\frac{\omega t}{2}\right|$.\\
+(b) Berührpunkt $C=(R\omega t,0)$: zeige $|\vv{CP}|=2R\left|\sin\frac{\omega t}{2}\right|$ und $\vv v_P=\vv\omega\times\vv{CP}$. Was sagt das über $C$?\\
+(c) Weglänge eines Bogens ($0\le\omega t\le2\pi$)? \hfill(Z)
+
+\auf{D} Spirale: $\rho=c\,t$, $\varphi=\omega t$, $z=0$. Bestimme $\vv v$ und $\vv a$ in Zylinderkoordinaten (Resultat von A7) und $|\vv v|$.
+
+\sect{E \quad ZP-Stil (Multiple Choice, ohne Taschenrechner)}
+\auf{E} $\dfrac{\dd}{\dd x}(\sin x\cos x)=$ \quad (a) $1$ \quad (b) $\cos2x$ \quad (c) $-\sin2x$ \quad (d) $\cos^2x$
+
+\auf{E} $\int_0^\pi\cos^2x\dd x=$ \quad (a) $0$ \quad (b) $1$ \quad (c) $\pi/2$ \quad (d) $\pi$
+
+\auf{E} $|\vv a|=2$, $|\vv b|=3$, $\vv a\cdot\vv b=3$. Dann ist $|\vv a\times\vv b|=$\\
+(a) $3$ \quad (b) $3\sqrt2$ \quad (c) $3\sqrt3$ \quad (d) $6$
+
+\auf{E} Eine Kinemate in $B$ ist $\{\vv v_B,\vv\omega\}$ mit $\vv\omega\neq\vv 0$. Welche Grösse ist in \emph{jedem} Punkt $M$ des Körpers gleich?\\
+(a) $\vv v_M$ \quad (b) $|\vv v_M|$ \quad (c) $\vv\omega\cdot\vv v_M$ \quad (d) $\vv\omega\times\vv v_M$
+
+\auf{E} $x(t)=2a\cos kt$ und $\dot x(t)=-v_0\sin\!\left(\frac{v_0t}{2a}\right)$. Dann ist $k=$\\
+(a) $\frac{v_0}{a}$ \quad (b) $\frac{v_0}{2a}$ \quad (c) $\frac{2a}{v_0}$ \quad (d) $v_0$
+\end{document}

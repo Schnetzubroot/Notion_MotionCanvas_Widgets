@@ -1,0 +1,146 @@
+\documentclass[10pt]{extarticle}
+\usepackage[a4paper,margin=10mm]{geometry}
+\input{pre}
+\usepackage{array,booktabs}
+\linespread{1.12}\setlength{\columnsep}{7mm}\setlength{\columnseprule}{0.3pt}
+\renewcommand{\arraystretch}{1.25}
+\newcommand{\hd}[1]{\par\medskip{\color{eth}\bfseries\large #1}\par\smallskip}
+\newcommand{\sh}[1]{\par\smallskip\textbf{#1}\par}
+\begin{document}
+{\LARGE\bfseries\color{eth}Cheatsheet: Ableiten, Integrieren, Vektoren}\hfill{\small Mechanik I \textbullet\ Notation wie im Kurs}
+\begin{multicols}{2}
+\hd{1 \ Trigonometrie}
+\sh{Werte} (auch in der Formelsammlung des Instituts)\\
+\begin{tabular}{@{}l|ccccc@{}}
+ & $0$ & $\frac\pi6$ & $\frac\pi4$ & $\frac\pi3$ & $\frac\pi2$\\\hline
+$\sin$ & $0$ & $\frac12$ & $\frac{\sqrt2}2$ & $\frac{\sqrt3}2$ & $1$\\
+$\cos$ & $1$ & $\frac{\sqrt3}2$ & $\frac{\sqrt2}2$ & $\frac12$ & $0$\\
+$\tan$ & $0$ & $\frac{\sqrt3}3$ & $1$ & $\sqrt3$ & $\pm\infty$
+\end{tabular}
+\sh{Identitäten}
+$\sin^2x+\cos^2x=1,\qquad 1+\tan^2x=\dfrac{1}{\cos^2x}$\\[2pt]
+$\sin2x=2\sin x\cos x$\\
+$\cos2x=\cos^2x-\sin^2x=1-2\sin^2x=2\cos^2x-1$\\[2pt]
+$\sin^2x=\tfrac12(1-\cos2x),\qquad\cos^2x=\tfrac12(1+\cos2x)$\\[2pt]
+$1-\cos x=2\sin^2\tfrac x2,\qquad 1+\cos x=2\cos^2\tfrac x2$\\[2pt]
+$\sin(x\pm y)=\sin x\cos y\pm\cos x\sin y$\\
+$\cos(x\pm y)=\cos x\cos y\mp\sin x\sin y$\\[2pt]
+$\sin(-x)=-\sin x,\quad\cos(-x)=\cos x$\\
+$\sin(\tfrac\pi2-x)=\cos x,\quad\sin(\pi-x)=\sin x,\quad\cos(\pi-x)=-\cos x$\\
+$A\cos x+B\sin x=C\cos(x-\delta)$, \ $C=\sqrt{A^2+B^2}$, $\tan\delta=B/A$
+\sh{Mittelwerte über ganze Perioden}
+$\overline{\sin}=\overline{\cos}=0,\qquad\overline{\sin^2}=\overline{\cos^2}=\tfrac12$
+
+\hd{2 \ Ableiten}
+\sh{Regeln}
+\begin{tabular}{@{}ll@{}}
+Produkt & $(uv)'=u'v+uv'$\\
+Quotient & $\left(\frac uv\right)'=\frac{u'v-uv'}{v^2}$\\
+Kette & $\big(f(g(t))\big)'=f'(g(t))\cdot\dot g(t)$\\
+Umkehr & $(f^{-1})'(y)=\dfrac{1}{f'(x)}$, \ $y=f(x)$
+\end{tabular}
+\sh{Tabelle}
+\begin{tabular}{@{}ll|ll@{}}
+$f$ & $f'$ & $f$ & $f'$\\\hline
+$x^n$ & $nx^{n-1}$ & $\sqrt x$ & $\frac1{2\sqrt x}$\\
+$e^{ax}$ & $ae^{ax}$ & $a^x$ & $a^x\ln a$\\
+$\ln|x|$ & $\frac1x$ & $\sin ax$ & $a\cos ax$\\
+$\cos ax$ & $-a\sin ax$ & $\tan x$ & $\frac1{\cos^2x}=1+\tan^2x$\\
+$\arcsin x$ & $\frac1{\sqrt{1-x^2}}$ & $\arccos x$ & $\frac{-1}{\sqrt{1-x^2}}$\\
+$\arctan x$ & $\frac1{1+x^2}$ & $\arctan\frac xa$ & $\frac{a}{a^2+x^2}$\\
+$\sinh x$ & $\cosh x$ & $\cosh x$ & $\sinh x$
+\end{tabular}
+\sh{Nützliche Kombinationen}
+$\frac{\dd}{\dd t}\sqrt{x^2+y^2}=\frac{x\dot x+y\dot y}{\sqrt{x^2+y^2}}$,\quad
+$\frac{\dd}{\dd t}\arctan\frac yx=\frac{x\dot y-y\dot x}{x^2+y^2}$\\[2pt]
+$\frac{\dd}{\dd t}\sin^2(\omega t)=\omega\sin2\omega t$,\quad
+$\frac{\dd}{\dd t}f(t)^2=2f\dot f$
+
+\hd{3 \ Integrieren}
+\sh{Tabelle} (jeweils $+C$)\\
+\begin{tabular}{@{}ll|ll@{}}
+$f$ & $\int f$ & $f$ & $\int f$\\\hline
+$x^n$ & $\frac{x^{n+1}}{n+1}$ \tiny($n\ne-1$) & $\frac1x$ & $\ln|x|$\\
+$e^{ax}$ & $\frac1ae^{ax}$ & $\sin ax$ & $-\frac1a\cos ax$\\
+$\cos ax$ & $\frac1a\sin ax$ & $\tan x$ & $-\ln|\cos x|$\\
+$\sin^2x$ & $\frac x2-\frac{\sin2x}4$ & $\cos^2x$ & $\frac x2+\frac{\sin2x}4$\\
+$\frac1{a^2+x^2}$ & $\frac1a\arctan\frac xa$ & $\frac1{\sqrt{a^2-x^2}}$ & $\arcsin\frac xa$\\
+$\ln x$ & $x\ln x-x$ & $\frac{f'}{f}$ & $\ln|f|$\\
+$x\,e^x$ & $(x-1)e^x$ & $x\cos x$ & $x\sin x+\cos x$
+\end{tabular}
+\sh{Substitution} $u=g(x)$, $\dd u=g'(x)\dd x$:\quad $\int f(g(x))\,g'(x)\dd x=\int f(u)\dd u$\\
+Erkennen: Ableitung des Inneren steht als Faktor da. Bei bestimmten Integralen die \emph{Grenzen mittransformieren}.
+\sh{Partielle Integration} $\int uv'\dd x=uv-\int u'v\dd x$\\
+$u$ = was beim Ableiten einfacher wird ($x^n$, $\ln x$). Zyklisch ($e^x\sin x$): zweimal, dann nach $I$ auflösen.
+\sh{Tricks}
+Symmetrie: ungerade $f$ über $[-a,a]$ $\Rightarrow0$.\quad $\int_0^{\pi/2}\sin^2=\int_0^{\pi/2}\cos^2=\frac\pi4$.\\
+Kontrolle: Resultat ableiten muss den Integranden geben.
+
+
+\hd{4 \ Vektoren}
+\sh{Komponenten und Betrag}
+$\vv a=a_x\e x+a_y\e y+a_z\e z$, \ $a_x=\vv a\cdot\e x$, \ $|\vv a|=\sqrt{a_x^2+a_y^2+a_z^2}$\\
+Einheitsvektor $\vv e_a=\vv a/|\vv a|$.
+\sh{Skalarprodukt} (Skalar)\\
+$\vv a\cdot\vv b=|\vv a||\vv b|\cos\varphi=a_xb_x+a_yb_y+a_zb_z$\\
+kommutativ, distributiv; $\vv a\cdot\vv a=|\vv a|^2$; \ $\vv a\cdot\vv b=0\Leftrightarrow\vv a\perp\vv b$
+\sh{Projektion (Zerlegung)}
+Komponente von $\vv b$ in Richtung $\vv a$: $\ b_a=\vv b\cdot\vv e_a$\\
+$\vv b_\parallel=(\vv b\cdot\vv e_a)\,\vv e_a=\dfrac{\vv a\cdot\vv b}{|\vv a|^2}\,\vv a,\qquad\vv b_\perp=\vv b-\vv b_\parallel$
+\sh{Vektorprodukt} (Vektor, $\perp$ zu beiden, Rechtssystem)\\
+$\vv a\times\vv b=\begin{pmatrix}a_yb_z-a_zb_y\\a_zb_x-a_xb_z\\a_xb_y-a_yb_x\end{pmatrix}$,\quad $|\vv a\times\vv b|=|\vv a||\vv b|\sin\varphi$ (Parallelogrammfläche)\\[2pt]
+$\vv a\times\vv b=-\vv b\times\vv a$, \ $\vv a\times\vv a=\vv 0$, \ \emph{nicht} assoziativ\\
+$\e x\times\e y=\e z,\ \e y\times\e z=\e x,\ \e z\times\e x=\e y$ \ (zyklisch $+$, gegen den Zyklus $-$)\\
+In der Ebene: $\omega\,\e z\times(x,y,0)=\omega(-y,x,0)$
+\sh{Kombinationen}
+$\vv a\times(\vv b\times\vv c)=\vv b(\vv a\cdot\vv c)-\vv c(\vv a\cdot\vv b)$ \ (,,bac minus cab``)\\
+$\vv a\cdot(\vv b\times\vv c)=\vv b\cdot(\vv c\times\vv a)=\det[\vv a\,\vv b\,\vv c]$ = Spatvolumen; $=0\Leftrightarrow$ komplanar\\
+$|\vv a\times\vv b|^2+(\vv a\cdot\vv b)^2=|\vv a|^2|\vv b|^2$ \ (Kontrolle!)\\
+$\vv a\cdot(\vv a\times\vv b)=0$ \ (Kontrolle!)
+\sh{Ableiten von Vektoren}
+Kartesisch komponentenweise (Basis konstant): $\dot{\vv r}=(\dot x,\dot y,\dot z)$\\
+$\frac{\dd}{\dd t}(\vv a\cdot\vv b)=\dot{\vv a}\cdot\vv b+\vv a\cdot\dot{\vv b}$, \ $\frac{\dd}{\dd t}(\vv a\times\vv b)=\dot{\vv a}\times\vv b+\vv a\times\dot{\vv b}$\\
+$|\vv r|=$ konst. $\Rightarrow\vv r\cdot\dot{\vv r}=0$
+
+\hd{5 \ Kinematik des Punktes}
+$\vv v=\dot{\vv r}$, \ $\vv a=\dot{\vv v}=\ddot{\vv r}$. \ Schnelligkeit $v=\dot s=|\vv v|$ (Skalar $\ge0$).\\
+Weg: $s=\int_{t_1}^{t_2}|\vv v|\dd t$ \quad (Weg $\ne$ Verschiebung $\vv r(t_2)-\vv r(t_1)$)\\
+$\vv a\cdot\vv v=v\,\dot v$; \ Bahn-/Normalkomp.: $a_t=\dot v$, \ $a_n=v^2/\rho_K$
+\sh{Zylinderkoordinaten} $\e\rho=(\cos\varphi,\sin\varphi,0)$, $\e\varphi=(-\sin\varphi,\cos\varphi,0)$\\
+$\dot{\vv e}_\rho=\dot\varphi\,\e\varphi$, \quad $\dot{\vv e}_\varphi=-\dot\varphi\,\e\rho$\\
+$\vv r=\rho\,\e\rho+z\,\e z$\\
+$\vv v=\dot\rho\,\e\rho+\rho\dot\varphi\,\e\varphi+\dot z\,\e z$\\
+$\vv a=(\ddot\rho-\rho\dot\varphi^2)\e\rho+(2\dot\rho\dot\varphi+\rho\ddot\varphi)\e\varphi+\ddot z\,\e z$\\
+Kreis ($\rho=R$): $\vv v=R\dot\varphi\,\e\varphi$, $\vv a=-R\dot\varphi^2\e\rho+R\ddot\varphi\,\e\varphi$
+\sh{Kugelkoordinaten} (Formelsammlung) $\vv v=\dot r\,\e r+r\dot\theta\,\e\theta+r\sin\theta\,\dot\psi\,\e\psi$
+
+\hd{6 \ Kinematik starrer Körper}
+Satz der projizierten Geschwindigkeiten: $\vv v_M\cdot\vv{MN}=\vv v_N\cdot\vv{MN}$\\
+Starrkörperformel: $\vv v_M=\vv v_B+\vv\omega\times\vv{BM}$\\
+Kinemate $\{\vv v_B,\vv\omega\}$; Invarianten: $\vv\omega$ und $\vv\omega\cdot\vv v_B$\\
+$\vv v_\omega=(\vv e_\omega\cdot\vv v_B)\,\vv e_\omega$, \ $\vv e_\omega=\vv\omega/|\vv\omega|$\\
+Momentanzentrum (eben): $\vv v_P=\vv 0$; Rollen ohne Gleiten: Berührpunkt.\\
+$|\vv v_M|=\omega\cdot|\vv{PM}|$, \ $\vv v_M\perp\vv{PM}$
+
+\hd{7 \ Kräfte, Momente, Leistung}
+$\vv M_O=\vv{OA}\times\vv F$, \quad $\vv M_B=\vv M_O+\vv R\times\vv{OB}$\\
+$P=\vv F\cdot\vv v$, \ $P=\vv M_B\cdot\vv\omega$, \ $P=\vv R\cdot\vv v_B+\vv M_B\cdot\vv\omega$\\
+Linienlast: $R=\int_0^Lq\dd x$, \ $x_s=\frac1R\int_0^Lx\,q\dd x$
+
+\hd{8 \ Koeffizientenvergleich}
+Gilt $A\sin(kt)=B\sin(\lambda t)$ für \emph{alle} $t$ (mit $A,B\neq0$), dann $k=\lambda$ und $A=B$.\\
+\textbf{Vorgehen:} 1. beide Seiten auf dieselbe Form bringen (z.\,B.\ $\sin^2\to\sin2x$, $2\sin\cos\to\sin2x$); 2. Frequenzen vergleichen; 3. Amplituden vergleichen.\\
+Beispiel: $-2ak\sin kt=-v_0\sin\frac{v_0t}{2a}\ \Rightarrow\ k=\frac{v_0}{2a}$, Kontrolle $2ak=v_0$ \checkmark\\
+Ebenso Polynome: $\sum a_nt^n=\sum b_nt^n\ \forall t\Rightarrow a_n=b_n$.
+
+\hd{9 \ Häufige Fehler}
+\begin{itemize}[leftmargin=*,nosep]
+\item Innere Ableitung vergessen ($\sin\omega t\to\omega\cos\omega t$).
+\item $\e\rho,\e\varphi$ als konstant behandeln.
+\item Reihenfolge im Kreuzprodukt vertauscht (Vorzeichen!).
+\item Projektion: durch $|\vv a|$ statt $|\vv a|^2$ teilen, wenn mit $\vv a$ statt $\vv e_a$.
+\item $|\vv v|$ (Schnelligkeit) mit $\vv v$ verwechselt; $\dot v\ne|\vv a|$.
+\item Integrationskonstanten nicht aus Anfangsbedingungen bestimmt.
+\end{itemize}
+\end{multicols}
+\end{document}
