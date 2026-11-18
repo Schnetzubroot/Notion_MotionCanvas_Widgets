@@ -1,0 +1,11 @@
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}\usepackage[ngerman]{babel}
+\usepackage{lmodern,amsmath,amssymb,enumitem,xcolor,tcolorbox,microtype,multicol}
+\usepackage[hidelinks]{hyperref}
+\newcommand{\vv}[1]{\underline{#1}}
+\newcommand{\e}[1]{\underline{e}_{#1}}
+\newcommand{\dd}{\,\mathrm{d}}
+\definecolor{eth}{RGB}{33,92,175}
+\newtcolorbox{tipp}{colback=eth!6,colframe=eth!60,boxrule=0.4pt,left=3pt,right=3pt,top=2pt,bottom=2pt,fontupper=\small}
+\newcommand{\sect}[1]{\section*{\color{eth}#1}\setcounter{auf}{0}}
+\newcounter{auf}\newcommand{\auf}[2][]{\refstepcounter{auf}\par\medskip\noindent\textbf{#2\theauf}\ifx&#1&\else\ \textit{(#1)}\fi\quad}
+\setlength{\parindent}{0pt}
