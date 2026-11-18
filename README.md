@@ -33,4 +33,5 @@ Als Handskizze (Gel-Marker-Look, farbig): `…/ansicht.html?s=kap3/3-1-spg&stil=
 `werkzeuge/funktionsplotter.html` zeichnet Funktionen einer Variablen: eine Zeile pro Objekt, z. B. `f(x) = a x^2 + b`, `a = regler(-3, 3, 1)`, `f'(x)`, `P = (1, f(1))`, `x = 2`, `f(x) = sqrt(x), 0 <= x <= 4`.
 Vektorfunktionen: Parameterkurven `r(t) = (cos(t), sin(t)), 0 <= t <= 2pi` (mit `r(t0)` als Punkt und `r'(t0)` als Tangentenvektor), Vektorfelder `F(x, y) = (-y, x)` und Pfeile `pfeil(P, v)`.
 Achsen einzeln skalieren: Achse ziehen (Maus oder Finger), Mausrad über einer Achse, Shift/Alt + Mausrad, Knöpfe x −/+ und y −/+; mit „gleich skaliert“ aus streckt ein Zwei-Finger-Zoom jede Achse getrennt.
+Hell/Dunkel: Knopf „☾ Dunkel“ / „☀ Hell“ unter dem Bild; die Wahl wird gespeichert und im Teilen-Link mitgegeben (oder per `?theme=dark` / `?theme=light`). `lib/core.css` kennt dafür `<html data-theme="dark|light">`.
 In Notion einbetten: Blatt bauen, „Link mit diesem Blatt kopieren“ klicken und den Link mit `/embed` einfügen. Der Link enthält Eingabe, Reglerstände, Farben und Ausschnitt.
