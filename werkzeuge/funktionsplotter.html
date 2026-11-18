@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Funktionsplotter</title>
+<title>2D-Plotter</title>
 <link rel="stylesheet" href="../lib/core.css">
 <style>
   .wrap.wide { max-width: 1200px; }
@@ -38,6 +38,7 @@
   .help table { border-collapse: collapse; width: 100%; }
   .help td { padding: 3px 6px; border-top: 1px solid var(--line); vertical-align: top; }
   .help td:first-child { width: 42%; overflow-wrap: anywhere; }
+  .ops button { font-family: ui-monospace, monospace; min-width: 30px; }
   details summary { cursor: pointer; font-weight: 600; font-size: 13px; }
   #cv { height: 540px; cursor: crosshair; }
   @media (max-width: 600px) { #cv { height: 380px; } }
@@ -52,8 +53,8 @@
 </head>
 <body>
 <div class="wrap wide">
-  <h1>Funktionsplotter</h1>
-  <p class="sub">Funktionen zeichnen wie in GeoGebra: eine Zeile pro Funktion, z. B. <code>f(x) = x^2 − a</code>, mit Reglern wie <code>a = regler(−3, 3, 1)</code>. Ableitungen mit <code>f'(x)</code>, Vektorfunktionen wie <code>r(t) = (cos(t), sin(t))</code> und Vektorfelder <code>F(x, y) = (−y, x)</code>. Ziehen verschiebt, Mausrad oder zwei Finger zoomen. Für Vektoren in 3D: <a href="rechenblatt.html">Rechenblatt</a>.</p>
+  <h1>2D-Plotter</h1>
+  <p class="sub">Funktionen und Vektoren in der Ebene, wie in GeoGebra: eine Zeile pro Definition, z. B. <code>f(x) = x^2 − a</code>, mit Reglern wie <code>a = regler(−3, 3, 1)</code>. Ableitungen mit <code>f'(x)</code>, Vektorfunktionen wie <code>r(t) = (cos(t), sin(t))</code> und Vektorfelder <code>F(x, y) = (−y, x)</code>. Ziehen verschiebt, Mausrad oder zwei Finger zoomen. Dasselbe im Raum: <a href="rechenblatt.html">3D-Plotter</a>.</p>
   <div class="grid2">
     <div>
       <div class="card">
@@ -62,12 +63,13 @@
       </div>
       <div class="card">
         <h2>Eingabe</h2>
+        <div class="row ops" id="ops"></div>
         <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
-        <div class="row"><button id="share">Link mit diesem Blatt kopieren</button><span class="help" id="shareMsg"></span></div>
+        <div class="row"><button id="share">Link mit dieser Eingabe kopieren</button><span class="help" id="shareMsg"></span></div>
         <div id="sliders"></div>
       </div>
       <div class="card">
-        <h2>Objekte</h2>
+        <h2>Objekte und Ergebnisse</h2>
         <div class="res" id="res"></div>
       </div>
       <div class="card help">
@@ -79,7 +81,7 @@
             <tr><td><code>f'(x)</code>, <code>f''(x)</code></td><td>erste und zweite Ableitung einer benannten Funktion (numerisch)</td></tr>
             <tr><td><code>a = regler(−3, 3)</code></td><td>Schieberegler; optional Startwert und Schritt: <code>regler(0, 5, 1, 0.5)</code>. ▶ animiert ihn</td></tr>
             <tr><td><code>c = 2</code>, <code>x0 = pi/4</code></td><td>Konstante; darf in allen Zeilen benutzt werden</td></tr>
-            <tr><td><code>P = (x0, f(x0))</code></td><td>Punkt; mit Punkten (Vektoren) darf man rechnen: <code>P + 2(1, 0)</code>, <code>t·v</code></td></tr>
+            <tr><td><code>P = (1, 2)</code>, <code>a = (1, 2)</code></td><td>Namen mit Grossbuchstaben werden als Punkte gezeichnet, kleingeschriebene als Pfeile vom Ursprung (wie im 3D-Plotter). Rechnen: <code>P + 2a</code>, <code>t·a</code>, <code>a · b</code> (Skalarprodukt), <code>|a|</code></td></tr>
             <tr><td><code>r(t) = (cos(t), sin(t)), 0 ≤ t ≤ 2pi</code></td><td>Vektorfunktion (Parameterkurve) t ↦ (x(t), y(t)); ohne Bereich läuft t von 0 bis 2π. <code>r(t0)</code> ist ein Punkt, <code>r'(t0)</code> der Tangentenvektor</td></tr>
             <tr><td><code>F(x, y) = (−y, x)</code></td><td>Vektorfeld: Pfeile auf einem Gitter, Länge proportional zu |F|</td></tr>
             <tr><td><code>v = pfeil(P, (1, 2))</code></td><td>Pfeil (Vektor) mit Fusspunkt P; <code>pfeil((1, 2))</code> startet im Ursprung</td></tr>
@@ -139,7 +141,7 @@
     asin: sc(Math.asin), acos: sc(Math.acos), atan: sc(Math.atan), arcsin: sc(Math.asin), arccos: sc(Math.acos), arctan: sc(Math.atan),
     sinh: sc(Math.sinh), cosh: sc(Math.cosh), tanh: sc(Math.tanh), arsinh: sc(Math.asinh), arcosh: sc(Math.acosh), artanh: sc(Math.atanh),
     sqrt: sc(Math.sqrt), wurzel: sc(Math.sqrt), cbrt: sc(Math.cbrt), exp: sc(Math.exp), ln: sc(Math.log), log: sc(Math.log10), lg: sc(Math.log10), log2: sc(Math.log2),
-    abs: sc(Math.abs), betrag: sc(Math.abs), sign: sc(Math.sign), sgn: sc(Math.sign), floor: sc(Math.floor), ceil: sc(Math.ceil), round: sc(Math.round),
+    abs: sc(Math.abs), betrag: sc(Math.abs), norm: sc(Math.abs), sign: sc(Math.sign), sgn: sc(Math.sign), floor: sc(Math.floor), ceil: sc(Math.ceil), round: sc(Math.round),
     atan2: [2, Math.atan2], min: [-1, Math.min], max: [-1, Math.max], mod: [2, (a, b) => a - b * Math.floor(a / b)],
     nroot: [2, (x, n) => (x < 0 && n % 2 === 1) ? -Math.pow(-x, 1 / n) : Math.pow(x, 1 / n)],
   };
@@ -240,7 +242,7 @@
       case 'pt': return n.items.map(x => ev(x, loc));
       case 'call': { const [ar, f] = FUN[n.f], a = n.args.map(x => ev(x, loc));
         if (ar >= 0 && a.length !== ar) throw new E(n.f + '() braucht ' + ar + ' Argument' + (ar === 1 ? '' : 'e'));
-        if (a.some(v => typeof v !== 'number')) { if (a.length === 1 && (n.f === 'abs' || n.f === 'betrag')) return Math.hypot(...a[0]); throw new E(n.f + '() erwartet Zahlen'); } return f(...a); }
+        if (a.some(v => typeof v !== 'number')) { if (a.length === 1 && (n.f === 'abs' || n.f === 'betrag' || n.f === 'norm')) return Math.hypot(...a[0]); throw new E(n.f + '() erwartet Zahlen'); } return f(...a); }
       case 'ucall': return callUser(n.f, n.d, n.args.map(x => ev(x, loc)));
       case 'bin': { const a = ev(n.a, loc), b = ev(n.b, loc);
         if (Array.isArray(a) || Array.isArray(b)) return vecOp(n.op, a, b);
@@ -358,13 +360,14 @@
     P.lines.forEach(r => {
       if (r.err && !r.perr) return; r.err = r.perr ? null : r.err; r.perr = false;
       try {
-        if (r.kind === 'const' || (r.kind === 'point' && r.name)) { r.val = lookup(r.name); r.kind = Array.isArray(r.val) ? 'point' : 'const'; }
+        if (r.kind === 'const' || r.kind === 'vector' || (r.kind === 'point' && r.name)) { r.val = lookup(r.name);
+          r.kind = !Array.isArray(r.val) ? 'const' : /^[a-zα-ω]/.test(r.name) ? 'vector' : 'point'; }
         else if (r.kind === 'value') r.val = ev(r.ast, {});
         else if (r.kind === 'arrow') { const g = r.args.map(a => ev(a, {})); if (!g.every(Array.isArray)) throw new E('pfeil braucht Vektoren: pfeil((1, 2)) oder pfeil(P, v)');
           r.val = g.length === 1 ? { A: [0, 0], v: g[0] } : { A: g[0], v: g[1] }; if (![...r.val.A, ...r.val.v].every(isFinite)) throw new E('Pfeil undefiniert'); }
         else if (r.kind === 'vline') { r.val = ev(r.ast, {}); if (typeof r.val !== 'number') throw new E('x = Zahl erwartet'); }
         else if (r.kind === 'point') { r.val = ev(r.ast, {}); }
-        if (r.kind === 'point' && !r.val.every(isFinite)) throw new E('Punkt undefiniert');
+        if ((r.kind === 'point' || r.kind === 'vector') && !r.val.every(isFinite)) throw new E(r.kind === 'point' ? 'Punkt undefiniert' : 'Vektor undefiniert');
         else if (r.kind === 'slider') r.val = P.sl[r.name].value;
         else if (r.kind === 'graph' || r.kind === 'curve') { r.kind = 'graph'; r.val = null;
           for (const x of [0.123, 1.37, -2.71, 0.5, 3, 10, -10]) { const v = callUser0(r, x); if (Array.isArray(v)) { r.kind = 'curve'; break; } if (isFinite(v)) break; }
@@ -394,19 +397,9 @@
   new ResizeObserver(() => { const dpr = window.devicePixelRatio || 1, b = cv.getBoundingClientRect(); const first = !W;
     W = b.width; H = b.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (first && !initView) resetView(); redraw(); }).observe(cv);
-  // ---------- light / dark ----------
-  const mq = window.matchMedia('(prefers-color-scheme: dark)'), themeBtn = document.getElementById('theme');
-  let themeChoice = null;   // null = follow the system, else 'light' | 'dark'
-  const isDark = () => themeChoice ? themeChoice === 'dark' : mq.matches;
-  function applyTheme(t, persist) {
-    themeChoice = t === 'light' || t === 'dark' ? t : null;
-    if (themeChoice) document.documentElement.dataset.theme = themeChoice; else delete document.documentElement.dataset.theme;
-    themeBtn.textContent = isDark() ? '☀ Hell' : '☾ Dunkel';
-    if (persist) { try { localStorage.setItem('plotter-theme', themeChoice || ''); } catch (e) {} }
-    if (P) render(); else redraw();
-  }
-  themeBtn.addEventListener('click', () => { applyTheme(isDark() ? 'light' : 'dark', true); saveSoon(); });
-  mq.addEventListener('change', () => applyTheme(themeChoice));
+  // ---------- light / dark (shared with the other widgets, see lib/core.js) ----------
+  MW.theme.button(document.getElementById('theme'));
+  MW.onTheme(() => { if (P) render(); else redraw(); });
 
   function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
   const tickText = v => { const a = Math.abs(v); if (a < 1e-12) return '0'; const s = a >= 1e5 || a < 1e-3 ? v.toExponential(1) : String(+v.toPrecision(6)); return s.replace('-', '−'); };
@@ -449,7 +442,8 @@
         ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; }
       else if (r.kind === 'curve') plotCurve(r, C);
       else if (r.kind === 'field') plotField(r);
-      else if (r.kind === 'arrow') { const a = [X(r.val.A[0]), Y(r.val.A[1])], b = [X(r.val.A[0] + r.val.v[0]), Y(r.val.A[1] + r.val.v[1])]; arrow(a, b, 2.4, 11);
+      else if (r.kind === 'arrow' || r.kind === 'vector') { const A = r.kind === 'vector' ? [0, 0] : r.val.A, w = r.kind === 'vector' ? r.val : r.val.v;
+        const a = [X(A[0]), Y(A[1])], b = [X(A[0] + w[0]), Y(A[1] + w[1])]; arrow(a, b, 2.4, 11);
         if (r.name) { ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
           halo(r.name, (a[0] + b[0]) / 2 + 6, (a[1] + b[1]) / 2 - 4, C.bg, r.col); ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; } }
     });
@@ -615,7 +609,7 @@
     P = run(srcEl.value); evaluate();
     let k = 0;
     P.lines.forEach(r => { r.key = r.name || ('#' + (r.kind === 'graph' ? 'g' + r.anon : r.no));
-      if (!r.err && ['graph', 'point', 'vline', 'curve', 'field', 'arrow'].includes(r.kind)) { r.col = colors[r.key] || MW.css(PALETTE[k % PALETTE.length]); k++; } });
+      if (!r.err && ['graph', 'point', 'vector', 'vline', 'curve', 'field', 'arrow'].includes(r.kind)) { r.col = colors[r.key] || MW.css(PALETTE[k % PALETTE.length]); k++; } });
     renderRows(); renderSliders(); save(); redraw();
   }
   function soft() { evaluate(); updateRows(); redraw(); }
@@ -628,6 +622,7 @@
       case 'field': return r.src + '   (Vektorfeld)';
       case 'arrow': return (r.name ? r.name + ' = ' : '') + 'Pfeil (' + r.val.v.map(fmt).join(', ') + ') ab (' + r.val.A.map(fmt).join(', ') + '), Länge ' + fmt(Math.hypot(...r.val.v));
       case 'vline': return 'senkrechte Gerade x = ' + fmt(r.val);
+      case 'vector': return r.name + ' = (' + r.val.map(fmt).join(', ') + ')   |' + r.name + '| = ' + fmt(Math.hypot(...r.val));
       case 'point': return (r.name ? r.name + ' = ' : '') + '(' + r.val.map(fmt).join(', ') + ')';
       case 'slider': return r.name + ' = ' + fmt(r.val) + '   (Regler)';
       case 'const': return r.name + ' = ' + fmt(r.val);
@@ -746,13 +741,16 @@ r(t) = 2 (cos(t), sin(t))`],
   EX.forEach(([n], i) => { const o = elm('option', '', n); o.value = i; exSel.appendChild(o); });
   exSel.addEventListener('change', () => { if (exSel.value === '') return; srcEl.value = EX[+exSel.value][1];
     for (const k in sliders) delete sliders[k]; hidden.clear(); colors = {}; resetView(); render(); });
+  const opsEl = document.getElementById('ops');
+  [['·', ' · '], ['π', 'pi'], ['√', 'sqrt('], ['|a|', 'abs('], ['x²', '^2'], ['≤', ' ≤ '], ["f'", "'"], ['ω', 'ω'], ['φ', 'φ']].forEach(([l, ins]) =>
+    MW.button(opsEl, l, () => { const a = srcEl.selectionStart, b = srcEl.selectionEnd; srcEl.setRangeText(ins, a, b, 'end'); srcEl.focus(); render(); }));
   let tt = 0; srcEl.addEventListener('input', () => { clearTimeout(tt); tt = setTimeout(render, 150); });
 
   // ---------- persistence & sharing ----------
   const enc = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const dec = s => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
   const state = () => ({ v: [view.cx, view.cy, view.sx, view.sy].map(x => +x.toPrecision(6)), eq: eqEl.checked, pi: piEl.checked,
-    sl: Object.fromEntries(Object.entries(sliders).map(([n, s]) => [n, +s.value.toPrecision(6)])), hid: [...hidden], col: colors, ...(themeChoice ? { th: themeChoice } : {}) });
+    sl: Object.fromEntries(Object.entries(sliders).map(([n, s]) => [n, +s.value.toPrecision(6)])), hid: [...hidden], col: colors, ...(MW.theme.get() ? { th: MW.theme.get() } : {}) });
   function save() { try { localStorage.setItem('plotter-src', srcEl.value); localStorage.setItem('plotter-state', JSON.stringify(state())); } catch (e) {} }
   let st = 0; const saveSoon = () => { clearTimeout(st); st = setTimeout(save, 300); };
   function applyState(o) { if (!o) return false;
@@ -769,9 +767,8 @@ r(t) = 2 (cos(t), sin(t))`],
   const h = location.hash.match(/#r=([\w-]*)/); if (h) { try { start = dec(h[1]); } catch (e) {} }
   const hs = location.hash.match(/[#&]s=([\w-]+)/);
   try { if (hs) initView = applyState(JSON.parse(dec(hs[1]))); } catch (e) {}
-  // theme: ?theme=dark|light, then the shared link, then this viewer's last choice, else the system setting
-  let savedTheme = null; try { savedTheme = localStorage.getItem('plotter-theme'); } catch (e) {}
-  applyTheme(new URLSearchParams(location.search).get('theme') || linkTheme || savedTheme);
+  // a shared link may carry a theme; ?theme= in the address still wins
+  if (linkTheme && !new URLSearchParams(location.search).get('theme')) MW.theme.apply(linkTheme);
   const q = new URLSearchParams(location.search).get('beispiel');
   if (start === null && q !== null && EX[+q]) { start = EX[+q][1]; exSel.value = q; }
   if (start === null) { try { start = localStorage.getItem('plotter-src'); if (start !== null) initView = applyState(JSON.parse(localStorage.getItem('plotter-state') || 'null')); } catch (e) {} }

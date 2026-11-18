@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Koordinaten-Spielplatz</title>
+<title>Koordinaten</title>
 <link rel="stylesheet" href="../lib/core.css">
 <style>
   .wrap.wide { max-width: 1240px; }
@@ -55,7 +55,7 @@
 </head>
 <body>
 <div class="wrap wide">
-  <h1>Koordinaten-Spielplatz</h1>
+  <h1>Koordinaten</h1>
   <p class="sub">Punkt in kartesischen, zylindrischen oder sphärischen Koordinaten setzen; Flächen, Bahnkurven und eigene Hilfslinien einzeichnen. Jedes Feld nimmt Ausdrücke wie <code>pi/3</code>, <code>sqrt(3)/2</code>, <code>cos(t)</code>. Die Variable <code>t</code> kommt vom Regler, die Koordinaten von M heissen <code>x_M y_M z_M ρ_M φ_M r_M θ_M ψ_M</code>.</p>
   <div class="grid2">
     <div>
@@ -519,7 +519,7 @@
   syncTabs(); loadPreset(0); syncForm();
   const q = new URLSearchParams(location.search).get('szenario');
   applyScenario(SCEN.some(s => s.id === q) ? q : 'frei');
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { renderItems(); view.redraw(); });
+  MW.onTheme(() => { renderItems(); view.redraw(); });
 })();
 </script>
 </body>

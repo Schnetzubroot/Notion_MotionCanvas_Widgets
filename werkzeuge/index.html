@@ -5,36 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Werkzeugkasten</title>
 <link rel="stylesheet" href="../lib/core.css">
+<script src="../lib/core.js"></script>
 <style>
   html, body { height: 100%; }
   body { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
   nav { display: flex; gap: 4px; padding: 6px 8px 0; border-bottom: 1px solid var(--line); background: var(--panel);
     overflow-x: auto; scrollbar-width: none; flex: none; }
   nav::-webkit-scrollbar { display: none; }
-  nav button { flex: none; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; background: none;
+  #tabs { display: flex; gap: 4px; flex: 1; }
+  nav button.theme { margin: 0 0 6px auto; border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; color: var(--fg); background: var(--bg); }
+  #tabs button { flex: none; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; background: none;
     color: var(--muted); padding: 7px 12px 8px; font-size: 13px; white-space: nowrap; margin-bottom: -1px; }
-  nav button:hover { color: var(--fg); }
-  nav button[aria-selected="true"] { background: var(--bg); color: var(--fg); border-color: var(--line); font-weight: 600; }
-  nav button .k { opacity: .65; font-weight: 400; margin-left: 4px; }
-  @media (max-width: 600px) { nav button .k { display: none; } }
+  #tabs button:hover { color: var(--fg); }
+  #tabs button[aria-selected="true"] { background: var(--bg); color: var(--fg); border-color: var(--line); font-weight: 600; }
+  #tabs button .k { opacity: .65; font-weight: 400; margin-left: 4px; }
+  @media (max-width: 600px) { #tabs button .k { display: none; } }
   main { flex: 1; position: relative; min-height: 0; }
   iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); }
   iframe[hidden] { display: none; }
 </style>
 </head>
 <body>
-<nav role="tablist" id="tabs"></nav>
+<nav><div role="tablist" id="tabs"></div><button id="theme" class="theme"></button></nav>
 <main id="panes"></main>
 <script>
 (() => {
   // one entry per tool: id (used as #id in the address), tab label, short hint, page
   const TOOLS = [
-    ['plotter', 'Funktionsplotter', '2D', 'funktionsplotter.html'],
-    ['rechenblatt', 'Rechenblatt', '3D-Vektoren', 'rechenblatt.html'],
+    ['2d', '2D-Plotter', 'Funktionen, Ebene', 'funktionsplotter.html'],
+    ['3d', '3D-Plotter', 'Vektoren, Raum', 'rechenblatt.html'],
     ['vektoren', 'Vektorrechner', 'Rechenwege', 'vektorrechner.html'],
-    ['koordinaten', 'Koordinaten', 'kart./zyl./sph.', 'koordinaten-spielplatz.html'],
-    ['skizze', 'MechSkizze', 'Skizzen', '../mechskizze/index.html'],
+    ['koordinaten', 'Koordinaten', 'kart. / zyl. / sph.', 'koordinaten-spielplatz.html'],
+    ['skizzen', 'Skizzen', 'MechSkizze', '../mechskizze/index.html'],
   ];
+  const ALIAS = { plotter: '2d', funktionsplotter: '2d', rechenblatt: '3d', skizze: 'skizzen', mechskizze: 'skizzen' };
+  const norm = id => ALIAS[id] || id;
   const nav = document.getElementById('tabs'), main = document.getElementById('panes'), panes = {}, buttons = {};
   TOOLS.forEach(([id, name, hint]) => {
     const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.id = 'tab-' + id;
@@ -43,20 +48,21 @@
   });
   // tools are loaded on first use and then kept, so switching tabs keeps what you typed
   function show(id, push) {
-    const t = TOOLS.find(x => x[0] === id) || TOOLS[0]; id = t[0];
+    id = norm(id); const t = TOOLS.find(x => x[0] === id) || TOOLS[0]; id = t[0];
     if (!panes[id]) { const f = document.createElement('iframe'); f.title = t[1]; f.allow = 'clipboard-write; fullscreen'; f.src = t[3] + (pending[id] || ''); main.appendChild(f); panes[id] = f; }
     for (const k in panes) panes[k].hidden = k !== id;
     for (const k in buttons) buttons[k].setAttribute('aria-selected', k === id);
     buttons[id].scrollIntoView({ block: 'nearest', inline: 'nearest' });
     if (push) { history.replaceState(null, '', '#' + id); try { localStorage.setItem('werkzeugkasten-tab', id); } catch (e) {} }
   }
-  // #plotter opens a tab; ?plotter=<rest> passes a query/hash to that tool (e.g. a shared plotter link: ?plotter=%23r%3D…)
+  // #2d opens a tab (old names like #plotter still work); ?2d=<rest> passes a query/hash to that tool (e.g. a shared plotter link: ?plotter=%23r%3D…)
   const pending = {}, q = new URLSearchParams(location.search);
-  TOOLS.forEach(([id]) => { if (q.has(id)) pending[id] = q.get(id); });
-  let start = location.hash.slice(1) || q.get('tool');
+  for (const [k, v] of q) { const id = norm(k); if (TOOLS.some(t => t[0] === id)) pending[id] = v; }
+  let start = norm(location.hash.slice(1) || q.get('tool') || '');
   if (!TOOLS.some(t => t[0] === start)) { start = Object.keys(pending)[0]; }
   if (!start) { try { start = localStorage.getItem('werkzeugkasten-tab'); } catch (e) {} }
-  show(start || 'plotter', false);
+  show(start || '2d', false);
+  MW.theme.button(document.getElementById('theme'));
   window.addEventListener('hashchange', () => show(location.hash.slice(1), false));
 })();
 </script>
