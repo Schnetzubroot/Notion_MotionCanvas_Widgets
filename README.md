@@ -15,7 +15,7 @@ Die Seiten werden über GitHub Pages ausgeliefert und in Notion eingebettet. Üb
 | `analysis-w2/` | Analysis I, Woche 2, Kapitel I.2–3: Funktionen, Grenzwerte, Stetigkeit |
 | `analysis-w3/` | Analysis I, Woche 3, Kapitel I.4–7: Zwischenwertsatz, Koordinatentransformationen, Umkehrfunktion, Asymptoten |
 | `chemistry-w2/` | Chemistry (151-0909-00L), Woche 2, Brown Kap. 10: Gasgesetze, Geschwindigkeitsverteilung |
-| `werkzeuge/` | Vektorrechner, Rechenblatt (eigene Rechnungen), Funktionsplotter (2D-Graphen wie in GeoGebra, Beispiele per `?beispiel=2`) und Koordinaten-Spielplatz (freie Werkzeuge, Szenario per `?szenario=zp25` wählbar) |
+| `werkzeuge/` | Werkzeugkasten `werkzeuge/` (alle Werkzeuge in Tabs auf einer Seite, `#plotter`, `#rechenblatt`, `#vektoren`, `#koordinaten`, `#skizze`); Vektorrechner, Rechenblatt (eigene Rechnungen), Funktionsplotter (2D-Graphen wie in GeoGebra, Beispiele per `?beispiel=2`) und Koordinaten-Spielplatz (freie Werkzeuge, Szenario per `?szenario=zp25` wählbar) |
 | `lib/` | gemeinsame Bibliothek (`core.js`, `core.css`) und MechSkizze-Renderer (`mechskizze.js`, läuft auch in Node) |
 | `tools/` | Build-Skripte: `python3 tools/build_kap1.py`, `build_kap2.py`, `build_kap3.py`, `build_skizzen.py`, `build_analysis_w1.py`, `build_analysis_w2.py`, `build_analysis_w3.py`, `build_chemistry_w2.py`, `build_index.py` |
 
@@ -35,3 +35,8 @@ Vektorfunktionen: Parameterkurven `r(t) = (cos(t), sin(t)), 0 <= t <= 2pi` (mit 
 Achsen einzeln skalieren: Achse ziehen (Maus oder Finger), Mausrad über einer Achse, Shift/Alt + Mausrad, Knöpfe x −/+ und y −/+; mit „gleich skaliert“ aus streckt ein Zwei-Finger-Zoom jede Achse getrennt.
 Hell/Dunkel: Knopf „☾ Dunkel“ / „☀ Hell“ unter dem Bild; die Wahl wird gespeichert und im Teilen-Link mitgegeben (oder per `?theme=dark` / `?theme=light`). `lib/core.css` kennt dafür `<html data-theme="dark|light">`.
 In Notion einbetten: Blatt bauen, „Link mit diesem Blatt kopieren“ klicken und den Link mit `/embed` einfügen. Der Link enthält Eingabe, Reglerstände, Farben und Ausschnitt.
+
+## Werkzeugkasten
+
+`werkzeuge/index.html` fasst Funktionsplotter, Rechenblatt, Vektorrechner, Koordinaten-Spielplatz und MechSkizze in einer Seite mit Tabs zusammen. In Notion genügt ein Embed: `https://schnetzubroot.github.io/Notion_MotionCanvas_Widgets/werkzeuge/`.
+Ein Tab wird beim ersten Öffnen geladen und behält danach seinen Inhalt; der zuletzt benutzte Tab wird gemerkt. `#plotter` usw. öffnet direkt einen Tab, `?plotter=%23r%3D…` reicht einen geteilten Plotter-Link durch. Die einzelnen Seiten bleiben unter ihren alten Adressen erreichbar.

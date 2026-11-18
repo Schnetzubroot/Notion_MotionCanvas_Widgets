@@ -15,7 +15,7 @@ SECTIONS = {
 def title(p):
     return re.search(r'<title>(.*?)</title>', p.read_text(encoding='utf-8')).group(1)
 
-parts = ['<h2>Werkzeuge</h2><ul>'
+parts = ['<h2>Werkzeuge</h2><p class="sub"><a href="werkzeuge/">Werkzeugkasten</a>: alle Werkzeuge auf einer Seite, mit Tabs (ein Notion-Embed für alles).</p><ul>'
          '<li><a href="werkzeuge/vektorrechner.html">Vektorrechner</a> (Addition, Skalar-, Kreuz- und Spatprodukt, Projektionen, Zentralachse)</li>'
          '<li><a href="werkzeuge/rechenblatt.html">Rechenblatt</a> (eigene Rechnungen wie in GeoGebra, mit 3D-Ansicht)</li>'
          '<li><a href="werkzeuge/funktionsplotter.html">Funktionsplotter</a> (Graphen y = f(x) wie in GeoGebra, Parameterkurven und Vektorfelder, mit Reglern, Ableitungen und Zoom)</li>'
