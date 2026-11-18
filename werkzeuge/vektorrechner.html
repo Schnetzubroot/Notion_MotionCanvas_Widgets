@@ -75,7 +75,7 @@
         <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>a</div><div><span class="sw" style="background:var(--c2)"></span>b</div><div><span class="sw" style="background:var(--c3)"></span>c</div><div><span class="sw" style="background:var(--c5)"></span>Ergebnis</div></div>
         <div class="hint">Ziehen: drehen · Rechtsklick/Shift-Ziehen oder zwei Finger: verschieben · Mausrad: zoomen</div>
       </div>
-      <div class="ctl"><label><input type="checkbox" id="showC" checked> c anzeigen</label><button id="reset">Ansicht zurücksetzen</button></div>
+      <div class="ctl"><label><input type="checkbox" id="showC" checked> c anzeigen</label><button id="reset">Ansicht zurücksetzen</button><button id="snap"></button></div>
       <div class="info" id="info"></div>
     </div>
   </div>
@@ -223,6 +223,7 @@
     if (r.v && op === 'sub') v.text(r.v, 'a − b', C.c5, 6, -6);
   });
   document.getElementById('reset').addEventListener('click', () => view.resetView());
+  MW.snap.button(document.getElementById('snap'), () => document.getElementById('cv'), 'vektorrechner');
 
   // ---------- update ----------
   function update() {

@@ -27,6 +27,7 @@ MechSkizze ist eine Textsprache für Mechanik-Skizzen (Sprache: `mechskizze/REFE
 In Notion bettet man sie so ein: `https://schnetzubroot.github.io/Notion_MotionCanvas_Widgets/mechskizze/ansicht.html?s=kap3/3-1-spg`.
 Die Ansicht zeigt den Text und einen Link in den Editor. Neue Skizze: Datei anlegen, dann `python3 tools/build_skizzen.py`.
 Als Handskizze (Gel-Marker-Look, farbig): `…/ansicht.html?s=kap3/3-1-spg&stil=hand` oder `stil hand` in der Skizze; Normschrift nach ISO 3098: `&schrift=norm` oder `schrift norm`. Die Schriften liegen in `lib/fonts/` (Zen Kurenaido, OFL; osifont, LGPL 3 mit Font-Ausnahme).
+Beschriftungen verschieben: im Editor die Beschriftung ziehen. Der Editor schreibt dafür `verschiebe "F" um (dx,dy)` in den Text (Versatz zum Ankerpunkt in Pixeln, weit weg mit Hinweislinie); Doppelklick setzt sie zurück.
 
 ## 2D-Plotter
 
@@ -41,4 +42,4 @@ In Notion einbetten: Blatt bauen, „Link mit diesem Blatt kopieren“ klicken u
 `werkzeuge/index.html` fasst 2D-Plotter, 3D-Plotter, Vektorrechner, Koordinaten und Skizzen (MechSkizze) in einer Seite mit Tabs zusammen. In Notion genügt ein Embed: `https://schnetzubroot.github.io/Notion_MotionCanvas_Widgets/werkzeuge/`.
 Ein Tab wird beim ersten Öffnen geladen und behält danach seinen Inhalt; der zuletzt benutzte Tab wird gemerkt. `#2d`, `#3d`, `#vektoren`, `#koordinaten`, `#skizzen` öffnen direkt einen Tab (alte Namen wie `#plotter` gehen auch), `?2d=%23r%3D…` reicht einen geteilten Plotter-Link durch.
 Die beiden Plotter werden gleich bedient: gleiche Eingabesprache (`f(x) = …`, `r(t) = (…), 0 ≤ t ≤ 2pi`, `f'(x)`, `regler(…)` mit ▶, `pfeil(P, v)`, Grossbuchstaben = Punkte, Kleinbuchstaben = Vektoren), gleiche Symbolleiste, Zoom-Knöpfe und Teilen-Link.
-Hell/Dunkel gilt für alle Werkzeuge gemeinsam (`lib/core.js`, `MW.theme`, gespeichert als `mw-theme`). Die einzelnen Seiten bleiben unter ihren alten Adressen erreichbar.
+Hell/Dunkel gilt für alle Werkzeuge gemeinsam (`lib/core.js`, `MW.theme`, gespeichert als `mw-theme`). Jedes Werkzeug hat einen Knopf „Bild kopieren“ (`MW.snap`): er legt die aktuelle Ansicht als PNG in die Zwischenablage; wo das Einbetten die Zwischenablage sperrt, wird das Bild stattdessen heruntergeladen. Die einzelnen Seiten bleiben unter ihren alten Adressen erreichbar.

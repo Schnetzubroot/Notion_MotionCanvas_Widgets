@@ -22,6 +22,7 @@ MechSkizze ist eine Textsprache für Mechanik-Skizzen (Körper, Lager, Kräfte, 
 | `untereinander` / `nebeneinander` | Anordnung der Teilbilder |
 | `ohne namen [A B]` | keine (bzw. diese) Punktnamen anzeigen |
 | `beschrifte E "E ≡ (0,2R,√3R)" lage r` | Beschriftung eines Punktes ändern/platzieren (lage: r l o u or ol ur ul) |
+| `verschiebe "F_1" um (12,-8)` | Beschriftung von Hand platzieren: Mitte der Beschriftung = Ankerpunkt + (dx,dy) in Pixeln (y nach oben), weit weg mit Hinweislinie zum Anker; bei gleichen Texten `verschiebe "F" nr 2 um …`. Im Editor einfach die Beschriftung ziehen (Doppelklick = zurück) |
 | `stil hand [einfarbig]` | Handskizze: wie von Hand mit Gel-Marker gezeichnet (siehe unten); `stil sauber` = Standard |
 | `schrift norm` | Beschriftung in Normschrift nach ISO 3098 (wie in einer Ingenieurzeichnung); auch `schrift hand`, `schrift standard`; mit jedem Stil kombinierbar |
 
