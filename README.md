@@ -31,4 +31,5 @@ Die Ansicht zeigt den Text und einen Link in den Editor. Neue Skizze: Datei anle
 
 `werkzeuge/funktionsplotter.html` zeichnet Funktionen einer Variablen: eine Zeile pro Objekt, z. B. `f(x) = a x^2 + b`, `a = regler(-3, 3, 1)`, `f'(x)`, `P = (1, f(1))`, `x = 2`, `f(x) = sqrt(x), 0 <= x <= 4`.
 Vektorfunktionen: Parameterkurven `r(t) = (cos(t), sin(t)), 0 <= t <= 2pi` (mit `r(t0)` als Punkt und `r'(t0)` als Tangentenvektor), Vektorfelder `F(x, y) = (-y, x)` und Pfeile `pfeil(P, v)`.
+Achsen einzeln skalieren: Achse ziehen (Maus oder Finger), Mausrad über einer Achse, Shift/Alt + Mausrad, Knöpfe x −/+ und y −/+; mit „gleich skaliert“ aus streckt ein Zwei-Finger-Zoom jede Achse getrennt.
 In Notion einbetten: Blatt bauen, „Link mit diesem Blatt kopieren“ klicken und den Link mit `/embed` einfügen. Der Link enthält Eingabe, Reglerstände, Farben und Ausschnitt.

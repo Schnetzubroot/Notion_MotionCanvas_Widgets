@@ -45,6 +45,8 @@
     border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; pointer-events: none; display: none; max-width: 70%; }
   .readout span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .zoom { position: absolute; right: 8px; bottom: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .axb { display: inline-flex; align-items: center; gap: 3px; }
+  .axb button { min-width: 30px; padding: 2px 0; }
   .zoom button { width: 30px; height: 30px; padding: 0; font-size: 16px; line-height: 1; }
 </style>
 </head>
@@ -88,13 +90,16 @@
             <tr><td><code># Kommentar</code></td><td>wird ignoriert</td></tr>
           </table>
           <p class="help">Wo eine Funktion nicht definiert ist (z. B. <code>ln(x)</code> für x ≤ 0) oder springt (z. B. <code>tan(x)</code>), bleibt der Graph offen. Fährst du mit der Maus über das Bild, siehst du x und die Funktionswerte an dieser Stelle.</p>
+          <p class="help"><b>Achsen einzeln skalieren:</b> eine Achse (oder ihre Zahlen) anfassen und ziehen, mit dem Mausrad über einer Achse drehen, <kbd>Shift</kbd> + Mausrad (x) bzw. <kbd>Alt</kbd> + Mausrad (y) oder die Knöpfe x −/+ und y −/+ unter dem Bild. Auf dem Touchscreen: Achse mit einem Finger ziehen; ist „gleich skaliert“ aus, streckt ein waagrechter Zwei-Finger-Zoom nur x und ein senkrechter nur y. „Ansicht zurücksetzen“ stellt die gleiche Skalierung wieder her.</p>
         </details>
       </div>
     </div>
     <div class="sticky">
-      <div class="stage"><canvas id="cv"></canvas><div class="readout" id="ro"></div><div class="hint">Ziehen: verschieben · Mausrad/zwei Finger: zoomen</div>
+      <div class="stage"><canvas id="cv"></canvas><div class="readout" id="ro"></div><div class="hint">Ziehen: verschieben · Mausrad/zwei Finger: zoomen · Achse ziehen: nur diese Achse strecken</div>
         <div class="zoom"><button id="zin" title="hineinzoomen">+</button><button id="zout" title="herauszoomen">−</button></div></div>
       <div class="row"><button id="reset">Ansicht zurücksetzen</button><label class="help"><input type="checkbox" id="eq" checked> x und y gleich skaliert</label>
+        <span class="axb help">x <button data-ax="x" data-k="0.7142857" title="x-Achse stauchen">−</button><button data-ax="x" data-k="1.4" title="x-Achse strecken">+</button></span>
+        <span class="axb help">y <button data-ax="y" data-k="0.7142857" title="y-Achse stauchen">−</button><button data-ax="y" data-k="1.4" title="y-Achse strecken">+</button></span>
         <label class="help"><input type="checkbox" id="piAx"> x-Achse in π</label></div>
     </div>
   </div>
@@ -513,41 +518,78 @@
   }
 
   // ---------- interaction ----------
+  // Pan: drag the plane. Zoom: wheel, pinch, +/−. Scale one axis: drag an axis (or its numbers), wheel over an axis,
+  // Shift/Alt + wheel, pinch with "gleich skaliert" off, or the x/y buttons. Scaling one axis turns equal scaling off.
   let drag = null; const ptrs = new Map(); let pinch = null;
   const pos = e => { const b = cv.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
-  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, pos(e));
-    if (ptrs.size === 1) { drag = { p: pos(e), cx: view.cx, cy: view.cy, moved: false }; if (e.pointerType !== 'mouse') mouse = pos(e); }
-    else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; drag = null;
-      pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), dx: Math.abs(a[0] - b[0]), dy: Math.abs(a[1] - b[1]), sx: view.sx, sy: view.sy, m: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], w: [iX((a[0] + b[0]) / 2), iY((a[1] + b[1]) / 2)] }; }
-    redraw(); });
+  const clampS = v => Math.min(Math.max(v, 1e-4), 1e7);
+  // which axis is under the pointer (the axis line plus its tick numbers); none near the origin
+  function axisAt(p, touch) {
+    const ax = Math.min(Math.max(Y(0), 0), H), ay = Math.min(Math.max(X(0), 0), W), t = touch ? 10 : 0;
+    const onX = p[1] > ax - 10 - t && p[1] < ax + 22 + t, onY = p[0] > ay - 34 - t && p[0] < ay + 10 + t;
+    if (onX && onY) return null; return onX ? 'x' : onY ? 'y' : null;
+  }
+  // anchor of axis scaling: the origin if visible, else the middle of the view
+  function anchor(axis) { const o = axis === 'x' ? X(0) : Y(0), lim = axis === 'x' ? W : H; return o >= 0 && o <= lim ? o : lim / 2; }
+  function scaleAxis(axis, k, at) {   // multiply pixels-per-unit of one axis by k, keeping screen position `at` fixed
+    if (!(k > 0) || !isFinite(k)) return;
+    if (eqEl.checked) eqEl.checked = false;
+    if (axis === 'x') { const w = iX(at); view.sx = clampS(view.sx * k); view.cx = w - (at - W / 2) / view.sx; }
+    else { const w = iY(at); view.sy = clampS(view.sy * k); view.cy = w + (at - H / 2) / view.sy; }
+    redraw(); saveSoon();
+  }
+  function setCursor(p, touch) { if (touch) return; const a = drag && drag.axis ? drag.axis : !drag && p ? axisAt(p) : null;
+    cv.style.cursor = a === 'x' ? 'ew-resize' : a === 'y' ? 'ns-resize' : drag && drag.moved ? 'grabbing' : 'crosshair'; }
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); const p = pos(e), touch = e.pointerType !== 'mouse'; ptrs.set(e.pointerId, p);
+    if (ptrs.size === 1) {
+      const axis = axisAt(p, touch);
+      drag = { p, cx: view.cx, cy: view.cy, sx: view.sx, sy: view.sy, moved: false, axis };
+      if (axis) { const a = anchor(axis); drag.at = a; drag.w = axis === 'x' ? iX(a) : iY(a); drag.d0 = axis === 'x' ? p[0] - a : p[1] - a; }
+      if (touch && !axis) mouse = p;
+    } else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; drag = null;
+      pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), dx: Math.abs(a[0] - b[0]), dy: Math.abs(a[1] - b[1]), sx: view.sx, sy: view.sy, w: [iX((a[0] + b[0]) / 2), iY((a[1] + b[1]) / 2)] }; }
+    setCursor(p, touch); redraw(); });
   cv.addEventListener('pointermove', e => {
-    const p = pos(e);
+    const p = pos(e), touch = e.pointerType !== 'mouse';
     if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, p);
-    if (pinch && ptrs.size === 2) { const [a, b] = [...ptrs.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), k = d / Math.max(pinch.d, 1);
-      view.sx = pinch.sx * k; view.sy = pinch.sy * k; const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-      view.cx = pinch.w[0] - (m[0] - W / 2) / view.sx; view.cy = pinch.w[1] + (m[1] - H / 2) / view.sy; mouse = null; redraw(); return; }
+    if (pinch && ptrs.size === 2) { const [a, b] = [...ptrs.values()];
+      if (eqEl.checked) { const k = Math.hypot(a[0] - b[0], a[1] - b[1]) / Math.max(pinch.d, 1); view.sx = clampS(pinch.sx * k); view.sy = clampS(pinch.sy * k); }
+      else { // each axis follows the finger distance along it (only if the fingers started far enough apart in that direction)
+        const MIN = 50, kx = pinch.dx >= MIN ? Math.abs(a[0] - b[0]) / pinch.dx : 1, ky = pinch.dy >= MIN ? Math.abs(a[1] - b[1]) / pinch.dy : 1;
+        if (pinch.dx < MIN && pinch.dy < MIN) { const k = Math.hypot(a[0] - b[0], a[1] - b[1]) / Math.max(pinch.d, 1); view.sx = clampS(pinch.sx * k); view.sy = clampS(pinch.sy * k); }
+        else { view.sx = clampS(pinch.sx * Math.max(kx, 0.02)); view.sy = clampS(pinch.sy * Math.max(ky, 0.02)); } }
+      const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      view.cx = pinch.w[0] - (m[0] - W / 2) / view.sx; view.cy = pinch.w[1] + (m[1] - H / 2) / view.sy; mouse = null; redraw(); saveSoon(); return; }
     if (drag) { const dx = p[0] - drag.p[0], dy = p[1] - drag.p[1]; if (Math.hypot(dx, dy) > 3) drag.moved = true;
-      if (drag.moved && e.pointerType === 'mouse') { view.cx = drag.cx - dx / view.sx; view.cy = drag.cy + dy / view.sy; }
+      if (drag.moved && drag.axis) { // drag along an axis: stretch it, the anchor stays put
+        const along = drag.axis === 'x' ? p[0] - drag.at : p[1] - drag.at;
+        let k = Math.abs(drag.d0) > 25 && Math.sign(along) === Math.sign(drag.d0) ? along / drag.d0 : Math.exp((drag.axis === 'x' ? dx : -dy) / 120);
+        k = Math.min(Math.max(k, 0.02), 50);
+        if (eqEl.checked) eqEl.checked = false;
+        if (drag.axis === 'x') { view.sx = clampS(drag.sx * k); view.cx = drag.w - (drag.at - W / 2) / view.sx; }
+        else { view.sy = clampS(drag.sy * k); view.cy = drag.w + (drag.at - H / 2) / view.sy; }
+        mouse = null; }
       else if (drag.moved) { view.cx = drag.cx - dx / view.sx; view.cy = drag.cy + dy / view.sy; }
-      redraw(); return; }
-    mouse = p; redraw(); });
+      setCursor(p, touch); redraw(); return; }
+    mouse = p; setCursor(p, touch); redraw(); });
   const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
-    if (drag && !drag.moved && e.pointerType !== 'mouse') mouse = pos(e); else if (e.pointerType !== 'mouse') mouse = null;
-    drag = null; redraw(); };
+    if (drag && !drag.moved && !drag.axis && e.pointerType !== 'mouse') mouse = pos(e); else if (e.pointerType !== 'mouse') mouse = null;
+    if (drag && drag.moved) saveSoon(); drag = null; setCursor(pos(e), e.pointerType !== 'mouse'); redraw(); };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !drag) { mouse = null; redraw(); } });
-  function zoomAt(px, py, k, onlyX, onlyY) { const wx = iX(px), wy = iY(py);
-    if (!onlyY) view.sx *= k; if (!onlyX) view.sy *= k;
-    if (eqEl.checked && (onlyX || onlyY)) { view.sx = view.sy = onlyX ? view.sx : view.sy; }
-    view.sx = Math.min(Math.max(view.sx, 1e-4), 1e7); view.sy = Math.min(Math.max(view.sy, 1e-4), 1e7);
+  function zoomAt(px, py, k) { const wx = iX(px), wy = iY(py);
+    view.sx = clampS(view.sx * k); view.sy = clampS(view.sy * k);
     view.cx = wx - (px - W / 2) / view.sx; view.cy = wy + (py - H / 2) / view.sy; redraw(); saveSoon(); }
-  cv.addEventListener('wheel', e => { e.preventDefault(); const p = pos(e), k = Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.0015));
-    // Shift: only x, Alt: only y (if not equal scaling)
-    zoomAt(p[0], p[1], k, e.shiftKey && !eqEl.checked, e.altKey && !eqEl.checked); }, { passive: false });
+  cv.addEventListener('wheel', e => { e.preventDefault(); const p = pos(e);
+    // Shift + wheel arrives as horizontal scrolling in most browsers, so take whichever delta is set
+    const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX, k = Math.exp(-d * (e.deltaMode ? 0.05 : 0.0015));
+    const axis = e.shiftKey ? 'x' : e.altKey ? 'y' : e.ctrlKey ? null : axisAt(p);
+    if (axis) scaleAxis(axis, k, axis === 'x' ? p[0] : p[1]); else zoomAt(p[0], p[1], k); }, { passive: false });
   document.getElementById('zin').addEventListener('click', () => zoomAt(W / 2, H / 2, 1.4));
   document.getElementById('zout').addEventListener('click', () => zoomAt(W / 2, H / 2, 1 / 1.4));
-  document.getElementById('reset').addEventListener('click', () => { resetView(); redraw(); saveSoon(); });
-  eqEl.addEventListener('change', () => { if (eqEl.checked) view.sy = view.sx; redraw(); saveSoon(); });
+  document.querySelectorAll('[data-ax]').forEach(b => b.addEventListener('click', () => { const a = b.dataset.ax; scaleAxis(a, +b.dataset.k, anchor(a)); }));
+  document.getElementById('reset').addEventListener('click', () => { resetView(); eqEl.checked = true; redraw(); saveSoon(); });
+  eqEl.addEventListener('change', () => { if (eqEl.checked) { const c = [iX(W / 2), iY(H / 2)]; view.sy = view.sx; view.cx = c[0]; view.cy = c[1]; } redraw(); saveSoon(); });
   piEl.addEventListener('change', () => { redraw(); saveSoon(); });
 
   // ---------- UI ----------
