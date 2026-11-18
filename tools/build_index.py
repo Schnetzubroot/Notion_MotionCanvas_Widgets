@@ -15,12 +15,12 @@ SECTIONS = {
 def title(p):
     return re.search(r'<title>(.*?)</title>', p.read_text(encoding='utf-8')).group(1)
 
-parts = ['<h2>Werkzeuge</h2><ul>'
+parts = ['<h2>Werkzeuge</h2><p class="sub"><a href="werkzeuge/">Werkzeugkasten</a>: alle Werkzeuge auf einer Seite, mit Tabs (ein Notion-Embed für alles).</p><ul>'
          '<li><a href="werkzeuge/vektorrechner.html">Vektorrechner</a> (Addition, Skalar-, Kreuz- und Spatprodukt, Projektionen, Zentralachse)</li>'
-         '<li><a href="werkzeuge/rechenblatt.html">Rechenblatt</a> (eigene Rechnungen wie in GeoGebra, mit 3D-Ansicht)</li>'
-         '<li><a href="werkzeuge/funktionsplotter.html">Funktionsplotter</a> (Graphen y = f(x) wie in GeoGebra, Parameterkurven und Vektorfelder, mit Reglern, Ableitungen und Zoom)</li>'
-         '<li><a href="werkzeuge/koordinaten-spielplatz.html">Koordinaten-Spielplatz</a> (Punkte, Koordinatenlinien, Flächen, Bahnkurven)</li>'
-         '<li><a href="mechskizze/index.html">MechSkizze-Editor</a> (Skizzen als Text: Freikörperbilder, Lager, Kräfte, Geschwindigkeiten; <a href="mechskizze/index.html#skizzen">alle Skizzen</a>)</li></ul>']
+         '<li><a href="werkzeuge/rechenblatt.html">3D-Plotter</a> (Vektoren, Punkte, Ebenen und Kurven im Raum, wie in GeoGebra)</li>'
+         '<li><a href="werkzeuge/funktionsplotter.html">2D-Plotter</a> (Funktionen y = f(x), Parameterkurven, Vektoren und Vektorfelder in der Ebene, wie in GeoGebra)</li>'
+         '<li><a href="werkzeuge/koordinaten-spielplatz.html">Koordinaten</a> (Punkte, Koordinatenlinien, Flächen, Bahnkurven)</li>'
+         '<li><a href="mechskizze/index.html">Skizzen (MechSkizze-Editor)</a> (Skizzen als Text: Freikörperbilder, Lager, Kräfte, Geschwindigkeiten; <a href="mechskizze/index.html#skizzen">alle Skizzen</a>)</li></ul>']
 for key, name in SECTIONS.items():
     files = sorted((ROOT / f'kap{key[0]}').glob(f'{key}-*.html'))
     items = ''.join(f'<li><a href="kap{key[0]}/{f.name}">{title(f)}</a></li>' for f in files)

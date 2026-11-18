@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rechenblatt</title>
+<title>3D-Plotter</title>
 <link rel="stylesheet" href="../lib/core.css">
 <style>
   .wrap.wide { max-width: 1200px; }
@@ -43,12 +43,16 @@
   .help td:first-child { width: 42%; overflow-wrap: anywhere; }
   details summary { cursor: pointer; font-weight: 600; font-size: 13px; }
   .ops button { font-family: ui-monospace, monospace; min-width: 30px; }
+  a { color: var(--c2); }
+  .zoom { position: absolute; right: 8px; bottom: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .zoom button { width: 30px; height: 30px; padding: 0; font-size: 16px; line-height: 1; }
+  .xs button { padding: 1px 8px; }
 </style>
 </head>
 <body>
 <div class="wrap wide">
-  <h1>Rechenblatt</h1>
-  <p class="sub">Eigene Rechnungen wie in GeoGebra: eine Zeile pro Definition, z. B. <code>ω = (0, 1, 1)</code> oder <code>v_E = v_A + ω × r_AE</code>. Alles wird sofort berechnet; Vektoren, Punkte, Geraden, Ebenen, Parallelogramme und Spate erscheinen in 3D. Zurück zum <a href="vektorrechner.html">Vektorrechner</a>.</p>
+  <h1>3D-Plotter</h1>
+  <p class="sub">Vektoren, Punkte und Kurven im Raum, wie in GeoGebra: eine Zeile pro Definition, z. B. <code>ω = (0, 1, 1)</code> oder <code>v_E = v_A + ω × r_AE</code>. Alles wird sofort berechnet; Vektoren, Punkte, Geraden, Ebenen, Parallelogramme und Spate erscheinen in 3D. Kurven als Funktion: <code>r(t) = (cos(t), sin(t), t/4)</code>. Dasselbe in der Ebene: <a href="funktionsplotter.html">2D-Plotter</a>; Rechenwege Schritt für Schritt: <a href="vektorrechner.html">Vektorrechner</a>.</p>
   <div class="grid2">
     <div>
       <div class="card">
@@ -59,7 +63,7 @@
         <h2>Eingabe</h2>
         <div class="row ops" id="ops"></div>
         <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
-        <div class="row"><button id="share">Link mit dieser Rechnung kopieren</button><span class="help" id="shareMsg"></span></div>
+        <div class="row"><button id="share">Link mit dieser Eingabe kopieren</button><span class="help" id="shareMsg"></span></div>
         <div class="sliders" id="sliders"></div>
       </div>
       <div class="card">
@@ -81,7 +85,9 @@
             <tr><td><code>zyl(ρ, φ, z)</code>, <code>sph(r, θ, ψ)</code></td><td>Ortsvektor aus zylindrischen bzw. sphärischen Koordinaten (θ ab der z-Achse)</td></tr>
             <tr><td><code>e_rho(φ)</code>, <code>e_phi(φ)</code></td><td>zylindrische Basis; <code>e_r(θ,ψ)</code>, <code>e_theta(θ,ψ)</code>, <code>e_psi(ψ)</code> sphärische Basis</td></tr>
             <tr><td><code>sin cos tan asin acos atan atan2 sqrt exp ln abs min max</code></td><td>Standardfunktionen; Konstanten <code>pi</code> (π), <code>e</code></td></tr>
-            <tr><td><code>t = regler(0, 2pi)</code></td><td>Schieberegler (optional Startwert: <code>regler(0, 2pi, 1)</code>)</td></tr>
+            <tr><td><code>f(x) = x^2 − 1</code></td><td>eigene Funktion (wie im 2D-Plotter), danach überall verwendbar: <code>f(2)</code>; Ableitung <code>f'(x)</code></td></tr>
+            <tr><td><code>r(t) = (cos(t), sin(t), t/4), 0 ≤ t ≤ 4pi</code></td><td>Vektorfunktion: wird als Kurve gezeichnet (ohne Bereich t von 0 bis 2π). <code>P = r(t0)</code> ist ein Punkt, <code>pfeil(P, r'(t0))</code> der Tangentenvektor</td></tr>
+            <tr><td><code>t = regler(0, 2pi)</code></td><td>Schieberegler (optional Startwert: <code>regler(0, 2pi, 1)</code>); ▶ animiert ihn</td></tr>
             <tr><td><code>punkt(P)</code></td><td>zeichnet P als Punkt statt als Pfeil</td></tr>
             <tr><td><code>pfeil(A, v)</code></td><td>zeichnet v mit Fusspunkt A (z. B. Geschwindigkeit im Punkt)</td></tr>
             <tr><td><code>gerade(A, v)</code>, <code>ebene(A, n)</code></td><td>Gerade durch A mit Richtung v; Ebene durch A mit Normale n</td></tr>
@@ -97,8 +103,9 @@
       </div>
     </div>
     <div class="sticky">
-      <div class="stage"><canvas id="cv" style="height:520px"></canvas><div class="hint">Ziehen: drehen · Rechtsklick/Shift-Ziehen oder zwei Finger: verschieben · Mausrad: zoomen</div></div>
-      <div class="row"><button id="reset">Ansicht zurücksetzen</button><label class="help"><input type="checkbox" id="grid" checked> Bodengitter</label></div>
+      <div class="stage"><canvas id="cv" style="height:520px"></canvas><div class="hint">Ziehen: drehen · Shift-/Rechtsklick-Ziehen oder zwei Finger: verschieben · Mausrad/zwei Finger: zoomen</div>
+        <div class="zoom"><button id="zin" title="hineinzoomen">+</button><button id="zout" title="herauszoomen">−</button></div></div>
+      <div class="row"><button id="reset">Ansicht zurücksetzen</button><button id="theme"></button><label class="help"><input type="checkbox" id="grid" checked> Bodengitter</label></div>
     </div>
   </div>
 </div>
@@ -172,6 +179,8 @@
       const t = next(); if (!t) throw new E('Ausdruck unvollständig');
       if (t.k === 'n') { const n = { t: 'num', v: t.v, implicit: true }; return n; }
       if (t.k === 'id') {
+        const um = t.v.match(/^(.*?)('*)$/);
+        if (UF.has(um[1]) && (um[2] || isOp('('))) { if (!isOp('(')) throw new E(t.v + ' braucht ein Argument: ' + t.v + '(t)'); p++; return { t: 'ucall', f: um[1], d: um[2].length, args: list(')'), implicit: true }; }
         if (isOp('(') && FUN[t.v]) { p++; return { t: 'call', f: t.v, args: list(')') }; }
         return { t: 'var', v: t.v };
       }
@@ -253,6 +262,7 @@
         if (FUN[n.v]) throw new E(n.v + ' ist eine Funktion: ' + n.v + '(…)'); throw new E('„' + n.v + '“ ist nicht definiert');
       case 'vec': { const it = n.items.map(x => ev(x, env)); if (!it.every(isN)) throw new E('Vektorkomponenten müssen Zahlen sein'); return it.length === 2 ? [...it, 0] : it; }
       case 'neg': { const a = ev(n.a, env); if (isN(a)) return -a; if (isV(a)) return V.mul(a, -1); throw new E('kann nicht negiert werden'); }
+      case 'ucall': return callU(n.f, n.d, n.args.map(x => ev(x, env)), env);
       case 'call': { const [ar, f] = FUN[n.f];
         if (POS[n.f]) POS[n.f].forEach(k => { const g = n.args[k]; if (g && g.t === 'var') consumed.add(g.v); }); const a = n.args.map(x => ev(x, env));
         if (ar >= 0 && a.length !== ar) throw new E(n.f + '() braucht ' + ar + ' Argument' + (ar === 1 ? '' : 'e'));
@@ -276,6 +286,19 @@
     }
   }
 
+  // ---------- user functions ----------
+  let UF = new Set(), UFN = {}, udepth = 0;   // names, name -> {params, ast}
+  function callU(name, d, a, env) {
+    const F = UFN[name]; if (a.length !== F.params.length) throw new E(name + '() braucht ' + F.params.length + ' Argument' + (F.params.length === 1 ? '' : 'e'));
+    if (a.some(isD)) throw new E('Zeichenobjekte können nicht weiterverrechnet werden');
+    if (d > 0) { if (F.params.length !== 1 || !isN(a[0])) throw new E('Ableitung nur für Funktionen einer Zahl, z. B. r\'(t)');
+      const x = a[0], h = 1e-4 * Math.max(1, Math.abs(x)), fa = callU(name, d - 1, [x + h], env), fb = callU(name, d - 1, [x - h], env);
+      return isV(fa) && isV(fb) ? V.mul(V.sub(fa, fb), 1 / (2 * h)) : (fa - fb) / (2 * h); }
+    if (++udepth > 60) { udepth = 0; throw new E(name + ' ruft sich selbst auf'); }
+    try { const e2 = { ...env }; F.params.forEach((q, i) => { e2[q] = a[i]; }); return ev(F.ast, e2); } finally { udepth--; }
+  }
+  const FN_RE = /^([A-Za-z_À-ÖØ-öø-ɏͰ-Ͽ][A-Za-z0-9_À-ÖØ-öø-ɏͰ-Ͽ]*)\s*\(([^)]*)\)\s*=(?!=)(.*)$/;
+
   // ---------- run ----------
   const sliders = {}; // name -> {min,max,value}
   let results = [], hidden = new Set(), forced = new Set();
@@ -287,10 +310,23 @@
   const NAME_RE = /^([A-Za-z_À-ÖØ-öø-ɏͰ-Ͽ][A-Za-z0-9_'À-ÖØ-öø-ɏͰ-Ͽ̀-ͯ]*)\s*=(?!=)(.*)$/;
   function compileProgram(src) {
     const prog = [];
+    UF = new Set(); UFN = {};
+    src.split('\n').forEach(raw => { const m = raw.replace(/#.*$/, '').trim().match(FN_RE); if (m && !FUN[m[1]] && !(m[1] in CONST)) UF.add(m[1]); });
     src.split('\n').forEach((raw, i) => {
       const line = raw.replace(/#.*$/, '').trim(); if (!line) return;
       const L = { line: i + 1, src: line };
       try {
+        const fm = line.match(FN_RE);
+        if (fm && UF.has(fm[1])) { // f(x) = …  or  r(t) = (x, y, z), a ≤ t ≤ b
+          const params = fm[2].split(',').map(x => x.trim()).filter(Boolean); if (!params.length) throw new E('Parameter fehlt: ' + fm[1] + '(t) = …');
+          if (UFN[fm[1]]) throw new E(fm[1] + ' ist schon definiert');
+          const g = splitArgs(fm[3]); let t0 = { t: 'num', v: 0 }, t1 = { t: 'num', v: 2 * PI };
+          if (g.length > 1 && /[<>≤≥]/.test(g[g.length - 1])) { const c = g.pop().replace(/<=/g, '≤').replace(/>=/g, '≥').split(/[<>≤≥]/).map(x => x.trim());
+            if (c.length !== 3 || c[1] !== params[0]) throw new E('Bereich so angeben: ' + fm[1] + '(' + params[0] + ') = …, 0 ≤ ' + params[0] + ' ≤ 2pi');
+            t0 = parse(lex(c[0])); t1 = parse(lex(c[2])); }
+          const body = g.join(', '); if (!body.trim()) throw new E('rechte Seite fehlt');
+          UFN[fm[1]] = { params, ast: parse(lex(body)) };
+          Object.assign(L, { kind: 'fn', name: fm[1], params, t0, t1 }); prog.push(L); return; }
         let name = null, rhs = line; const m = line.match(NAME_RE);
         if (m) { name = m[1]; rhs = m[2]; if (!rhs.trim()) throw new E('rechte Seite fehlt'); if (FUN[name]) throw new E('„' + name + '“ ist ein Funktionsname'); if (name in CONST && name !== 'e') throw new E('„' + name + '“ ist eine Konstante'); }
         L.name = name;
@@ -343,10 +379,22 @@
           let len = 0; for (let k = 1; k < pts.length; k++) len += V.norm(V.sub(pts[k], pts[k - 1]));
           r.val = { draw: 'path', pts, desc: `Bahn für ${L.param} ∈ [${fmt(t0)}, ${fmt(t1)}], Bogenlänge ≈ ${fmt(len)}` };
           if (L.name) env[L.name] = r.val; }
+        else if (L.kind === 'fn') { r.fn = L; r.val = 'Funktion ' + L.name + '(' + L.params.join(', ') + ')'; }
         else { const v = ev(L.ast, env); if (L.name) env[L.name] = v; r.val = v; }
       } catch (e) { r.err = e instanceof E ? e.message : 'Fehler: ' + e.message; }
       out.push(r);
     });
+    // functions of one number that return a vector are drawn as curves (with all definitions known)
+    out.forEach(r => { const L = r.fn; if (!L || L.params.length !== 1) return;
+      try { const t0 = ev(L.t0, env), t1 = ev(L.t1, env); if (!isN(t0) || !isN(t1) || !(t1 > t0)) throw new E('Bereich: Anfang < Ende');
+        const N = 400, pts = []; let vec = false, firstErr = '';
+        for (let k = 0; k <= N; k++) { try { const P = callU(L.name, 0, [t0 + (t1 - t0) * k / N], env); if (isV(P)) { vec = true; if (P.every(isFinite)) pts.push(P); } else if (!isN(P)) break; }
+          catch (e) { firstErr = firstErr || e.message; } }
+        if (!vec) { if (firstErr) throw new E(firstErr); return; }
+        if (pts.length < 2) throw new E(firstErr || 'Kurve konnte nicht berechnet werden');
+        let len = 0; for (let k = 1; k < pts.length; k++) len += V.norm(V.sub(pts[k], pts[k - 1]));
+        r.val = { draw: 'path', pts, desc: `Kurve ${L.name}(${L.params[0]}) für ${L.params[0]} von ${fmt(t0)} bis ${fmt(t1)}, Bogenlänge ≈ ${fmt(len)}` };
+      } catch (e) { r.err = e instanceof E ? e.message : 'Fehler: ' + e.message; } });
     for (const k of Object.keys(sliders)) if (!used.has(k)) delete sliders[k];
     return out;
   }
@@ -389,7 +437,9 @@
     // sliders UI (rebuild only when set/range changes)
     const key = Object.entries(sliders).map(([n, s]) => n + s.min + ':' + s.max).join('|');
     if (key !== sliderKey) { sliderKey = key; slEl.innerHTML = ''; sliderUI = {};
-      for (const [n, s] of Object.entries(sliders)) sliderUI[n] = exSlider(slEl, { label: n, min: s.min, max: s.max, value: s.value, onInput: x => { s.value = x; renderSoft(); } }); }
+      for (const [n, s] of Object.entries(sliders)) { sliderUI[n] = exSlider(slEl, { label: n, min: s.min, max: s.max, value: s.value, onInput: x => { s.value = x; renderSoft(); } });
+        const pb = elm('button', '', s.playing ? '❚❚' : '▶'); pb.title = 'Regler animieren'; sliderUI[n].el.appendChild(pb);
+        pb.addEventListener('click', () => { s.playing = !s.playing; pb.textContent = s.playing ? '❚❚' : '▶'; if (s.playing) animate(); }); } }
     else for (const [n, s] of Object.entries(sliders)) sliderUI[n] && sliderUI[n].set(s.value);
     save(); view.redraw();
   }
@@ -436,12 +486,20 @@
     });
     if (fk && rows[fk] && rows[fk].inp) { rows[fk].inp.focus(); rows[fk].inp.setSelectionRange(caret, caret); }
   }
+  // slider animation: back and forth between min and max, one way in 6 s
+  let animRaf = 0, animLast = 0;
+  function animate() { cancelAnimationFrame(animRaf); animLast = 0;
+    const step = ts => { const dt = animLast ? Math.min((ts - animLast) / 1000, 0.1) : 0; animLast = ts; let any = false;
+      for (const [n, s] of Object.entries(sliders)) { if (!s.playing) continue; any = true; s.dir = s.dir || 1;
+        s.value += s.dir * dt * (s.max - s.min) / 6; if (s.value >= s.max) { s.value = s.max; s.dir = -1; } if (s.value <= s.min) { s.value = s.min; s.dir = 1; } }
+      if (any) { render(); animRaf = requestAnimationFrame(step); } };
+    animRaf = requestAnimationFrame(step); }
   let pending = 0; function renderSoft() { cancelAnimationFrame(pending); pending = requestAnimationFrame(render); }
   srcEl.addEventListener('input', () => { clearTimeout(srcEl._t); srcEl._t = setTimeout(render, 120); });
 
   // operator buttons
   const ops = document.getElementById('ops');
-  [['×', ' × '], ['·', ' · '], ['π', 'pi'], ['ω', 'ω'], ['φ', 'φ'], ['θ', 'θ'], ['ψ', 'ψ'], ['ρ', 'ρ'], ['√', 'sqrt('], ['|a|', 'norm(']].forEach(([l, ins]) =>
+  [['×', ' × '], ['·', ' · '], ['π', 'pi'], ['√', 'sqrt('], ['|a|', 'abs('], ['x²', '^2'], ['≤', ' ≤ '], ["f'", "'"], ['ω', 'ω'], ['φ', 'φ'], ['θ', 'θ'], ['ψ', 'ψ'], ['ρ', 'ρ']].forEach(([l, ins]) =>
     MW.button(ops, l, () => { const s = srcEl.selectionStart, e = srcEl.selectionEnd; srcEl.setRangeText(ins, s, e, 'end'); srcEl.focus(); render(); }));
 
   const fa = (c, a) => c.startsWith('#') && c.length === 7 ? c + Math.round(a * 255).toString(16).padStart(2, '0') : c;
@@ -486,6 +544,10 @@
     });
   });
   document.getElementById('reset').addEventListener('click', () => view.resetView());
+  document.getElementById('zin').addEventListener('click', () => view.zoomBy(1.4));
+  document.getElementById('zout').addEventListener('click', () => view.zoomBy(1 / 1.4));
+  MW.theme.button(document.getElementById('theme'));
+  MW.onTheme(() => { rowSig = ''; render(); });
   document.getElementById('grid').addEventListener('change', () => view.redraw());
 
   // ---------- examples ----------
@@ -595,6 +657,10 @@ schraube = bahn(H, 0, 4pi)
 K = sph(1.5, θ, ψ)
 kugelbahn = bahn(K, 0, 2pi)
 vK = pfeil(K, 1.5 * (sin(t) * 2pi/3 * e_theta(θ, ψ) + sin(θ) * e_psi(ψ)))`],
+    ['Vektorfunktion: Schraubenlinie mit Tangente', `r(t) = (cos(t), sin(t), t/4), 0 ≤ t ≤ 4pi
+t0 = regler(0, 12.5, 2)
+P = r(t0)
+v = pfeil(P, r'(t0))`],
     ['Leeres Blatt', ``],
   ];
   const exSel = document.getElementById('ex');

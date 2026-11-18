@@ -15,7 +15,7 @@ Die Seiten werden über GitHub Pages ausgeliefert und in Notion eingebettet. Üb
 | `analysis-w2/` | Analysis I, Woche 2, Kapitel I.2–3: Funktionen, Grenzwerte, Stetigkeit |
 | `analysis-w3/` | Analysis I, Woche 3, Kapitel I.4–7: Zwischenwertsatz, Koordinatentransformationen, Umkehrfunktion, Asymptoten |
 | `chemistry-w2/` | Chemistry (151-0909-00L), Woche 2, Brown Kap. 10: Gasgesetze, Geschwindigkeitsverteilung |
-| `werkzeuge/` | Vektorrechner, Rechenblatt (eigene Rechnungen), Funktionsplotter (2D-Graphen wie in GeoGebra, Beispiele per `?beispiel=2`) und Koordinaten-Spielplatz (freie Werkzeuge, Szenario per `?szenario=zp25` wählbar) |
+| `werkzeuge/` | Werkzeugkasten `werkzeuge/` (alle Werkzeuge in Tabs: `#2d`, `#3d`, `#vektoren`, `#koordinaten`, `#skizzen`); Vektorrechner, 3D-Plotter (`rechenblatt.html`), 2D-Plotter (`funktionsplotter.html`, Beispiele per `?beispiel=2`) und Koordinaten (`koordinaten-spielplatz.html`) (freie Werkzeuge, Szenario per `?szenario=zp25` wählbar) |
 | `lib/` | gemeinsame Bibliothek (`core.js`, `core.css`) und MechSkizze-Renderer (`mechskizze.js`, läuft auch in Node) |
 | `tools/` | Build-Skripte: `python3 tools/build_kap1.py`, `build_kap2.py`, `build_kap3.py`, `build_skizzen.py`, `build_analysis_w1.py`, `build_analysis_w2.py`, `build_analysis_w3.py`, `build_chemistry_w2.py`, `build_index.py` |
 
@@ -28,10 +28,17 @@ In Notion bettet man sie so ein: `https://schnetzubroot.github.io/Notion_MotionC
 Die Ansicht zeigt den Text und einen Link in den Editor. Neue Skizze: Datei anlegen, dann `python3 tools/build_skizzen.py`.
 Als Handskizze (Gel-Marker-Look, farbig): `…/ansicht.html?s=kap3/3-1-spg&stil=hand` oder `stil hand` in der Skizze; Normschrift nach ISO 3098: `&schrift=norm` oder `schrift norm`. Die Schriften liegen in `lib/fonts/` (Zen Kurenaido, OFL; osifont, LGPL 3 mit Font-Ausnahme).
 
-## Funktionsplotter
+## 2D-Plotter
 
-`werkzeuge/funktionsplotter.html` zeichnet Funktionen einer Variablen: eine Zeile pro Objekt, z. B. `f(x) = a x^2 + b`, `a = regler(-3, 3, 1)`, `f'(x)`, `P = (1, f(1))`, `x = 2`, `f(x) = sqrt(x), 0 <= x <= 4`.
+`werkzeuge/funktionsplotter.html` (2D-Plotter) zeichnet Funktionen einer Variablen: eine Zeile pro Objekt, z. B. `f(x) = a x^2 + b`, `a = regler(-3, 3, 1)`, `f'(x)`, `P = (1, f(1))`, `x = 2`, `f(x) = sqrt(x), 0 <= x <= 4`.
 Vektorfunktionen: Parameterkurven `r(t) = (cos(t), sin(t)), 0 <= t <= 2pi` (mit `r(t0)` als Punkt und `r'(t0)` als Tangentenvektor), Vektorfelder `F(x, y) = (-y, x)` und Pfeile `pfeil(P, v)`.
 Achsen einzeln skalieren: Achse ziehen (Maus oder Finger), Mausrad über einer Achse, Shift/Alt + Mausrad, Knöpfe x −/+ und y −/+; mit „gleich skaliert“ aus streckt ein Zwei-Finger-Zoom jede Achse getrennt.
 Hell/Dunkel: Knopf „☾ Dunkel“ / „☀ Hell“ unter dem Bild; die Wahl wird gespeichert und im Teilen-Link mitgegeben (oder per `?theme=dark` / `?theme=light`). `lib/core.css` kennt dafür `<html data-theme="dark|light">`.
 In Notion einbetten: Blatt bauen, „Link mit diesem Blatt kopieren“ klicken und den Link mit `/embed` einfügen. Der Link enthält Eingabe, Reglerstände, Farben und Ausschnitt.
+
+## Werkzeugkasten
+
+`werkzeuge/index.html` fasst 2D-Plotter, 3D-Plotter, Vektorrechner, Koordinaten und Skizzen (MechSkizze) in einer Seite mit Tabs zusammen. In Notion genügt ein Embed: `https://schnetzubroot.github.io/Notion_MotionCanvas_Widgets/werkzeuge/`.
+Ein Tab wird beim ersten Öffnen geladen und behält danach seinen Inhalt; der zuletzt benutzte Tab wird gemerkt. `#2d`, `#3d`, `#vektoren`, `#koordinaten`, `#skizzen` öffnen direkt einen Tab (alte Namen wie `#plotter` gehen auch), `?2d=%23r%3D…` reicht einen geteilten Plotter-Link durch.
+Die beiden Plotter werden gleich bedient: gleiche Eingabesprache (`f(x) = …`, `r(t) = (…), 0 ≤ t ≤ 2pi`, `f'(x)`, `regler(…)` mit ▶, `pfeil(P, v)`, Grossbuchstaben = Punkte, Kleinbuchstaben = Vektoren), gleiche Symbolleiste, Zoom-Knöpfe und Teilen-Link.
+Hell/Dunkel gilt für alle Werkzeuge gemeinsam (`lib/core.js`, `MW.theme`, gespeichert als `mw-theme`). Die einzelnen Seiten bleiben unter ihren alten Adressen erreichbar.
