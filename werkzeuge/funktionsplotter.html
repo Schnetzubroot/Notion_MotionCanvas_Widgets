@@ -99,7 +99,7 @@
     <div class="sticky">
       <div class="stage"><canvas id="cv"></canvas><div class="readout" id="ro"></div><div class="hint">Ziehen: verschieben · Mausrad/zwei Finger: zoomen · Achse ziehen: nur diese Achse strecken</div>
         <div class="zoom"><button id="zin" title="hineinzoomen">+</button><button id="zout" title="herauszoomen">−</button></div></div>
-      <div class="row"><button id="reset">Ansicht zurücksetzen</button><button id="theme" title="zwischen hellem und dunklem Modus wechseln"></button><label class="help"><input type="checkbox" id="eq" checked> x und y gleich skaliert</label>
+      <div class="row"><button id="reset">Ansicht zurücksetzen</button><button id="snap"></button><button id="theme" title="zwischen hellem und dunklem Modus wechseln"></button><label class="help"><input type="checkbox" id="eq" checked> x und y gleich skaliert</label>
         <span class="axb help">x <button data-ax="x" data-k="0.7142857" title="x-Achse stauchen">−</button><button data-ax="x" data-k="1.4" title="x-Achse strecken">+</button></span>
         <span class="axb help">y <button data-ax="y" data-k="0.7142857" title="y-Achse stauchen">−</button><button data-ax="y" data-k="1.4" title="y-Achse strecken">+</button></span>
         <label class="help"><input type="checkbox" id="piAx"> x-Achse in π</label></div>
@@ -399,6 +399,7 @@
     if (first && !initView) resetView(); redraw(); }).observe(cv);
   // ---------- light / dark (shared with the other widgets, see lib/core.js) ----------
   MW.theme.button(document.getElementById('theme'));
+  MW.snap.button(document.getElementById('snap'), () => cv, '2d-plotter');
   MW.onTheme(() => { if (P) render(); else redraw(); });
 
   function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }

@@ -105,7 +105,7 @@
     <div class="sticky">
       <div class="stage"><canvas id="cv" style="height:520px"></canvas><div class="hint">Ziehen: drehen · Shift-/Rechtsklick-Ziehen oder zwei Finger: verschieben · Mausrad/zwei Finger: zoomen</div>
         <div class="zoom"><button id="zin" title="hineinzoomen">+</button><button id="zout" title="herauszoomen">−</button></div></div>
-      <div class="row"><button id="reset">Ansicht zurücksetzen</button><button id="theme"></button><label class="help"><input type="checkbox" id="grid" checked> Bodengitter</label></div>
+      <div class="row"><button id="reset">Ansicht zurücksetzen</button><button id="snap"></button><button id="theme"></button><label class="help"><input type="checkbox" id="grid" checked> Bodengitter</label></div>
     </div>
   </div>
 </div>
@@ -547,6 +547,7 @@
   document.getElementById('zin').addEventListener('click', () => view.zoomBy(1.4));
   document.getElementById('zout').addEventListener('click', () => view.zoomBy(1 / 1.4));
   MW.theme.button(document.getElementById('theme'));
+  MW.snap.button(document.getElementById('snap'), () => document.getElementById('cv'), '3d-plotter');
   MW.onTheme(() => { rowSig = ''; render(); });
   document.getElementById('grid').addEventListener('change', () => view.redraw());
 

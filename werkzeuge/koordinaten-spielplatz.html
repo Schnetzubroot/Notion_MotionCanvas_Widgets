@@ -337,6 +337,7 @@
   gS.el.style.flex = '1'; gS.el.style.minWidth = '220px';
   MW.button(viewRow, 'Ansicht zurücksetzen', () => view.resetView());
   MW.button(viewRow, 'Von oben', () => { view.cam.pitch = 1.5; view.cam.yaw = 0; view.redraw(); });
+  MW.snap.button(MW.button(viewRow, '', () => {}), () => document.getElementById('cv'), 'koordinaten');
   ['vAxes', 'vFloor', 'vLabels'].forEach(id => document.getElementById(id).addEventListener('change', () => view.redraw()));
 
   // ---------- drawing ----------
