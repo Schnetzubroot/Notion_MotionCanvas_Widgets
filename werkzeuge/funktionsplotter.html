@@ -97,7 +97,7 @@
     <div class="sticky">
       <div class="stage"><canvas id="cv"></canvas><div class="readout" id="ro"></div><div class="hint">Ziehen: verschieben · Mausrad/zwei Finger: zoomen · Achse ziehen: nur diese Achse strecken</div>
         <div class="zoom"><button id="zin" title="hineinzoomen">+</button><button id="zout" title="herauszoomen">−</button></div></div>
-      <div class="row"><button id="reset">Ansicht zurücksetzen</button><label class="help"><input type="checkbox" id="eq" checked> x und y gleich skaliert</label>
+      <div class="row"><button id="reset">Ansicht zurücksetzen</button><button id="theme" title="zwischen hellem und dunklem Modus wechseln"></button><label class="help"><input type="checkbox" id="eq" checked> x und y gleich skaliert</label>
         <span class="axb help">x <button data-ax="x" data-k="0.7142857" title="x-Achse stauchen">−</button><button data-ax="x" data-k="1.4" title="x-Achse strecken">+</button></span>
         <span class="axb help">y <button data-ax="y" data-k="0.7142857" title="y-Achse stauchen">−</button><button data-ax="y" data-k="1.4" title="y-Achse strecken">+</button></span>
         <label class="help"><input type="checkbox" id="piAx"> x-Achse in π</label></div>
@@ -394,7 +394,19 @@
   new ResizeObserver(() => { const dpr = window.devicePixelRatio || 1, b = cv.getBoundingClientRect(); const first = !W;
     W = b.width; H = b.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (first && !initView) resetView(); redraw(); }).observe(cv);
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
+  // ---------- light / dark ----------
+  const mq = window.matchMedia('(prefers-color-scheme: dark)'), themeBtn = document.getElementById('theme');
+  let themeChoice = null;   // null = follow the system, else 'light' | 'dark'
+  const isDark = () => themeChoice ? themeChoice === 'dark' : mq.matches;
+  function applyTheme(t, persist) {
+    themeChoice = t === 'light' || t === 'dark' ? t : null;
+    if (themeChoice) document.documentElement.dataset.theme = themeChoice; else delete document.documentElement.dataset.theme;
+    themeBtn.textContent = isDark() ? '☀ Hell' : '☾ Dunkel';
+    if (persist) { try { localStorage.setItem('plotter-theme', themeChoice || ''); } catch (e) {} }
+    if (P) render(); else redraw();
+  }
+  themeBtn.addEventListener('click', () => { applyTheme(isDark() ? 'light' : 'dark', true); saveSoon(); });
+  mq.addEventListener('change', () => applyTheme(themeChoice));
 
   function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
   const tickText = v => { const a = Math.abs(v); if (a < 1e-12) return '0'; const s = a >= 1e5 || a < 1e-3 ? v.toExponential(1) : String(+v.toPrecision(6)); return s.replace('-', '−'); };
@@ -740,14 +752,14 @@ r(t) = 2 (cos(t), sin(t))`],
   const enc = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const dec = s => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
   const state = () => ({ v: [view.cx, view.cy, view.sx, view.sy].map(x => +x.toPrecision(6)), eq: eqEl.checked, pi: piEl.checked,
-    sl: Object.fromEntries(Object.entries(sliders).map(([n, s]) => [n, +s.value.toPrecision(6)])), hid: [...hidden], col: colors });
+    sl: Object.fromEntries(Object.entries(sliders).map(([n, s]) => [n, +s.value.toPrecision(6)])), hid: [...hidden], col: colors, ...(themeChoice ? { th: themeChoice } : {}) });
   function save() { try { localStorage.setItem('plotter-src', srcEl.value); localStorage.setItem('plotter-state', JSON.stringify(state())); } catch (e) {} }
   let st = 0; const saveSoon = () => { clearTimeout(st); st = setTimeout(save, 300); };
   function applyState(o) { if (!o) return false;
     if (o.v && o.v.length === 4 && o.v.every(isFinite)) [view.cx, view.cy, view.sx, view.sy] = o.v;
     eqEl.checked = o.eq !== false; piEl.checked = !!o.pi; (o.hid || []).forEach(k => hidden.add(k)); colors = o.col || {};
-    pendingSl = o.sl || {}; return !!o.v; }
-  let pendingSl = {};
+    pendingSl = o.sl || {}; if (o.th) linkTheme = o.th; return !!o.v; }
+  let pendingSl = {}, linkTheme = null;
   document.getElementById('share').addEventListener('click', async () => {
     const url = location.href.split('#')[0].split('?')[0] + '#r=' + enc(srcEl.value) + '&s=' + enc(JSON.stringify(state())), msg = document.getElementById('shareMsg');
     try { await navigator.clipboard.writeText(url); msg.textContent = 'Kopiert. In Notion mit /embed einfügen.'; }
@@ -757,6 +769,9 @@ r(t) = 2 (cos(t), sin(t))`],
   const h = location.hash.match(/#r=([\w-]*)/); if (h) { try { start = dec(h[1]); } catch (e) {} }
   const hs = location.hash.match(/[#&]s=([\w-]+)/);
   try { if (hs) initView = applyState(JSON.parse(dec(hs[1]))); } catch (e) {}
+  // theme: ?theme=dark|light, then the shared link, then this viewer's last choice, else the system setting
+  let savedTheme = null; try { savedTheme = localStorage.getItem('plotter-theme'); } catch (e) {}
+  applyTheme(new URLSearchParams(location.search).get('theme') || linkTheme || savedTheme);
   const q = new URLSearchParams(location.search).get('beispiel');
   if (start === null && q !== null && EX[+q]) { start = EX[+q][1]; exSel.value = q; }
   if (start === null) { try { start = localStorage.getItem('plotter-src'); if (start !== null) initView = applyState(JSON.parse(localStorage.getItem('plotter-state') || 'null')); } catch (e) {} }
