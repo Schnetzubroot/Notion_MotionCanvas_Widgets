@@ -1,0 +1,7 @@
+titel "Übungsheft Abb. 2.6 (rechts) – Rotation um μ, B nicht auf μ"
+punkte _O(0,0)  B(1.05,0.32)
+linie (0,-1.0) (0,1.0) ; text (0,-1.0) "ξ = μ" lage r
+linie (-0.6,-0.18) (1.4,0.42) ; linie (-0.4,-0.45) (0.55,0.6) grau
+marke B
+vektor ~ω bei _O richtung 90° länge 0.65
+vektor ~v_B bei B richtung 148° länge 0.55

@@ -1,0 +1,8 @@
+titel "Übungsheft Abb. 2.6 – Spezialfälle bei verschwindender 2. Invariante"
+punkte B(0,0)
+linie (0,-1.1) (0,1.0) ; text (0,-1.1) "ξ = μ" lage r
+linie (-0.6,-0.18) (1.4,0.42) ; linie (-0.4,-0.45) (0.55,0.65) grau
+marke B
+vektor ~ω bei B richtung 90° länge 0.65
+text B "~v_B = 0" lage ur
+pfeil von (0.95,0.28) nach (0.55,0.6) grau

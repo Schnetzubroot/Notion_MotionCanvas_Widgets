@@ -1,0 +1,10 @@
+titel "Übungsheft Abb. 2.7 – Konstruktion des Momentanzentrums"
+punkte B(0,0)  N(2.3,1.1)  Z(3.2,-0.4)
+kurve (-0.8,-0.2) (-0.5,1.0) (-0.3,1.9) (1.3,2.1) (2.4,1.9) (3.6,1.6) (3.7,0.4) (2.4,-0.3) (0.5,-1.1) (-0.8,-0.8) geschlossen grau
+text (0.1,-0.95) "K" grau
+marke B N Z
+linie B Z ; linie N Z
+vektor ~v_B bei B richtung 83° länge 1.6
+vektor ~v_N bei N richtung 32° länge 1.0
+rechtwinklig B zwischen Z und 83°
+rechtwinklig N zwischen Z und 32°

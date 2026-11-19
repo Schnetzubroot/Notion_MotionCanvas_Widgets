@@ -1,0 +1,13 @@
+titel "Übungsheft Abb. 2.9 – Feste Polbahn (Leiter an Wand)"
+param L=3
+punkte O(0,0)  _A1(0,2.4)  _B1(1.8,0)  _A2(0,1.55)  _B2(2.6,0)  Z_1(1.8,2.4)  Z_2(2.6,1.55)  _L(1.05,1.35)
+pfeil von O nach (3.9,0) "x" ; pfeil von O nach (0,3.3) "y"
+bogen O radius L von 0 bis 90
+balken _A1 _B1 ; balken _A2 _B2
+marke O Z_1 Z_2
+linie _A1 Z_1 gestrichelt ; linie Z_1 _B1 gestrichelt ; linie _A2 Z_2 gestrichelt ; linie Z_2 _B2 gestrichelt
+vektor ~v_{A1} bei _A1 richtung -90° länge 0.45
+vektor ~v_{A2} bei _A2 richtung -90° länge 0.3
+vektor ~v_{B1} bei _B1 richtung 0° länge 0.4
+vektor ~v_{B2} bei _B2 richtung 0° länge 0.4
+text _L "L"

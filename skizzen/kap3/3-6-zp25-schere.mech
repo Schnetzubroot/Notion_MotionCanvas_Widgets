@@ -1,0 +1,10 @@
+titel "ZP 2025, Aufgabe 3 – Scherenmechanismus: Stäbe OB und AC (Mitte E gelenkig verbunden), BD und CD (Länge l)"
+param l=1
+punkte O(0,0) A(l,0) E(l/2,√3l/2) B(l,√3l) C(0,√3l) D(l/2,1.5√3l)
+stab O-B ; stab A-C ; stab B-D ; stab C-D
+festlager O ; loslager A ; marke O A ; gelenk E B C D
+moment ω bei O uhrzeiger lage r
+winkel E zwischen O und A "π/3" radius 22
+pfeil von O nach (0.75l,0) "x" grau ; pfeil von O nach (0,0.85l) "y" grau
+kante O-E "l" links  E-A "l" rechts  E-C "l" links  E-B "l" rechts  C-D "l" links  B-D "l" rechts
+vektor ~e_y bei (-1.2l,1.2l) richtung +y länge 0.4 ; vektor ~e_x bei (-1.2l,1.2l) richtung +x länge 0.4 ; aus (-1.2l,1.2l) "~e_z" lage u

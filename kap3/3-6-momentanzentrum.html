@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Satz vom Momentanzentrum: v = ω r (Fig. 3.19)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Satz vom Momentanzentrum: v = ω r (Fig. 3.19)</h1>
+  <p class="sub">Bei einer ebenen Bewegung mit ω ≠ 0 gibt es einen einzigen ruhenden Punkt Z der Ebene. Jeder Punkt M bewegt sich senkrecht zu ZM mit der Schnelligkeit v = ω r, r = |ZM|.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>v = ω × ZM</div><div><span class="sw" style="background:var(--c5)"></span>Momentanzentrum Z</div><div><span class="sw" style="background:var(--c2)"></span>Kreise um Z</div></div>
+    <div class="hint">Z und die Punkte ziehen, ω ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let Z = [0.2, 0.1], om = 1.0; const pts = [[-2.4, 1.2], [0.9, 1.7], [2.5, -0.6], [-0.6, -1.4]];
+  const view = MW.View2D(cv, { xmin: -4, xmax: 4, ymin: -2.7, ymax: 3 }, v => {
+    const C = v.C, plate = [[-2.6, -1.9], [2.9, -1.7], [3.1, 2.4], [-2.4, 2.6]];
+    v.poly(plate, C.line, 1.5, null, true, C.fill); v.text([-2.4, 2.6], 'K', C.muted, 6, -14, 13, false);
+    const rows = [];
+    pts.forEach((p, i) => {
+      const zm = V.sub(p, Z), r = V.norm(zm), vel = [-om * zm[1], om * zm[0]];
+      if (r > 0.02) v.circle(Z, r, C.c2, 1, [4, 4]);
+      v.line(Z, p, C.line, 1, [3, 3]);
+      v.arrow(p, V.mul(vel, 0.5), C.c1, 2.8); v.dot(p, C.fg, 5); v.text(p, 'M' + (i + 1), C.fg, 7, 14, 12);
+      rows.push(['M' + (i + 1) + ': r = ' + fmt(r) + ', v = ω r', fmt(Math.abs(om) * r)]);
+    });
+    v.dot(Z, C.c5, 7); v.text(Z, 'Z', C.c5, 9, 14, 14);
+    MW.info(infoEl, 'v_Z = 0, v_M ⊥ ZM, |v_M| = |ω| r' + (om === 0 ? ' (ω = 0: Translation)' : ''), [['ω', fmt(om)], ...rows],
+      'Die Schnelligkeit wächst linear mit dem Abstand r zu Z, und die Pfeile stehen senkrecht auf ZM (tangential zu den gestrichelten Kreisen).');
+  });
+  view.handle(() => Z, p => { Z = p; }); pts.forEach((_, i) => view.handle(() => pts[i], p => { pts[i] = p; }));
+  MW.slider(ctl, { label: 'ω', min: -2, max: 2, step: 0.1, value: om, onInput: x => { om = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

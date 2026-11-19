@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polbahnen einer an der Wand rutschenden Leiter (Fig. 3.22/3.23)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Polbahnen einer an der Wand rutschenden Leiter (Fig. 3.22/3.23)</h1>
+  <p class="sub">Das Momentanzentrum Z liegt über B und neben A: Z = (L cos φ, L sin φ). Die feste Polbahn ist der Viertelkreis um O mit Radius L, die bewegliche Polbahn der Kreis um die Stabmitte M mit Radius L/2. Die Leiter bewegt sich, als rolle der kleine Kreis im grossen.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>feste Polbahn (Radius L um O)</div><div><span class="sw" style="background:var(--c3)"></span>bewegliche Polbahn (Radius L/2 um M)</div><div><span class="sw" style="background:var(--c1)"></span>v_A, v_B</div><div><span class="sw" style="background:var(--c5)"></span>Momentanzentrum Z</div></div>
+    <div class="hint">φ ändern oder abspielen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const L = 3; let phi = 50, trace = true, ghost = true;
+  const view = MW.View2D(cv, { xmin: -0.8, xmax: 4.2, ymin: -0.6, ymax: 3.9 }, v => {
+    const C = v.C, f = phi * MW.deg, A = [0, L * Math.sin(f)], B = [L * Math.cos(f), 0], M = V.mul(V.add(A, B), 0.5), Z = [B[0], A[1]];
+    v.arrow([-0.6, 0], [4.1, 0], C.muted, 1.2, 8); v.arrow([0, -0.4], [0, 3.8], C.muted, 1.2, 8); v.text([4.1, 0], 'x', C.muted, -4, -8, 13, false); v.text([0, 3.8], 'y', C.muted, 8, -4, 13, false);
+    if (ghost) for (let a = 85; a >= 10; a -= 5) { const g = a * MW.deg; v.line([0, L * Math.sin(g)], [L * Math.cos(g), 0], C.line, 1); }
+    const fixed = []; for (let a = 5; a <= 90; a += 1) fixed.push([L * Math.cos(a * MW.deg), L * Math.sin(a * MW.deg)]); v.poly(fixed, C.muted, 1.2, [4, 4]);
+    if (trace) { const tr = []; for (let a = phi; a <= 88; a += 1) tr.push([L * Math.cos(a * MW.deg), L * Math.sin(a * MW.deg)]); if (tr.length > 1) v.poly(tr, C.c2, 3.2, null); }
+    v.circle(M, L / 2, C.c3, 2.2, null, null);
+    v.line(A, B, C.fg, 6);
+    v.line(A, Z, C.line, 1, [3, 3]); v.line(B, Z, C.line, 1, [3, 3]);
+    const u = 1, vB = [u, 0], om = u / A[1], vA = [0, -om * B[0]];
+    v.arrow(B, V.mul(vB, 0.7), C.c1, 2.6); v.arrow(A, V.mul(vA, 0.7), C.c1, 2.6);
+    v.dot(A, C.fg, 5); v.dot(B, C.fg, 5); v.dot(M, C.c3, 4); v.dot([0, 0], C.muted, 4); v.dot(Z, C.c5, 7);
+    v.text(A, 'A', C.fg, -16, 4); v.text(B, 'B', C.fg, 6, 16); v.text(M, 'M', C.c3, 8, -6, 12); v.text(Z, 'Z', C.c5, 8, -10, 14); v.text([0, 0], 'O', C.muted, -14, 14, 12);
+    MW.info(infoEl, 'Z = (L cos φ, L sin φ) = (' + fmt(Z[0]) + ', ' + fmt(Z[1]) + ')', [['φ', fmt(phi, 0) + '°'], ['|OZ|', fmt(V.norm(Z))], ['|MZ|', fmt(V.norm(V.sub(Z, M)))], ['ω = v_B / |ZB| (für v_B = 1)', fmt(om)], ['v_A = v_B cot φ (nach unten)', fmt(Math.abs(vA[1]))]],
+      'Z liegt immer im Abstand L von O (feste Polbahn) und im Abstand L/2 von M (bewegliche Polbahn, Satz des Thales). Alle Punkte der Leiter ausser A, B laufen auf Ellipsen.');
+  });
+  MW.player(ctl, { t0: 8, t1: 85, duration: 6, value: phi, label: 'φ', fmt: x => fmt(x, 0) + '°', onTime: x => { phi = x; view.redraw(); } });
+  MW.check(ctl, 'Spur von Z', true, x => { trace = x; view.redraw(); });
+  MW.check(ctl, 'frühere Lagen', true, x => { ghost = x; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

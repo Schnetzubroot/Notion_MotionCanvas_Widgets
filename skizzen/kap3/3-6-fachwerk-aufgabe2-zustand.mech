@@ -1,0 +1,14 @@
+titel "Übungsheft Abb. 2.16 – Bewegungszustand des ebenen Fachwerkes in der Anfangslage"
+param L=1
+punkte A(0,0)  B(√3L,L)  C(√3L,0)  D(√3L+L,L)  E(√3L+L,0)  F(2√3L+L,L)  G(2.5√3L+L,L)  H(2.5√3L+L,0)  M(3√3L+L,0)  Z_4(√3L+0.25L,1.2L)  Z_5(√3L+0.15L,0)
+fläche A B C schraffiert ; fläche D E F schraffiert ; fläche F H M G schraffiert
+fachwerk A-B A-C B-C B-D C-E D-E D-F E-F F-G F-H G-H G-M H-M nummeriert
+linie E H gestrichelt ; linie B M dünn ; linie F F+(0,-L) gestrichelt
+festlager A ; festlager M
+marke Z_4 Z_5
+moment ω bei A uhrzeiger ; moment ω' bei M ; drehpfeil Z_4 achse +z "ω_4" ; drehpfeil Z_5 achse +z "ω_5"
+vektor v_B bei B richtung -70° länge 0.45 ; vektor v_C bei C richtung -90° länge 0.3
+vektor v_D bei D richtung 60° länge 1.0 ; vektor v_E bei E richtung 90° länge 0.6
+vektor v_F bei F richtung 60° länge 0.6 ; vektor v_{Fx} bei F richtung 0° länge 0.3
+vektor ~e_x bei mitte(E,H) richtung 0° länge 0.5 ; vektor ~e_y bei A+(0,0.5L) richtung 90° länge 0.4
+winkel A zwischen C und B "30°" radius 40 ; winkel M zwischen H und G "30°" radius 40 ; winkel F zwischen 0 und 60 "60°" radius 22

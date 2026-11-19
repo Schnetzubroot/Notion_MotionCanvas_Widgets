@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kreiselung: momentane Rotation um eine wandernde Achse (Fig. 3.11)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Kreiselung: momentane Rotation um eine wandernde Achse (Fig. 3.11)</h1>
+  <p class="sub">Bei der Kreiselung ruht nur ein Punkt O dauernd. In jedem Augenblick ruht aber eine ganze Achse μ durch O, und v = ω × OM. Die Achse wandert dabei im Raum (fester Polkegel) und im Körper (beweglicher Polkegel).</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c5)"></span>Momentanachse μ, ω</div><div><span class="sw" style="background:var(--c1)"></span>v = ω × OM</div><div><span class="sw" style="background:var(--c2)"></span>μ im Raum (fester Polkegel)</div><div><span class="sw" style="background:var(--c3)"></span>μ im Körper (beweglicher Polkegel)</div></div>
+    <div class="hint">Abspielen, Öffnungswinkel β ändern, Ansicht ziehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  // Drehung von p um die Achse durch A mit Richtung k (Einheitsvektor) um den Winkel th (Rodrigues)
+  const rot = (p, A, k, th) => { const q = V.sub(p, A), c = Math.cos(th), s = Math.sin(th);
+    return V.add(A, V.add(V.add(V.mul(q, c), V.mul(V.cross(k, q), s)), V.mul(k, V.dot(k, q) * (1 - c)))); };
+
+  let beta = 35, w = 2, t = 2.2;
+  const box = []; [-0.7, 0.7].forEach(x => [-0.5, 0.5].forEach(y => [-0.4, 0.9].forEach(z => box.push([x, y, z]))));
+  const edges = [[0, 1], [2, 3], [4, 5], [6, 7], [0, 2], [1, 3], [4, 6], [5, 7], [0, 4], [1, 5], [2, 6], [3, 7]];
+  const kOf = s => { const b = beta * MW.deg; return [Math.sin(b) * Math.cos(s), Math.sin(b) * Math.sin(s), Math.cos(b)]; };
+  const place = (R, p) => V.add(V.add(V.mul(R[0], p[0]), V.mul(R[1], p[1])), V.mul(R[2], p[2]));
+  // Orientierung durch Integration von dR/dt = ω × R (Achse k(s) wandert, ω = w k(s))
+  function integrate(tEnd) {
+    let R = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+    const body = u => R.map(c => V.dot(c, u)), hist = [{ k: kOf(0), b: body(kOf(0)) }];
+    const n = Math.max(1, Math.ceil(tEnd / 0.02)), dt = tEnd / n;
+    for (let i = 1; i <= n; i++) { const k = kOf((i - 0.5) * dt); R = R.map(c => rot(c, [0, 0, 0], k, w * dt)); const k1 = kOf(i * dt); hist.push({ k: k1, b: body(k1) }); }
+    return { R, hist };
+  }
+  const view = MW.View3D(cv, { extent: 1.75, yaw: 35, pitch: 20, center: [0, 0, 0.3] }, v => {
+    const C = v.C, { R, hist } = integrate(t), k = V.unit(kOf(t)), om = V.mul(k, w), O = [0, 0, 0];
+    const P = box.map(p => place(R, p));
+    if (hist.length > 1) { v.poly(hist.map(h => V.mul(h.k, 1.6)), C.c2, 2, null); v.poly(hist.map(h => V.mul(place(R, h.b), 1.6)), C.c3, 2, null); }
+    v.line(V.mul(k, -1.9), V.mul(k, 2.1), C.c5, 1.6, [8, 3, 2, 3]); v.text(V.mul(k, 2.1), 'μ', C.c5, 6, 0);
+    v.arrow(O, V.mul(k, 0.35 * w + 0.2), C.c5, 3); v.text(V.mul(k, 0.35 * w + 0.2), 'ω', C.c5, 6, 0);
+    edges.forEach(([i, j]) => v.line(P[i], P[j], C.fg, 1.6));
+    let vmax = 0;
+    P.forEach(p => { const vp = V.cross(om, p); vmax = Math.max(vmax, V.norm(vp)); v.arrow(p, V.mul(vp, 0.22), C.c1, 1.8, 7); });
+    const Q = V.mul(k, 1.35); v.dot(Q, C.c5, 4); v.text(Q, 'v = 0', C.c5, 8, 12, 12);
+    v.dot(O, C.fg, 5); v.text(O, 'O', C.fg, -14, 14);
+    MW.info(infoEl, 'v_M = ω × OM mit ω = ' + fv(om) + ' (momentan)', [['Öffnungswinkel β der Kegel', fmt(beta, 0) + '°'], ['|ω|', fmt(w)], ['grösstes |v| der Ecken', fmt(vmax)], ['v auf der Achse μ', '0']],
+      'Nur O ruht für alle Zeiten. Die Achse μ durch O ruht nur in diesem Augenblick (Buch Fig. 3.11). Beide Spuren berühren sich in der Momentanachse: Die Kreiselung ist ein Abrollen des beweglichen auf dem festen Polkegel.');
+  });
+  MW.player(ctl, { t0: 0, t1: 2 * Math.PI, duration: 10, value: t, label: 't', fmt: x => fmt(x), onTime: x => { t = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'β', min: 5, max: 80, step: 1, value: beta, unit: '°', onInput: x => { beta = x; view.redraw(); } });
+  MW.slider(ctl, { label: '|ω|', min: 0.5, max: 4, step: 0.1, value: w, onInput: x => { w = x; view.redraw(); } });
+  MW.button(ctl, 'Ansicht zurücksetzen', () => view.resetView());
+
+})();
+</script>
+</body>
+</html>

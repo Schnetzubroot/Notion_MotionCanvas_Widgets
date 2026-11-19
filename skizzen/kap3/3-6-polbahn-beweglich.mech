@@ -1,0 +1,7 @@
+titel "Übungsheft Abb. 2.10 – Bewegliche Polbahn (Halbkreis um die Stabmitte)"
+punkte O(0,0)  M(1.5,0)  _E(3,0)  Z_1(0.42,1.2)  Z_2(2.0,1.42)
+pfeil von (-0.15,0) nach (4.1,0) "ξ" ; pfeil von (0,-0.3) nach (0,2.3) "η"
+bogen M radius 1.5 von 0 bis 180
+balken O _E ; marke O M _E Z_1 Z_2
+text (1.1,0) "L" lage o
+linie O Z_1 gestrichelt ; linie Z_1 _E gestrichelt ; linie O Z_2 gestrichelt ; linie Z_2 _E gestrichelt

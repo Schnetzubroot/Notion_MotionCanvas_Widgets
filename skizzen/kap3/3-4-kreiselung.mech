@@ -1,0 +1,12 @@
+titel "Kreiselung: O ruht, μ ist die Momentanachse durch O, v_M = ω × OM"
+3d achsen (1,0) (0.42,0.3) (0,1)
+punkte O(0,0,0)  M(1.1,0.9,1.3)
+pfeil von O nach (2.6,0,0) "x" ; pfeil von O nach (0,2.2,0) "y" gestrichelt ; pfeil von O nach (0,0,2.0) "z"
+quader von (-0.3,-0.3,-0.3) bis (1.7,1.1,1.3) dünn
+text (1.6,1.0,-0.15) "K" grau
+linie (-0.6,-0.9,-0.6) (1.2,1.8,1.2) dick
+text (1.2,1.8,1.2) "μ" lage r
+marke O M
+pfeil von O nach M dick ; text teil(O,M,0.5) "~O~M" lage l
+drehpfeil (0.95,1.4,0.95) achse (0.6,0.9,0.6) "~ω"
+vektor ~v_M bei M richtung (0.63,-0.12,-0.45) länge 0.6

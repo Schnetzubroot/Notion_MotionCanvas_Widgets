@@ -1,0 +1,8 @@
+titel "Übungsheft Abb. 2.12 – Rotationsgeschwindigkeiten im Parallelogramm"
+ohne namen
+punkte _A(0,0)  _B(1.0,0)  _C(1.5,0.85)  _D(0.5,0.85)
+stab _A-_B _B-_C _C-_D _D-_A knoten
+drehpfeil mitte(_A,_B) achse +z "ω_1" lage u
+drehpfeil mitte(_D,_C) achse +z "ω_1" lage o
+drehpfeil mitte(_A,_D) achse +z "ω_2" lage l
+drehpfeil mitte(_B,_C) achse +z "ω_2" lage r

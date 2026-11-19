@@ -1,0 +1,13 @@
+titel "Übungsheft Abb. 2.11 – Bewegungszustand eines ebenen Fachwerkes"
+punkte Z_1(0,0)  _P(0.55,1.0)  A(1.65,1.0)  _Q(1.1,0)  _B(3.1,1.0)  Z_2(3.1,1.9)
+fläche Z_1 _P A _Q schraffiert
+stab Z_1-_P _P-A A-_Q _Q-Z_1 _P-_Q ; stab A-_B
+festlager Z_1 ; loslager _B
+marke A Z_2
+linie Z_1 Z_2 gestrichelt ; linie _B Z_2 gestrichelt
+moment ω_1 bei Z_1
+moment ω_2 bei Z_2 uhrzeiger
+vektor ~v_B bei _B richtung 0° länge 0.4
+vektor ~v_A bei A richtung -60° länge 0.75
+vektor ~v_{A'} bei A richtung 0° länge 0.4
+linie A+(0.375,-0.65) A+(0.375,0) gestrichelt
