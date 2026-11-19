@@ -43,6 +43,13 @@ ANA = {
     ('analysis-w3', '5-2'): 'Analysis I.5 Graphen skizzieren, Schwingungen', ('analysis-w3', '6-1'): 'Analysis I.6 Injektiv, surjektiv, bijektiv',
     ('analysis-w3', '6-2'): 'Analysis I.6 Umkehrfunktion', ('analysis-w3', '6-3'): 'Analysis I.6 Arcus-Funktionen',
     ('analysis-w3', '7-1'): 'Analysis I.7 Asymptoten',
+    ('analysis-w4', '1-1'): 'Analysis II.1 Differenzen- und Differentialquotient', ('analysis-w4', '1-2'): 'Analysis II.1 Ableitungsfunktion und Rechenregeln',
+    ('analysis-w4', '1-3'): 'Analysis II.1 Kettenregel', ('analysis-w4', '1-4'): 'Analysis II.1 Ableitung der Umkehrfunktion',
+    ('analysis-w4', '2-1'): 'Analysis II.2 Lineare Ersatzfunktion',
+    ('analysis-w5', '2-2'): 'Analysis II.2 Differentiale und Fehlerrechnung', ('analysis-w5', '3-1'): 'Analysis II.3 Lokale Extrema, Satz von Rolle',
+    ('analysis-w5', '3-2'): 'Analysis II.3 Mittelwertsatz', ('analysis-w5', '3-3'): 'Analysis II.3 Regel von Bernoulli-Hôpital',
+    ('analysis-w5', '4-1'): 'Analysis II.4 Kandidaten für Extremalstellen', ('analysis-w5', '4-2'): 'Analysis II.4 Abstand Punkt–Strecke',
+    ('analysis-w5', '4-3'): 'Analysis II.4 Kreuzförmiger Querschnitt', ('analysis-w5', 'A-1'): 'Analysis Anhang A: Komplexe Zahlen',
 }
 parts.append('<h1 style="margin-top:32px">Analysis I</h1><p class="sub">Begleitmaterial zu U. Stammbach: Analysis I/II, Teil A (ETH Zürich).</p>')
 for (folder, key), name in ANA.items():
