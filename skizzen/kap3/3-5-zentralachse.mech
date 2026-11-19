@@ -1,0 +1,16 @@
+titel "Übungsheft Abb. 2.5 – Zentralachse"
+punkte Z(0,0)  B(-1.15,-0.33)  M(1.9,0.62)
+linie (0,-1.6) (0,3.2) ; text (0,3.2) "ζ" lage r
+linie (-1.8,-0.52) (2.8,0.92)
+marke Z B M
+vektor ~ω bei Z richtung 90° länge 2.2
+text Z+(0,0.8) "~v_ω = ~v_Z" lage r
+vektor ~e_ζ bei (0,-1.55) richtung 90° länge 0.5
+vektor ~v_ω bei B richtung 90° länge 1.0
+vektor ~v_B bei B richtung 75° länge 1.0
+vektor (~v_B)_⊥ bei B richtung -12° länge 0.3
+linie B+(0.26,0.97) B+(0.29,-0.06) gestrichelt
+vektor ~v_ω bei M richtung 90° länge 1.0
+vektor ~v_M bei M richtung 113° länge 1.6
+vektor (~v_M)_⊥ bei M richtung 165° länge 0.65
+linie M+(-0.63,1.47) M+(-0.63,0.17) gestrichelt ; linie M+(-0.63,1.47) M+(0,1.0) gestrichelt

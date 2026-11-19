@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinemate, Bezugspunktwechsel und Invarianten (Würfel)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Kinemate, Bezugspunktwechsel und Invarianten (Würfel)</h1>
+  <p class="sub">Der Bewegungszustand ist die Kinemate {v<sub>B</sub>, ω}. Wechselt man den Bezugspunkt, gilt v<sub>B'</sub> = v<sub>B</sub> + ω × BB'. Dabei bleiben ω (1. Invariante) und ω · v (2. Invariante) gleich.</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>v in allen Ecken</div><div><span class="sw" style="background:var(--c5)"></span>ω</div><div><span class="sw" style="background:var(--c3)"></span>v_ω (Anteil ∥ ω, überall gleich)</div><div><span class="sw" style="background:var(--c4)"></span>v_⊥ (Anteil ⊥ ω)</div></div>
+    <div class="hint">Bezugspunkt wählen, Beispiel wählen oder v_A und ω einstellen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const P0 = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]], NAMES = 'ABCDEFGH';
+  const edges = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
+  const PRE = { zp23: ['Allgemein (ZP1 2023 A1)', [3, 1, 1], [0, 1, 1]], transl: ['Translation (ω = 0)', [1, 0.5, 0], [0, 0, 0]], rot0: ['Rotation, A auf μ (v_A = 0)', [0, 0, 0], [0, 1, 1]],
+    rotp: ['Rotation, A nicht auf μ (v_A ⊥ ω)', [1, 0, 1], [0, 1, 0]], schr: ['Schraubung', [1, 2, 0], [0, 2, 0]] };
+  let vA = [3, 1, 1], om = [0, 1, 1], ref = 0;
+  const sl = [];
+  const view = MW.View3D(cv, { extent: 1.6, yaw: 35, pitch: 22, center: [0.5, 0.5, 0.5] }, v => {
+    const C = v.C, A = P0[0], vel = p => V.add(vA, V.cross(om, V.sub(p, A))), sc = 0.2;
+    edges.forEach(([i, j]) => v.line(P0[i], P0[j], C.fg, 1.6));
+    P0.forEach((p, i) => { if (i !== ref) v.arrow(p, V.mul(vel(p), sc), C.c1, 1.6, 7); v.dot(p, C.fg, 3.5); v.text(p, NAMES[i], C.muted, 7, -7, 12); });
+    const B = P0[ref], vB = vel(B), w2 = V.dot(om, om), vw = w2 > 1e-9 ? V.mul(om, V.dot(vB, om) / w2) : [0, 0, 0], vp = V.sub(vB, vw);
+    if (V.norm(vp) > 1e-9 && V.norm(vw) > 1e-9) { v.line(V.add(B, V.mul(vw, sc)), V.add(B, V.mul(vB, sc)), C.line, 1, [3, 3]); v.line(V.add(B, V.mul(vp, sc)), V.add(B, V.mul(vB, sc)), C.line, 1, [3, 3]); }
+    if (V.norm(vw) > 1e-9) v.arrow(B, V.mul(vw, sc), C.c3, 3.4);
+    if (V.norm(vp) > 1e-9) v.arrow(B, V.mul(vp, sc), C.c4, 2.6);
+    if (V.norm(om) > 1e-9) { v.arrow(B, V.mul(om, 0.45), C.c5, 3); v.text(V.add(B, V.mul(om, 0.45)), 'ω', C.c5, 6, 0); }
+    v.arrow(B, V.mul(vB, sc), C.c1, 3.4); v.dot(B, C.fg, 6); v.text(B, 'v_' + NAMES[ref], C.c1, 10, 14, 13);
+    const dot = V.dot(om, vB), zero = V.norm(om) < 1e-9 ? 'Translation (ω = 0)' : Math.abs(dot) < 1e-9 ? (V.norm(vB) < 1e-9 ? 'Rotation, ' + NAMES[ref] + ' liegt auf μ' : 'Rotation, ' + NAMES[ref] + ' liegt nicht auf μ (v ⊥ ω)') : 'Schraubung (ω · v ≠ 0)';
+    MW.info(infoEl, 'Kinemate in ' + NAMES[ref] + ': {v_' + NAMES[ref] + ' = ' + fv(vB) + ', ω = ' + fv(om) + '}', [['v_' + NAMES[ref] + ' = v_A + ω × A' + NAMES[ref], fv(vB)], ['ω (1. Invariante)', fv(om)], ['ω · v (2. Invariante)', fmt(dot)],
+      ['v_ω = (ω · v) ω / |ω|²', fv(vw)], ['v_⊥ = v − v_ω', fv(vp)], ['Zustand', zero]],
+      'Wechsle den Bezugspunkt: v und v_⊥ ändern sich, ω, ω · v und v_ω (violett) bleiben gleich. Gilt ω · v = 0, ist der Zustand eine momentane Rotation oder Translation, sonst eine Schraubung.');
+  });
+  MW.select(ctl, 'Bezugspunkt', NAMES.split('').map((n, i) => [i, n]), x => { ref = +x; view.redraw(); }).set(ref);
+  const pre = MW.select(ctl, 'Beispiel', Object.entries(PRE).map(([k, a]) => [k, a[0]]), x => { vA = PRE[x][1].slice(); om = PRE[x][2].slice(); sl.forEach((s, i) => s.set(i < 3 ? vA[i] : om[i - 3])); view.redraw(); });
+  pre.set('zp23');
+  ['x', 'y', 'z'].forEach((c, i) => sl.push(MW.slider(ctl, { label: 'v_A,' + c, min: -3, max: 3, step: 0.5, value: vA[i], onInput: x => { vA[i] = x; view.redraw(); } })));
+  ['x', 'y', 'z'].forEach((c, i) => sl.push(MW.slider(ctl, { label: 'ω_' + c, min: -2, max: 2, step: 0.5, value: om[i], onInput: x => { om[i] = x; view.redraw(); } })));
+  MW.button(ctl, 'Ansicht zurücksetzen', () => view.resetView());
+
+})();
+</script>
+</body>
+</html>

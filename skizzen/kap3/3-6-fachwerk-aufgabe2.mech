@@ -1,0 +1,8 @@
+titel "Übungsheft Abb. 2.15 – Ebenes Gelenksystem aus 13 Stäben (Aufgabe 2)"
+param L=1
+punkte A(0,0)  B(√3L,L)  C(√3L,0)  D(√3L+L,L)  E(√3L+L,0)  F(2√3L+L,L)  G(2.5√3L+L,L)  H(2.5√3L+L,0)  M(3√3L+L,0)
+fachwerk A-B A-C B-C B-D C-E D-E D-F E-F F-G F-H G-H G-M H-M nummeriert
+linie E H gestrichelt
+festlager A ; festlager M
+moment ω bei A uhrzeiger
+kante A-B "2L" oben  B-C "L" rechts  B-D "L" oben  D-E "L" rechts  E-F "2L" unten  F-G "√3/2 L" oben  G-H "L" rechts  H-M "√3/2 L" unten

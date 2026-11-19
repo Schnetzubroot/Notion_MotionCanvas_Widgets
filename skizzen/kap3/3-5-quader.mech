@@ -1,0 +1,7 @@
+titel "Übungsheft Abb. 2.13 – Starrer Quader"
+3d achsen (-0.38,-0.38) (1,0) (0,1)
+param a=1
+punkte A(0,0,0)  B(a,0,0)  C(a,2a,0)  D(0,2a,0)  E(0,0,a)  F(a,0,a)  G(a,2a,a)  H(0,2a,a)
+quader von A bis G dick
+pfeil von A nach (0,2.5a,0) "y" ; pfeil von A nach (0,0,1.5a) "z" ; pfeil von A nach (1.5a,0,0) "x"
+kante B-C "2a" unten  H-D "a" rechts  G-H "a" oben

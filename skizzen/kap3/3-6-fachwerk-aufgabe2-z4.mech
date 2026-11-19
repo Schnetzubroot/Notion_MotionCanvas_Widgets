@@ -1,0 +1,11 @@
+titel "Übungsheft Abb. 2.17 – Bestimmung des Momentanzentrums Z_4"
+punkte B(0,0)  D(2.6,0)  Z_4(1.0,0.58)
+balken B D ; marke B D Z_4
+linie B Z_4 ; linie Z_4 D dünn ; linie Z_4 (1.0,0) gestrichelt
+text mitte(B,D)+(0.5,0) "4" lage u
+kante B-Z_4 "a" oben
+text (0.5,0) "b" lage u ; text (1.0,0.29) "c" lage r
+winkel B zwischen D und Z_4 "30°" radius 45
+drehpfeil Z_4 achse +z "ω_4" lage r
+vektor v_B bei B richtung -60° länge 0.6
+vektor v_D bei D richtung 60° länge 0.8

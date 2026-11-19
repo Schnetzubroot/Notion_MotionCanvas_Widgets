@@ -1,0 +1,8 @@
+titel "ZP 2023, Aufgabe 2 – Ebenes Fachwerk aus 17 Stäben der Länge L, gelagert in F und H"
+param L=1  h=0.866
+knoten A(0,0) F(L,0) B(L/2,h) E(1.5L,h) C(L,2h) D(2L,2h) I(3L,2h) K(2.5L,h) J(3.5L,h) G(3L,0) H(4L,0)
+fachwerk A-F A-B B-F B-E E-F B-C C-E C-D D-E D-I D-K I-J K-J K-G G-J G-H J-H
+festlager F ; festlager H
+moment ω bei F uhrzeiger lage ul
+kante A-F "L" oben  B-F "L" rechts  K-J "L" oben
+vektor ~e_y bei (-0.6,2h) richtung +y länge 0.3 ; vektor ~e_x bei (-0.6,2h) richtung +x länge 0.4 ; aus (-0.6,2h) "~e_z" lage u

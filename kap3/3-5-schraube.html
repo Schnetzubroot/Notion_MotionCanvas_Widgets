@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schraubung um die Zentralachse</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Schraubung um die Zentralachse</h1>
+  <p class="sub">Die allgemeinste Bewegung ist momentan eine Schraubung um die Zentralachse ζ: Drehen mit ω um ζ und gleichzeitig Verschieben mit v<sub>ω</sub> entlang ζ. Jeder Punkt hat v = v<sub>ω</sub> + ω × ρ mit dem Abstand ρ zu ζ.</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c5)"></span>Zentralachse ζ</div><div><span class="sw" style="background:var(--c1)"></span>ω × ρ (senkrecht zu ζ)</div><div><span class="sw" style="background:var(--c3)"></span>v_ω (entlang ζ, überall gleich)</div><div><span class="sw" style="background:var(--c4)"></span>v = v_ω + ω × ρ</div><div><span class="sw" style="background:var(--c2)"></span>Bahn von M (Schraubenlinie)</div></div>
+    <div class="hint">Abspielen, Steigung und Abstand ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  // Drehung von p um die Achse durch A mit Richtung k (Einheitsvektor) um den Winkel th (Rodrigues)
+  const rot = (p, A, k, th) => { const q = V.sub(p, A), c = Math.cos(th), s = Math.sin(th);
+    return V.add(A, V.add(V.add(V.mul(q, c), V.mul(V.cross(k, q), s)), V.mul(k, V.dot(k, q) * (1 - c)))); };
+
+  let h = 0.25, d = 0.9, t = 3.5;                     // ω = 1 e_z, v_ω = h e_z, Abstand d von ζ
+  const half = 0.2, box = []; [-1, 1].forEach(x => [-1, 1].forEach(y => [-1, 1].forEach(z => box.push([x * half, y * half, z * half]))));
+  const edges = [[0, 1], [2, 3], [4, 5], [6, 7], [0, 2], [1, 3], [4, 6], [5, 7], [0, 4], [1, 5], [2, 6], [3, 7]], ez = [0, 0, 1];
+  const move = (p, s) => V.add(rot(p, [0, 0, 0], ez, s), [0, 0, h * s]);
+  const view = MW.View3D(cv, { extent: 2.3, yaw: 40, pitch: 18, center: [0, 0, 1.2] }, v => {
+    const C = v.C, M0 = [d, 0, 0], M = move(M0, t);
+    v.line([0, 0, -0.6], [0, 0, 3.4], C.c5, 1.6, [8, 3, 2, 3]); v.text([0, 0, 3.4], 'ζ', C.c5, 6, 0);
+    const tr = []; for (let i = 0; i <= 160; i++) tr.push(move(M0, t * i / 160));
+    v.poly(tr, C.c2, 2, null);
+    const P = box.map(p => move(V.add(M0, p), t)); edges.forEach(([i, j]) => v.line(P[i], P[j], C.fg, 1.4));
+    const vo = [0, 0, h], vp = V.cross(ez, V.sub(M, [0, 0, M[2]])), vt = V.add(vo, vp), D = [0, 0, M[2]], sc = 1.8;
+    v.line(D, M, C.line, 1, [3, 3]); v.dot(D, C.c5, 3);
+    v.arrow(M, V.mul(vp, sc), C.c1, 2.4); v.arrow(M, V.mul(vo, sc), C.c3, 3); v.arrow(M, V.mul(vt, sc), C.c4, 3.4); v.dot(M, C.fg, 5); v.text(M, 'M', C.fg, 8, -8);
+    v.arrow([0, 0, 0], [0, 0, 0.9], C.c5, 3); v.text([0, 0, 0.9], 'ω', C.c5, 8, 0);
+    MW.info(infoEl, 'ω = (0, 0, 1), v_ω = (0, 0, ' + fmt(h) + ')', [['Steigung v_ω / ω', fmt(h)], ['Ganghöhe 2π v_ω / ω', fmt(2 * Math.PI * h)], ['Abstand ρ von ζ', fmt(d)], ['|v_M| = √(v_ω² + (ωρ)²)', fmt(V.norm(vt))], ['kleinste Schnelligkeit (auf ζ)', fmt(Math.abs(h))]],
+      Math.abs(h) < 1e-9 ? 'Steigung 0: v_ω = 0, die Schraubung ist eine reine Rotation um ζ (2. Invariante ω · v = 0).' : 'Auf ζ ist die Schnelligkeit am kleinsten, nämlich |v_ω|. Mit dem Abstand zu ζ wächst nur der Anteil ω × ρ.');
+  });
+  MW.player(ctl, { t0: 0, t1: 3 * Math.PI, duration: 9, value: t, label: 'Φ', fmt: x => fmt(x / MW.deg, 0) + '°', onTime: x => { t = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'v_ω / ω', min: -0.3, max: 0.3, step: 0.05, value: h, onInput: x => { h = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'Abstand ρ', min: 0.2, max: 1.6, step: 0.1, value: d, onInput: x => { d = x; view.redraw(); } });
+  MW.button(ctl, 'Ansicht zurücksetzen', () => view.resetView());
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+titel "Übungsheft Abb. 2.4 – Allgemeine Bewegung eines starren Körpers"
+punkte B(0,0)  M(2.4,1.0)
+kurve (-0.6,-0.5) (1.0,-0.5) (2.8,0.2) (3.0,1.6) (2.0,1.95) (1.0,1.7) (0.2,1.8) (-0.5,1.2) geschlossen grau
+text (0.1,-0.6) "K" grau
+marke B M
+pfeil von B nach M ; text teil(B,M,0.55) "~B~M" lage u
+vektor ~ω bei B richtung 73° länge 1.55
+vektor ~v_ω bei B richtung 73° länge 0.85
+vektor ~v_B bei B richtung 92° länge 1.0
+linie B+(0,1.0) B+(0.85*cos(73),0.85*sin(73)) gestrichelt
+vektor ~ω bei M richtung 73° länge 1.55
+vektor ~v_ω bei M richtung 73° länge 0.85
+vektor ~v_M bei M richtung 52° länge 0.95
+linie M+(0.95*cos(52),0.95*sin(52)) M+(0.85*cos(73),0.85*sin(73)) gestrichelt

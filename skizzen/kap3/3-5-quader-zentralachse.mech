@@ -1,0 +1,11 @@
+titel "Übungsheft Abb. 2.14 – Zentralachse des starren Quaders"
+3d achsen (-0.38,-0.38) (1,0) (0,1)
+param a=1
+punkte A(0,0,0)  _B(a,0,0)  C(a,2a,0)  D(0,2a,0)  E(0,0,a)  F(a,0,a)  G(a,2a,a)  H(0,2a,a)  _P(a,0,-a)  _Q(a,a,0)
+quader von A bis G dick
+pfeil von A nach (0,2.6a,0) "y" ; pfeil von A nach (0,0,1.5a) "z" ; pfeil von A nach (1.5a,0,0) "x"
+linie _P (a,2.6a,1.6a) dick ; vektor ~e_ζ bei (a,2.6a,1.6a) richtung (0,1,1) länge 0.3a
+marke G _Q _P
+linie _B _P gestrichelt
+vektor ~ω bei (a,0.15a,-0.45a) richtung (0,1,1) länge 0.5a
+text _P "(a, 0, -a)" lage r

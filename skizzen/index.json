@@ -34,5 +34,77 @@
  {
   "s": "kap3/3-3-zp25-kugel",
   "titel": "ZP1 2025 A2: Die Rotationsachse geht durch A und C"
+ },
+ {
+  "s": "kap3/3-4-kreiselung",
+  "titel": "Kreiselung: O ruht, μ ist die Momentanachse durch O, v_M = ω × OM"
+ },
+ {
+  "s": "kap3/3-5-kinemate",
+  "titel": "Übungsheft Abb. 2.4 – Allgemeine Bewegung eines starren Körpers"
+ },
+ {
+  "s": "kap3/3-5-quader-zentralachse",
+  "titel": "Übungsheft Abb. 2.14 – Zentralachse des starren Quaders"
+ },
+ {
+  "s": "kap3/3-5-quader",
+  "titel": "Übungsheft Abb. 2.13 – Starrer Quader"
+ },
+ {
+  "s": "kap3/3-5-spezialfall-b-auf-mu",
+  "titel": "Übungsheft Abb. 2.6 – Spezialfälle bei verschwindender 2. Invariante"
+ },
+ {
+  "s": "kap3/3-5-spezialfall-b-neben-mu",
+  "titel": "Übungsheft Abb. 2.6 (rechts) – Rotation um μ, B nicht auf μ"
+ },
+ {
+  "s": "kap3/3-5-zentralachse",
+  "titel": "Übungsheft Abb. 2.5 – Zentralachse"
+ },
+ {
+  "s": "kap3/3-6-fachwerk-aufgabe2-z4",
+  "titel": "Übungsheft Abb. 2.17 – Bestimmung des Momentanzentrums Z_4"
+ },
+ {
+  "s": "kap3/3-6-fachwerk-aufgabe2-zustand",
+  "titel": "Übungsheft Abb. 2.16 – Bewegungszustand des ebenen Fachwerkes in der Anfangslage"
+ },
+ {
+  "s": "kap3/3-6-fachwerk-aufgabe2",
+  "titel": "Übungsheft Abb. 2.15 – Ebenes Gelenksystem aus 13 Stäben (Aufgabe 2)"
+ },
+ {
+  "s": "kap3/3-6-fachwerk-zustand",
+  "titel": "Übungsheft Abb. 2.11 – Bewegungszustand eines ebenen Fachwerkes"
+ },
+ {
+  "s": "kap3/3-6-momentanzentrum",
+  "titel": "Übungsheft Abb. 2.7 – Konstruktion des Momentanzentrums"
+ },
+ {
+  "s": "kap3/3-6-parallele-geschwindigkeiten",
+  "titel": "Übungsheft Abb. 2.8 – Momentanzentrum bei ungleichen, parallelen Geschwindigkeiten"
+ },
+ {
+  "s": "kap3/3-6-parallelogramm",
+  "titel": "Übungsheft Abb. 2.12 – Rotationsgeschwindigkeiten im Parallelogramm"
+ },
+ {
+  "s": "kap3/3-6-polbahn-beweglich",
+  "titel": "Übungsheft Abb. 2.10 – Bewegliche Polbahn (Halbkreis um die Stabmitte)"
+ },
+ {
+  "s": "kap3/3-6-polbahn-fest",
+  "titel": "Übungsheft Abb. 2.9 – Feste Polbahn (Leiter an Wand)"
+ },
+ {
+  "s": "kap3/3-6-zp23-fachwerk",
+  "titel": "ZP 2023, Aufgabe 2 – Ebenes Fachwerk aus 17 Stäben der Länge L, gelagert in F und H"
+ },
+ {
+  "s": "kap3/3-6-zp25-schere",
+  "titel": "ZP 2025, Aufgabe 3 – Scherenmechanismus: Stäbe OB und AC (Mitte E gelenkig verbunden), BD und CD (Länge l)"
  }
 ]

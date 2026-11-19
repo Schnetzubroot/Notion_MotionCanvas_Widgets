@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ebenes Fachwerk (ZP1 2023 A2): Körper, Parallelogramm, Rotationsgeschwindigkeiten</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Ebenes Fachwerk (ZP1 2023 A2): Körper, Parallelogramm, Rotationsgeschwindigkeiten</h1>
+  <p class="sub">Das Fachwerk besteht aus drei starren Teilen: dem Dreiecksbereich mit F (rotiert um F), dem Dreiecksbereich mit H (rotiert um H) und dem Parallelogramm DIJK. Die Stäbe DK und IJ haben gleiche Rotationsgeschwindigkeit, ebenso DI und KJ (Parallelogrammregel).</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>Körper um F</div><div><span class="sw" style="background:var(--c2)"></span>Körper um H</div><div><span class="sw" style="background:var(--c3)"></span>Parallelogramm D–I–J–K</div><div><span class="sw" style="background:var(--c4)"></span>Geschwindigkeiten</div></div>
+    <div class="hint">ω der Platte um F ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const L = 1, h = Math.sqrt(3) / 2; let om = 1;
+  const N = { A: [0, 0], F: [1, 0], B: [0.5, h], E: [1.5, h], C: [1, 2 * h], D: [2, 2 * h], I: [3, 2 * h], K: [2.5, h], J: [3.5, h], G: [3, 0], H: [4, 0] };
+  const left = ['A-F', 'A-B', 'B-F', 'B-E', 'E-F', 'B-C', 'C-E', 'C-D', 'D-E'], par = ['D-I', 'D-K', 'I-J', 'K-J'], right = ['K-G', 'G-J', 'G-H', 'J-H'];
+  const rotv = (Zc, wz, p) => [-wz * (p[1] - Zc[1]), wz * (p[0] - Zc[0])];
+  const view = MW.View2D(cv, { xmin: -0.6, xmax: 4.6, ymin: -1.0, ymax: 2.2 }, v => {
+    const C = v.C, wF = -om, wH = 2 * om, wDK = -4 * om;                  // z-Komponenten
+    const vel = { D: rotv(N.F, wF, N.D) }; ['A', 'B', 'C', 'E'].forEach(k => vel[k] = rotv(N.F, wF, N[k])); ['K', 'J', 'G'].forEach(k => vel[k] = rotv(N.H, wH, N[k]));
+    vel.I = V.add(vel.D, rotv([0, 0], wH, V.sub(N.I, N.D)));                   // DI hat ω = ω_H
+    const res = V.norm(V.sub(vel.K, V.add(vel.D, rotv([0, 0], wDK, V.sub(N.K, N.D))))), res2 = V.norm(V.sub(vel.I, V.add(vel.J, rotv([0, 0], wDK, V.sub(N.I, N.J)))));
+    const draw = (list, col, wd) => list.forEach(s => { const [a, b] = s.split('-'); v.line(N[a], N[b], col, wd); });
+    draw(left, C.c1, 3); draw(right, C.c2, 3); draw(par, C.c3, 3);
+    Object.keys(N).forEach(k => { v.dot(N[k], C.fg, 4); v.text(N[k], k, C.fg, 5, -10, 12); });
+    ['D', 'I', 'J', 'K', 'G', 'E'].forEach(k => v.arrow(N[k], V.mul(vel[k], 0.35), C.c4, 2.4));
+    [N.F, N.H].forEach(p => { v.dot(p, C.c5, 6); }); v.text(N.F, 'F', C.c5, -2, 16, 13); v.text(N.H, 'H', C.c5, -2, 16, 13);
+    MW.info(infoEl, 'Platte um F: ω = (0, 0, −' + fmt(om) + ') · v_D = ωL(√3, −1)', [['v_D', fv(vel.D)], ['ω_DK (A2.2)', fmt(wDK / om, 0) + ' ω, also |ω_DK| = 4ω'], ['ω_H (Körper um H)', fmt(wH / om, 0) + ' ω'], ['|v_G| = ω_H · HG (A2.3)', fmt(V.norm(vel.G)) + '  (= 2ωL)'], ['Kontrolle v_K, v_I zweimal berechnet', fmt(res + res2, 6)]],
+      'Aus v_K = v_D + ω_DK × DK und v_K = ω_H × HK folgt ω_H = 2ω und ω_DK = −4ω. Die Parallelogrammregel liefert ω_DI = ω_KJ = ω_H.');
+  });
+  MW.slider(ctl, { label: 'ω', min: 0.25, max: 2, step: 0.25, value: om, onInput: x => { om = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>
