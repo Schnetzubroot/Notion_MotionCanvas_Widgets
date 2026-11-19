@@ -55,8 +55,8 @@ W.append(dict(file='3-6-polbahnen.html', title='Polbahnen einer an der Wand ruts
 
 # ---------------------------------------------------------------- 3.6 Planetengetriebe
 W.append(dict(file='3-6-planetengetriebe.html', title='Planetengetriebe (Fig. 3.21)',
-  sub='Das Planetenrad mit R<sub>3</sub> = (R<sub>2</sub> − R<sub>1</sub>)/2 rollt zwischen Sonnenrad (R<sub>1</sub>, ω<sub>1</sub>) und Hohlrad (R<sub>2</sub>, ω<sub>2</sub>). Die Kontaktpunkte S, T haben die Geschwindigkeiten R<sub>1</sub>ω<sub>1</sub> und R<sub>2</sub>ω<sub>2</sub>, dazwischen ist die Verteilung linear.',
-  hint='Abspielen, Radien und Drehzahlen ändern.', legend=[('--c1', 'v_S, v_T'), ('--c4', 'v_M (Mittelwert)'), ('--c5', 'Momentanzentrum des Planeten')], js=r'''
+  sub='Das Planetenrad mit R<sub>3</sub> = (R<sub>2</sub> − R<sub>1</sub>)/2 rollt zwischen Sonnenrad (R<sub>1</sub>, ω<sub>1</sub>) und Hohlrad (R<sub>2</sub>, ω<sub>2</sub>). Die Kontaktpunkte P, Q haben die Geschwindigkeiten R<sub>1</sub>ω<sub>1</sub> und R<sub>2</sub>ω<sub>2</sub>, dazwischen ist die Verteilung linear.',
+  hint='Abspielen, Radien und Drehzahlen ändern.', legend=[('--c1', 'v_P, v_Q'), ('--c4', 'v_M (Mittelwert)'), ('--c5', 'Momentanzentrum des Planeten')], js=r'''
   let R1 = 1, R2 = 3, w1 = 1, w2 = 0, t = 1.0;
   const view = MW.View2D(cv, { xmin: -4.4, xmax: 4.4, ymin: -3.6, ymax: 3.6 }, v => {
     const C = v.C, R3 = (R2 - R1) / 2, Lm = (R1 + R2) / 2, wA = (R1 * w1 + R2 * w2) / (R1 + R2), w3 = R2 > R1 ? (R2 * w2 - R1 * w1) / (R2 - R1) : 0;
@@ -70,10 +70,10 @@ W.append(dict(file='3-6-planetengetriebe.html', title='Planetengetriebe (Fig. 3.
     const vS = V.mul(et, R1 * w1), vT = V.mul(et, R2 * w2), vM = V.mul(et, (R1 * w1 + R2 * w2) / 2), sc = 0.7;
     v.arrow(S, V.mul(vS, sc), C.c1, 2.6); v.arrow(T, V.mul(vT, sc), C.c1, 2.6); v.arrow(M, V.mul(vM, sc), C.c4, 3);
     v.dot(S, C.fg, 4); v.dot(T, C.fg, 4); v.dot(M, C.fg, 4); v.dot([0, 0], C.fg, 4);
-    v.text(S, 'S', C.fg, -14, -8, 12); v.text(T, 'T', C.fg, 8, -8, 12); v.text(M, 'M', C.fg, -4, 14, 12);
+    v.text(S, 'P', C.fg, -14, -8, 12); v.text(T, 'Q', C.fg, 8, -8, 12); v.text(M, 'M', C.fg, -4, 14, 12);
     if (Math.abs(w3) > 1e-6) { const rz = R1 - R1 * w1 / w3; if (Math.abs(rz) < 12) { const Zp = V.mul(er, rz); v.dot(Zp, C.c5, 6); v.text(Zp, 'Z', C.c5, 8, 14, 13); } }
     MW.info(infoEl, 'ω_Arm = (R₁ω₁ + R₂ω₂)/(R₁ + R₂) = ' + fmt(wA), [['R₃ = (R₂ − R₁)/2', fmt(R3)], ['L = (R₁ + R₂)/2', fmt(Lm)], ['v_M = (R₁ω₁ + R₂ω₂)/2', fmt((R1 * w1 + R2 * w2) / 2)], ['ω_Planet = (R₂ω₂ − R₁ω₁)/(R₂ − R₁)', fmt(w3)]],
-      'Auf der Geraden S–T ist die Geschwindigkeit linear: v_M ist der Mittelwert von v_S und v_T. Ruht das Hohlrad (ω₂ = 0), gilt ω_Arm = R₁ω₁/(R₁ + R₂).');
+      'Auf der Geraden P–Q ist die Geschwindigkeit linear: v_M ist der Mittelwert von v_P und v_Q. Ruht das Hohlrad (ω₂ = 0), gilt ω_Arm = R₁ω₁/(R₁ + R₂).');
   });
   MW.player(ctl, { t0: 0, t1: 6.3, duration: 8, value: t, label: 't', fmt: x => fmt(x), onTime: x => { t = x; view.redraw(); } });
   MW.slider(ctl, { label: 'R₁', min: 0.6, max: 2, step: 0.1, value: R1, onInput: x => { R1 = x; if (R2 < R1 + 0.8) { R2 = R1 + 0.8; s2.set(R2); } view.redraw(); } });
