@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mittelwertsatz: irgendwo ist die Tangente parallel zur Sekante</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Mittelwertsatz: irgendwo ist die Tangente parallel zur Sekante</h1>
+  <p class="sub">Für f differenzierbar auf [a, b] gibt es ein ξ ∈ (a, b) mit f′(ξ) = (f(b) − f(a))/(b − a). Die Sekante lässt sich parallel verschieben, bis sie den Graphen berührt. Die Hilfsfunktion g aus dem Beweis hat g(a) = g(b).</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>f</div><div><span class="sw" style="background:var(--c1)"></span>Sekante</div><div><span class="sw" style="background:var(--c3)"></span>parallele Tangente(n) in ξ</div><div><span class="sw" style="background:var(--c5)"></span>Hilfsfunktion g</div></div>
+    <div class="hint">Beispiel wählen, a und b verschieben.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  const nd = (f, x, h = 1e-5) => (f(x + h) - f(x - h)) / (2 * h);
+  function roots(g, a, b, N = 2000) { const out = []; let px = a, py = g(a);
+    if (Math.abs(py) < 1e-12) out.push(a);
+    for (let i = 1; i <= N; i++) { const x = a + (b - a) * i / N, y = g(x);
+      if (!isFinite(y) || !isFinite(py)) { px = x; py = y; continue; }
+      if (Math.abs(y) < 1e-12) { if (!out.length || Math.abs(out[out.length - 1] - x) > 1e-6) out.push(x); }
+      else if (py * y < 0) { let lo = px, hi = x; for (let k = 0; k < 60; k++) { const c = (lo + hi) / 2; if (g(lo) * g(c) <= 0) hi = c; else lo = c; }
+        const r = (lo + hi) / 2; if (!out.length || Math.abs(out[out.length - 1] - r) > 1e-6) out.push(r); }
+      px = x; py = y; }
+    return out; }
+
+  const S = {
+    cub: { name: 'f(x) = x³ − 3x (eigenes Beispiel)', f: x => x ** 3 - 3 * x, df: x => 3 * x * x - 3, w: [-2.3, 2.3], y: [-3.5, 3.5], ab: [-2, 1.5], diff: true },
+    exp: { name: 'f(x) = eˣ (eigenes Beispiel)', f: Math.exp, df: Math.exp, w: [-2, 2], y: [-0.5, 7.5], ab: [-1.5, 1.8], diff: true },
+    sin: { name: 'f(x) = sin x (eigenes Beispiel)', f: Math.sin, df: Math.cos, w: [-0.5, 6.8], y: [-1.4, 1.4], ab: [0.3, 4], diff: true },
+    abs: { name: 'f(x) = |x| auf [−1, 1] (Gegenbeispiel)', f: Math.abs, df: x => Math.sign(x), w: [-1.5, 1.5], y: [-0.4, 1.6], ab: [-1, 1], diff: false },
+  };
+  let key = 'cub', a = -2, b = 1.5, showG = true;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, s = S[key], A = mkAx(s.w[0], s.w[1], s.y[0], s.y[1]); axes(v, A, 'x', 'y');
+    if (b - a < 1e-3) { MW.info(infoEl, s.name, [['', 'a muss kleiner als b sein']], ''); return; }
+    const fa = s.f(a), fb = s.f(b), m = (fb - fa) / (b - a), g = x => s.f(x) - m * (x - a);
+    v.poly([A.P(a, s.y[0]), A.P(b, s.y[0]), A.P(b, s.y[1]), A.P(a, s.y[1])], null, 1, null, true, C.fill);
+    if (showG) fplot(v, A, g, C.c5, 1.6, 600, a, b);
+    fplot(v, A, s.f, C.c2, 2.5, 800);
+    fplot(v, A, x => fa + m * (x - a), C.c1, 2, 20);
+    const xis = s.diff ? roots(x => s.df(x) - m, a, b, 4000).filter(t => t > a + 1e-6 && t < b - 1e-6) : [];
+    xis.forEach(t => { const y = s.f(t); fplot(v, A, x => y + m * (x - t), C.c3, 1.6, 20); v.dot(A.P(t, y), C.c3, 6); v.text(A.P(t, y), 'ξ', C.c3, -4, -10, 13); });
+    v.dot(A.P(a, fa), C.fg, 5.5); v.text(A.P(a, fa), 'a', C.fg, -14, -6, 12); v.dot(A.P(b, fb), C.fg, 5.5); v.text(A.P(b, fb), 'b', C.fg, 6, -6, 12);
+    const rows = [['Sekantensteigung (f(b) − f(a))/(b − a)', fmt(m, 4)],
+      ['ξ mit f′(ξ) = Sekantensteigung', xis.length ? xis.map(t => fmt(t, 4)).join(', ') : 'keines']];
+    if (showG) rows.push(['g(a) = g(b)', fmt(g(a), 4) + ' = ' + fmt(g(b), 4)]);
+    const note = s.diff ? 'Beweis (Vorlesung S. 14, Skript S. 25): g(x) = f(x) − ((f(b) − f(a))/(b − a))(x − a) erfüllt g(a) = g(b). Rolle liefert g′(ξ) = 0, also f′(ξ) = Sekantensteigung.'
+      : 'Vorlesung S. 14: Auf [−1, 1] ist die Sekante waagrecht, aber f′ ist nur −1 oder +1. Weil f bei 0 nicht differenzierbar ist, gilt der MWS nicht.';
+    MW.info(infoEl, s.name, rows, note, !s.diff && !xis.length && a < 0 && b > 0);
+  });
+  const sa = MW.slider(ctl, { label: 'a', min: -2.3, max: 2.3, step: 0.01, value: a, onInput: u => { a = Math.min(u, b - 0.02); view.redraw(); } });
+  const sb = MW.slider(ctl, { label: 'b', min: -2.3, max: 2.3, step: 0.01, value: b, onInput: u => { b = Math.max(u, a + 0.02); view.redraw(); } });
+  MW.check(ctl, 'Hilfsfunktion g', showG, t => { showG = t; view.redraw(); });
+  MW.select(ctl, 'Beispiel', Object.entries(S).map(([k, s]) => [k, s.name]), u => { key = u; const s = S[key];
+    [sa, sb].forEach(sl => { const inp = sl.el.querySelector('input'); inp.min = s.w[0]; inp.max = s.w[1]; });
+    [a, b] = s.ab; sa.set(a); sb.set(b); view.redraw(); }).set(key);
+
+})();
+</script>
+</body>
+</html>
