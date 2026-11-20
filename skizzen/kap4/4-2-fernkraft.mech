@@ -1,0 +1,9 @@
+titel "Übungsheft Abb. 3.1 (rechts) – Fernkraft"
+punkte A_1(0,0)  A_2(3.1,0.9)
+körper K1 = kreis A_1 radius 0.55
+körper K2 = kreis A_2 radius 0.75
+marke A_1 A_2
+beschrifte A_1 lage ul ; beschrifte A_2 lage ur
+linie A_1 A_2 gestrichelt
+kraft ~F bei A_1 richtung A_2 länge 1.0
+kraft "-~F" bei A_2 richtung A_1 länge 1.0

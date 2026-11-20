@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gesamtleistung am starren Körper: P = vB·R + ω·MB</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Gesamtleistung am starren Körper: P = v<sub>B</sub>·R + ω·M<sub>B</sub></h1>
+  <p class="sub">Auf eine starre Platte wirken drei Kräfte. Ihre Gesamtleistung kann man als Summe ΣF<sub>i</sub>·v<sub>i</sub> rechnen oder, viel kürzer, aus der Kinemate {v<sub>B</sub>, ω} im Bezugspunkt B und den Kraftgrössen R = ΣF<sub>i</sub>, M<sub>B</sub> = ΣBA<sub>i</sub>×F<sub>i</sub>. Das Ergebnis ist dasselbe.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>Kräfte F_i</div><div><span class="sw" style="background:var(--c3)"></span>Geschwindigkeiten v_i = v_B + ω × BA_i</div><div><span class="sw" style="background:var(--c4)"></span>Resultierende R in B</div></div>
+    <div class="hint">Kraftpfeile und Angriffspunkte ziehen, Kinemate mit den Reglern setzen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let A = [[1.6, 0.6], [-1.4, 0.8], [0.4, -0.9]], F = [[0.0, 1.4], [1.0, 0.5], [-1.2, -0.4]], vB = [0.6, 0.0], om = 0.8;
+  const cr = (a, b) => a[0] * b[1] - a[1] * b[0];
+  const view = MW.View2D(cv, { xmin: -3.6, xmax: 3.6, ymin: -2.3, ymax: 2.5 }, v => {
+    const C = v.C, B = [0, 0];
+    v.poly([[-2.4, -1.3], [2.4, -1.3], [2.4, 1.3], [-2.4, 1.3]], C.line, 1.5, null, true, 'rgba(120,120,120,0.07)');
+    v.dot(B, C.fg, 6); v.text(B, 'B', C.fg, -14, 16, 14);
+    let P1 = 0, R = [0, 0], MB = 0; const rows = [];
+    F.forEach((f, i) => {
+      const r = A[i], vi = V.add(vB, [-om * r[1], om * r[0]]), Pi = (f[0] * vi[0] + f[1] * vi[1]) * 10;   // 1 Einheit Kraft = 10 N, Länge 1 m, Geschwindigkeit 1 m/s
+      P1 += Pi; R = V.add(R, f); MB += cr(r, f) * 10;
+      v.arrow(r, V.mul(vi, 0.7), C.c3, 2.2, 8); v.arrow(r, f, C.c1, 3); v.dot(r, C.c5, 5); v.text(r, 'A' + (i + 1), C.muted, -16, 16, 12); v.text(V.add(r, f), 'F' + (i + 1), C.c1, 6, -4, 13);
+      rows.push(['F' + (i + 1) + '·v' + (i + 1), fmt(Pi, 1) + ' W']);
+    });
+    v.arrow(B, R, C.c4, 3.5, 11); v.text(R, 'R', C.c4, 6, -4, 14);
+    v.arrow(B, V.mul(vB, 0.7), C.c3, 2.6, 8); v.text(V.mul(vB, 0.7), 'v_B', C.c3, 4, 14, 12);
+    const P2 = (vB[0] * R[0] + vB[1] * R[1]) * 10 + om * MB;
+    MW.info(infoEl, 'Zwei Wege, ein Ergebnis: ΣF_i·v_i = v_B·R + ω M_B', [...rows, ['Summe ΣF_i·v_i', fmt(P1, 1) + ' W'], ['R, M_B', fv(V.mul(R, 10), 1) + ' N,  ' + fmt(MB, 1) + ' Nm'], ['v_B·R + ω M_B', fmt(P2, 1) + ' W']],
+      'Die Formel nutzt, dass v_i = v_B + ω × BA_i eine Kinemate ist, siehe Kap. 3.5. Kinemate {v_B, ω} und Dyname {R, M_B} sind dual: Das Skalarprodukt beider ist die Gesamtleistung.');
+  });
+  F.forEach((_, i) => { view.handle(() => V.add(A[i], F[i]), p => { F[i] = V.sub(p, A[i]); }); view.handle(() => A[i], p => { A[i] = [Math.max(-2.4, Math.min(2.4, p[0])), Math.max(-1.3, Math.min(1.3, p[1]))]; }); });
+  MW.slider(ctl, { label: 'v_Bx', min: -2, max: 2, step: 0.1, value: vB[0], unit: ' m/s', onInput: x => { vB[0] = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'v_By', min: -2, max: 2, step: 0.1, value: vB[1], unit: ' m/s', onInput: x => { vB[1] = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'ω', min: -2, max: 2, step: 0.1, value: om, unit: ' 1/s', onInput: x => { om = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

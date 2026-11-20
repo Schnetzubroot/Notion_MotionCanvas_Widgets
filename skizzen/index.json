@@ -106,5 +106,65 @@
  {
   "s": "kap3/3-6-zp25-schere",
   "titel": "ZP 2025, Aufgabe 3 – Scherenmechanismus: Stäbe OB und AC (Mitte E gelenkig verbunden), BD und CD (Länge l)"
+ },
+ {
+  "s": "kap4/4-2-fernkraft",
+  "titel": "Übungsheft Abb. 3.1 (rechts) – Fernkraft"
+ },
+ {
+  "s": "kap4/4-2-kontaktkraft",
+  "titel": "Übungsheft Abb. 3.1 (links) – Kontaktkraft"
+ },
+ {
+  "s": "kap4/4-3-balken-s1",
+  "titel": "Übungsheft Abb. 3.3 (links) – Balken S_1 nach der Trennung"
+ },
+ {
+  "s": "kap4/4-3-freischnitt-system",
+  "titel": "Übungsheft Abb. 3.2 (rechts) – freigeschnittenes System"
+ },
+ {
+  "s": "kap4/4-3-klotz-balken",
+  "titel": "Übungsheft Abb. 3.2 (links) – Gesamtes System: Klotz auf schiefem Balken"
+ },
+ {
+  "s": "kap4/4-3-masse-s2",
+  "titel": "Übungsheft Abb. 3.3 (rechts) – Masse S_2 nach der Trennung"
+ },
+ {
+  "s": "kap4/4-4-dreieck",
+  "titel": "Übungsheft Abb. 3.9 – Dreieckverteilung"
+ },
+ {
+  "s": "kap4/4-4-gleichfoermig",
+  "titel": "Übungsheft Abb. 3.9 (links) – Gleichförmige Kräfteverteilung"
+ },
+ {
+  "s": "kap5/5-1-leistung-einzelkraft",
+  "titel": "Übungsheft Abb. 3.6 – Zur Leistung einer Einzelkraft"
+ },
+ {
+  "s": "kap5/5-2-zp1-quader",
+  "titel": "ZP 2024, Aufgabe 3 – Quader (Grundfläche a×a, Höhe b) mit Kräften F_B = −3F e_z, F_D = F e_z, F_G = 2F e_y"
+ },
+ {
+  "s": "kap6/6-1-oktaeder-aufgabe2",
+  "titel": "Übungsheft Abb. 3.11 – Oktaeder mit Eckkräften (Aufgabe 2)"
+ },
+ {
+  "s": "kap6/6-1-quader-aufgabe1",
+  "titel": "Übungsheft Abb. 3.10 – Quader mit vier Kräften und drei Momenten (Aufgabe 1)"
+ },
+ {
+  "s": "kap6/6-2-moment-punkt",
+  "titel": "Übungsheft Abb. 3.4 – Moment einer Kraft F im Punkt O"
+ },
+ {
+  "s": "kap6/6-3-kraeftemittelpunkt",
+  "titel": "Übungsheft Abb. 3.8 – Kräftemittelpunkt einer parallelen Kräftegruppe"
+ },
+ {
+  "s": "kap6/6-3-kraeftepaar",
+  "titel": "Übungsheft Abb. 3.5 – Kräftepaar"
  }
 ]

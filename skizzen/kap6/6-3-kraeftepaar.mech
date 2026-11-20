@@ -1,0 +1,11 @@
+titel "Übungsheft Abb. 3.5 – Kräftepaar"
+3d azimut -30 elevation 30
+punkte A(0,0,0.5)  A'(0,-0.2,-0.1)  _m(0,-0.1,0.2)
+fläche (-2,-1.6,0) (2,-1.6,0) (2,1.6,0) (-2,1.6,0)
+linie (0,0,0.0)+(0,0,0) (0,0,0) dünn
+kraft ~F bei A richtung (1,-0.8,0) länge 0.9
+kraft "-~F" bei A' richtung (-1,0.8,0) länge 0.9
+vektor ~M bei A richtung +z länge 0.9
+linie A A' dünn ; marke A A'
+linie A (-1.5,1.2,0.5) dünn ; linie A' (-1.5,1.0,-0.1) dünn
+mass A-A' "b" versatz 0.6

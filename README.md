@@ -10,7 +10,9 @@ Die Seiten werden über GitHub Pages ausgeliefert und in Notion eingebettet. Üb
 | `kap3/` | Woche 3, Kapitel 3.1–3.3: Satz der projizierten Geschwindigkeiten, Translation, Rotation (9 Widgets) |
 | `kap3/` (Woche 4) | Kapitel 3.4–3.5: Kreiselung, Kinemate und Invarianten, Schraubung (`3-4-*`, `3-5-*`, 3 Widgets) |
 | `kap3/` (Woche 5) | Kapitel 3.6: Satz vom Momentanzentrum, Polbahnen, Planetengetriebe, ebenes Fachwerk (`3-6-*`, 4 Widgets) |
-| `kap4/` | Woche 5, Kapitel 4.1: Kräfte als punktgebundene Vektoren (1 Widget) |
+| `kap4/` | Wochen 5–6, Kapitel 4.1–4.4: Kraftbegriff, Reaktionsprinzip und Freischneiden, Kraftdichten (3 Widgets) |
+| `kap5/` | Woche 6, Kapitel 5: Leistung einer Einzelkraft und eines Moments, Gesamtleistung (2 Widgets) |
+| `kap6/` | Woche 7, Kapitel 6.1–6.4: Statische Äquivalenz, Moment, Kräftepaar, Hebelgesetz, Gleichgewicht (6 Widgets) |
 | `kinemate-3d.html`, `momentanzentrum.html` | Kapitel 3.5 und 3.6: Zentralachse im 3D-Raum, Konstruktion des Momentanzentrums (freie Werkzeuge mit Beispielen aus ZP1) |
 | `mechskizze/` | MechSkizze: Editor (`index.html`), Einzelansicht zum Einbetten (`ansicht.html?s=kap3/3-1-spg`), Sprachreferenz (`REFERENZ.md`) |
 | `skizzen/` | MechSkizze-Dateien (`.mech`), nach Kapitel; `index.json` wird von `tools/build_skizzen.py` erzeugt |
@@ -27,9 +29,9 @@ Die Seiten werden über GitHub Pages ausgeliefert und in Notion eingebettet. Üb
 | `chemistry-w7/` | Chemistry (151-0909-00L), Woche 7, Brown Kap. 9: VSEPR-Geometrien in 3D |
 | `werkzeuge/` | Werkzeugkasten `werkzeuge/` (alle Werkzeuge in Tabs: `#2d`, `#3d`, `#vektoren`, `#koordinaten`, `#skizzen`); Vektorrechner, 3D-Plotter (`rechenblatt.html`), 2D-Plotter (`funktionsplotter.html`, Beispiele per `?beispiel=2`) und Koordinaten (`koordinaten-spielplatz.html`) (freie Werkzeuge, Szenario per `?szenario=zp25` wählbar) |
 | `lib/` | gemeinsame Bibliothek (`core.js`, `core.css`) und MechSkizze-Renderer (`mechskizze.js`, läuft auch in Node) |
-| `tools/` | Build-Skripte: `python3 tools/build_kap1.py`, `build_kap2.py`, `build_kap3.py`, `build_kap3_w4.py`, `build_kap3_w5.py`, `build_kap4.py`, `build_skizzen.py`, `build_analysis_w1.py`, `build_analysis_w2.py`, `build_analysis_w3.py`, `build_analysis_w4.py`, `build_analysis_w5.py`, `build_analysis_w6.py`, `build_analysis_w7.py`, `build_chemistry_w2.py`, `build_chemistry_w5.py`, `build_chemistry_w6_w7.py`, `build_index.py` |
+| `tools/` | Build-Skripte: `python3 tools/build_kap1.py`, `build_kap2.py`, `build_kap3.py`, `build_kap3_w4.py`, `build_kap3_w5.py`, `build_kap4.py`, `build_kap4_w6.py`, `build_kap5.py`, `build_kap6.py`, `build_skizzen.py`, `build_analysis_w1.py`, `build_analysis_w2.py`, `build_analysis_w3.py`, `build_analysis_w4.py`, `build_analysis_w5.py`, `build_analysis_w6.py`, `build_analysis_w7.py`, `build_chemistry_w2.py`, `build_chemistry_w5.py`, `build_chemistry_w6_w7.py`, `build_index.py` |
 
-Jedes Widget zeigt genau eine Situation. Die HTML-Dateien in `kap1/`, `kap2/`, `kap3/`, `kap4/`, `analysis-w1/`, `analysis-w2/`, `analysis-w3/`, `analysis-w4/`, `analysis-w5/`, `analysis-w6/`, `analysis-w7/`, `chemistry-w2/`, `chemistry-w5/`, `chemistry-w6/` und `chemistry-w7/` werden aus den Build-Skripten erzeugt.
+Jedes Widget zeigt genau eine Situation. Die HTML-Dateien in `kap1/`, `kap2/`, `kap3/`, `kap4/`, `kap5/`, `kap6/`, `analysis-w1/`, `analysis-w2/`, `analysis-w3/`, `analysis-w4/`, `analysis-w5/`, `analysis-w6/`, `analysis-w7/`, `chemistry-w2/`, `chemistry-w5/`, `chemistry-w6/` und `chemistry-w7/` werden aus den Build-Skripten erzeugt.
 
 ## MechSkizze
 

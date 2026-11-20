@@ -1,0 +1,10 @@
+titel "Übungsheft Abb. 3.3 (links) – Balken S_1 nach der Trennung"
+system s = gedreht -27°
+punkte _B(0,0)  _A(3.2,-1.63)  _K(1.4,-0.71)
+linie _B _A dick
+kraft ~B_y bei _B richtung +y länge 0.6
+kraft ~A_y bei _A+(0,0.05) richtung +y länge 0.6
+kraft ~A_x bei _A+(0.1,0) richtung +x länge 0.5
+kraft "-~N" bei _K richtung -117° länge 0.5
+kraft "-~F_R" bei _K+(0.05,0.2) in s richtung -27° länge 0.8
+text (-0.1,-0.9) "S_1"

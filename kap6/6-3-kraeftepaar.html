@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kräftepaar: das Moment M = A′A × F ist vom Bezugspunkt unabhängig</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Kräftepaar: das Moment M = A′A × F ist vom Bezugspunkt unabhängig</h1>
+  <p class="sub">Zwei entgegengesetzt gleiche Kräfte F in A und −F in A′ mit verschiedenen Wirkungslinien bilden ein Kräftepaar (R = 0). Sein Moment M = A′A × F hat den Betrag M = b·F (b = Abstand der Wirkungslinien) und ist ein freier Vektor.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>F in A und −F in A′</div><div><span class="sw" style="background:var(--c2)"></span>Moment M des Kräftepaars</div><div><span class="sw" style="background:var(--c5)"></span>Bezugspunkt P</div></div>
+    <div class="hint">A, A′, die Kraft und den Bezugspunkt P ziehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const cr = (a, b) => a[0] * b[1] - a[1] * b[0];          // z-Komponente von a × b (2D)
+  const arcArrow = (v, c, r, a0, a1, col, w) => { const pts = []; const n = 40; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; pts.push([c[0] + r * Math.cos(a), c[1] + r * Math.sin(a)]); }
+    v.poly(pts, col, w); const e = pts[n], d = V.sub(pts[n], pts[n - 2]); v.arrow(V.sub(e, V.mul(V.unit(d), 0.12)), V.mul(V.unit(d), 0.14), col, w, 10); };
+  const mArc = (v, c, M, col, r = 0.5) => { if (Math.abs(M) < 0.02) return; M > 0 ? arcArrow(v, c, r, 0.5, 5.0, col, 2.6) : arcArrow(v, c, r, 5.0, 0.5, col, 2.6); };
+
+  let A = [-0.8, 0.9], A2 = [1.0, -0.7], F = [1.5, 0.5], P = [-2.2, -1.6];
+  const view = MW.View2D(cv, { xmin: -4.0, xmax: 4.0, ymin: -2.6, ymax: 2.6 }, v => {
+    const C = v.C, mF = V.mul(F, -1), M = cr(V.sub(A, A2), F), b = Math.abs(M) / (V.norm(F) || 1);
+    const u = V.unit(F), L = 5;
+    v.line(V.sub(A, V.mul(u, L)), V.add(A, V.mul(u, L)), C.line, 1, [5, 4]); v.line(V.sub(A2, V.mul(u, L)), V.add(A2, V.mul(u, L)), C.line, 1, [5, 4]);
+    v.arrow(A, F, C.c1, 3.4); v.arrow(A2, mF, C.c1, 3.4); v.dot(A, C.fg, 5); v.dot(A2, C.fg, 5);
+    v.text(A, 'A', C.fg, -16, -8, 14); v.text(A2, "A′", C.fg, 8, 16, 14); v.text(V.add(A, F), 'F', C.c1, 6, -6, 15); v.text(V.add(A2, mF), '−F', C.c1, -22, 14, 15);
+    const mid = V.mul(V.add(A, A2), 0.5); mArc(v, mid, M, C.c2, 0.6); v.text(mid, 'M', C.c2, 16, -16, 15);
+    v.dot(P, C.c5, 6); v.text(P, 'P', C.c5, -16, 16, 14);
+    const m1 = cr(V.sub(A, P), F), m2 = cr(V.sub(A2, P), mF);
+    MW.info(infoEl, 'Summe der Momente um P ist unabhängig von P', [['R = F + (−F)', '0'], ['M = A′A × F', fmt(M * 10, 1) + ' Nm  (' + (M >= 0 ? 'gegen' : 'im') + ' Uhrzeigersinn)'], ['Breite b, Betrag F', fmt(b, 2) + ' m,  ' + fmt(V.norm(F) * 10, 1) + ' N'], ['b·F', fmt(b * V.norm(F) * 10, 1) + ' Nm'],
+      ['Moment von F um P', fmt(m1 * 10, 1) + ' Nm'], ['Moment von −F um P', fmt(m2 * 10, 1) + ' Nm'], ['Summe um P', fmt((m1 + m2) * 10, 1) + ' Nm']],
+      'Verschieben Sie P: die beiden Einzelmomente ändern sich, ihre Summe nicht. Auch das ganze Paar darf in der Ebene verschoben und gedreht werden, solange M gleich bleibt.');
+  });
+  view.handle(() => A, p => { A = p; }); view.handle(() => A2, p => { A2 = p; }); view.handle(() => V.add(A, F), p => { F = V.sub(p, A); }); view.handle(() => P, p => { P = p; });
+
+})();
+</script>
+</body>
+</html>

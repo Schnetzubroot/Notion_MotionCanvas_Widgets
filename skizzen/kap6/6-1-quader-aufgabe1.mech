@@ -1,0 +1,15 @@
+titel "Übungsheft Abb. 3.10 – Quader mit vier Kräften und drei Momenten (Aufgabe 1)"
+3d achsen (0.85,-0.3) (0.62,0.42) (0,1)
+param a=1  P=1
+punkte O(0,0,0)  C(2a,0,0)  A(0,-2a,0)  B(2a,-2a,0)  G(0,0,a)  F(2a,0,a)  D(0,-2a,a)  E(2a,-2a,a)
+quader von A bis F
+pfeil von (0,-2.6a,0) nach (0,1.4a,0) "y" ; pfeil von O nach (3.3a,0,0) "x" ; pfeil von O nach (0,0,1.9a) "z"
+kraft ~F_1 bei D richtung +y länge 0.9a
+kraft ~F_2 bei C richtung -z zu länge 0.75a
+kraft ~F_3 bei D richtung +x länge 1.4a
+kraft ~F_4 bei F richtung -y länge 0.9a
+moment ~M_1 bei (1.2a,-1.0a,0) achse +x länge 0.9a
+moment ~M_2 bei (1.0a,-2a,0.5a) achse -y länge 0.9a
+moment ~M_3 bei (0.5a,-0.6a,a) achse +z länge 0.9a
+marke O
+kante A-B "2a" unten  B-C "2a" unten  B-E "a" rechts

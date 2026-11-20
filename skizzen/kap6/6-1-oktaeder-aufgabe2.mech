@@ -1,0 +1,13 @@
+titel "Übungsheft Abb. 3.11 – Oktaeder mit Eckkräften (Aufgabe 2)"
+3d achsen (1,0) (0.55,0.45) (0,1)
+param a=1  P=1
+punkte A(0,0,0)  B(√2a,0,0)  C(√2a,√2a,0)  D(0,√2a,0)  F(√2a/2,√2a/2,a)  E(√2a/2,√2a/2,-a)
+linie A B dick ; linie B C dick ; linie C D gestrichelt ; linie D A gestrichelt
+linie A F dick ; linie B F dick ; linie C F dick ; linie D F gestrichelt
+linie A E dick ; linie B E dick ; linie C E dick ; linie D E gestrichelt
+pfeil von A nach (2.6a,0,0) "x" ; pfeil von A nach (0,2.6a,0) "y" ; pfeil von A nach (0,0,1.4a) "z"
+kraft ~P bei A richtung F länge 0.55a
+kraft "2~P" bei D richtung E->D zu länge 0.8a
+kraft ~P bei B richtung F->B zu länge 0.8a
+kraft "2~P" bei C richtung E länge 0.7a
+kante A-B "√2a" unten

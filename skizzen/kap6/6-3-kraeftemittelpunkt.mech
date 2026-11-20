@@ -1,0 +1,11 @@
+titel "Übungsheft Abb. 3.8 – Kräftemittelpunkt einer parallelen Kräftegruppe"
+param L=3
+punkte _O(0,0)  _E(L,0)  _S(1.65,0)
+linie (-0.15,0) (3.2,0) dick
+last von _O nach _E q (0.55,0.75,0.7,1.0,0.95,0.65,0.8) richtung -65° höhe 0.95 nachaussen "s(x)"
+kraft ~R bei _S richtung -65° länge 1.3 dick
+marke _S
+vektor ~e_y bei _O richtung 90° länge 0.3
+vektor ~e_x bei (3.4,0) richtung 0° länge 0.4 ; vektor ~e_η bei (3.4,0) richtung -65° länge 0.4
+mass _O-_S "x_S" versatz 0.25 seite oben
+mass _O-_E "L" versatz 0.5 seite oben

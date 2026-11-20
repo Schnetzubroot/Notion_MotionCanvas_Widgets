@@ -1,0 +1,15 @@
+titel "Übungsheft Abb. 3.1 (links) – Kontaktkraft"
+teilbild
+punkte _M(0,1)  _K(0,0)
+boden (-1.2,0) (1.2,0) schraffur unten
+körper Kugel = kreis _M radius 1
+marke _M _K
+kraft ~G bei _M richtung -y länge 0.95
+teilbild
+punkte _M(0,2.0)  _K(0,1.0)  _K2(0,0)
+boden (-1.2,0) (1.2,0) schraffur unten
+körper Kugel2 = kreis _M radius 1
+marke _M _K _K2
+kraft ~G bei _M richtung -y länge 0.6
+kraft ~N_K "-~N" bei _K richtung +y zu länge 0.5 lage l
+kraft ~N bei _K2+(0,0.5) richtung -y zu länge 0.5 lage r
