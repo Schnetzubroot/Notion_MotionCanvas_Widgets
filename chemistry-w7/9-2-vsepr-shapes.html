@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VSEPR: electron-domain and molecular geometry in 3D</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>VSEPR: electron-domain and molecular geometry in 3D</h1>
+  <p class="sub">Electron domains (bonds and lone pairs) around the central atom spread as far apart as possible. All domains give the electron-domain geometry; the atoms alone give the molecular geometry. A double or triple bond counts as one domain.</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>central atom</div><div><span class="sw" style="background:var(--c3)"></span>bonded atom</div><div><span class="sw" style="background:var(--c4)"></span>lone pair</div><div><span class="sw" style="background:var(--line)"></span>electron-domain shape</div></div>
+    <div class="hint">Drag to rotate. Choose the number of domains and lone pairs.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const s3 = Math.sqrt(3) / 2, t = 1 / Math.sqrt(3);
+  const POS = {
+    2: [[1, 0, 0], [-1, 0, 0]],
+    3: [[1, 0, 0], [-0.5, s3, 0], [-0.5, -s3, 0]],
+    4: [[t, t, t], [t, -t, -t], [-t, t, -t], [-t, -t, t]],
+    5: [[1, 0, 0], [-0.5, s3, 0], [-0.5, -s3, 0], [0, 0, 1], [0, 0, -1]],   // equatorial first, then axial
+    6: [[0, 0, 1], [0, 0, -1], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0]], // trans pair first
+  };
+  // [domains, lone pairs] -> [electron-domain geometry, molecular geometry, example, central, outer, angles]
+  const T = {
+    '2,0': ['linear', 'linear', 'CO2', 'C', 'O', '180°'],
+    '3,0': ['trigonal planar', 'trigonal planar', 'BF3', 'B', 'F', '120°'],
+    '3,1': ['trigonal planar', 'bent', 'NO2⁻', 'N', 'O', '< 120°'],
+    '4,0': ['tetrahedral', 'tetrahedral', 'CH4', 'C', 'H', '109.5°'],
+    '4,1': ['tetrahedral', 'trigonal pyramidal', 'NH3', 'N', 'H', '107° (ideal 109.5°)'],
+    '4,2': ['tetrahedral', 'bent', 'H2O', 'O', 'H', '104.5° (ideal 109.5°)'],
+    '5,0': ['trigonal bipyramidal', 'trigonal bipyramidal', 'PCl5', 'P', 'Cl', '90°, 120°'],
+    '5,1': ['trigonal bipyramidal', 'seesaw', 'SF4', 'S', 'F', '≈ 90°, ≈ 120°'],
+    '5,2': ['trigonal bipyramidal', 'T-shaped', 'ClF3', 'Cl', 'F', '≈ 90°'],
+    '5,3': ['trigonal bipyramidal', 'linear', 'XeF2', 'Xe', 'F', '180°'],
+    '6,0': ['octahedral', 'octahedral', 'SF6', 'S', 'F', '90°'],
+    '6,1': ['octahedral', 'square pyramidal', 'BrF5', 'Br', 'F', '≈ 90°'],
+    '6,2': ['octahedral', 'square planar', 'XeF4', 'Xe', 'F', '90°'],
+  };
+  const MAXLP = { 2: 0, 3: 1, 4: 2, 5: 3, 6: 2 };
+  // which positions hold lone pairs: 5 domains -> equatorial first; 6 domains -> trans pair first; others -> first slots
+  const lpIdx = (d, k) => [...Array(k).keys()];
+  let D = 4, LP = 1, showShape = true;
+  const view = MW.View3D(cv, { extent: 1.7, yaw: 25, pitch: 18 }, v => {
+    const C = v.C, P = POS[D], lps = new Set(lpIdx(D, LP)), R = 1.25, row = T[D + ',' + LP];
+    const Pw = P.map(p => V.mul(p, R));
+    if (showShape) { // edges of the electron-domain polyhedron
+      for (let i = 0; i < Pw.length; i++) for (let j = i + 1; j < Pw.length; j++) {
+        const d = V.norm(V.sub(Pw[i], Pw[j])), dmin = Math.min(...Pw.map((a, k) => k === i ? 9 : V.norm(V.sub(a, Pw[i]))));
+        if (D > 2 && d < dmin * 1.05 + 1e-6) v.line(Pw[i], Pw[j], C.line, 1, [4, 4]); }
+    }
+    const items = Pw.map((p, i) => ({ p, i, lp: lps.has(i), z: v.depth(p) })).sort((a, b) => a.z - b.z);
+    const center = { p: [0, 0, 0], center: true, z: 0 };
+    const all = items.concat([center]).sort((a, b) => a.z - b.z);
+    items.forEach(it => { if (!it.lp) v.line([0, 0, 0], it.p, C.fg, 4); });
+    all.forEach(it => {
+      if (it.center) { v.dot([0, 0, 0], C.c2, 15); v.text([0, 0, 0], row[3], '#fff', 0, 5, 12, true, 'center'); return; }
+      if (it.lp) { const q = V.mul(it.p, 0.62), e = V.mul(it.p, 0.08);
+        v.line([0, 0, 0], V.mul(it.p, 0.4), C.c4, 1.5, [2, 3]);
+        const s = v.toS(q); v.ctx.save(); v.ctx.globalAlpha = 0.28; v.sDot(s, C.c4, 22); v.ctx.restore();
+        const perp = V.mul(V.unit(V.cross(it.p, Math.abs(it.p[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0])), 0.07);
+        v.dot(V.add(q, perp), C.c4, 3.5); v.dot(V.sub(q, perp), C.c4, 3.5);
+      } else { v.dot(it.p, C.c3, 12); v.text(it.p, row[4], '#fff', 0, 4, 11, true, 'center'); }
+    });
+    MW.info(infoEl, row[1] + ' (' + row[2] + ')', [
+      ['electron domains', D + ' = ' + (D - LP) + ' bonding + ' + LP + ' lone pair' + (LP === 1 ? '' : 's')],
+      ['electron-domain geometry', row[0]], ['molecular geometry', row[1]], ['bond angles', row[5]]],
+      (D === 5 && LP > 0 ? 'With 5 domains the lone pairs sit in the equatorial plane, where they have the most room. ' : '')
+      + (D === 6 && LP === 2 ? 'The two lone pairs sit opposite each other (trans). ' : '')
+      + 'Lone pairs take more space than bonding pairs, so real angles are a bit smaller than ideal (CH4 109.5°, NH3 107°, H2O 104.5°). '
+      + 'Table: Exercise7_notes p. 6 (Brown Tables 9.2–9.3).');
+  });
+  const lpOpts = () => [...Array(MAXLP[D] + 1).keys()].map(k => [String(k), String(k)]);
+  MW.select(ctl, 'Electron domains', [2, 3, 4, 5, 6].map(n => [String(n), String(n)]), x => { D = +x; if (LP > MAXLP[D]) LP = MAXLP[D]; fillLP(); view.redraw(); }).set(String(D));
+  MW.select(ctl, 'Lone pairs', [['0', '0'], ['1', '1'], ['2', '2'], ['3', '3']], x => { LP = +x; view.redraw(); });
+  const lpEl = ctl.querySelectorAll('select')[1];
+  function fillLP() { [...lpEl.options].forEach(o => { o.disabled = +o.value > MAXLP[D]; }); lpEl.value = String(LP); }
+  fillLP();
+  const ex = Object.entries(T).map(([k, r]) => [k, r[2] + ': ' + r[1]]);
+  MW.select(ctl, 'Example', [['', '—']].concat(ex), x => { if (!x) return; [D, LP] = x.split(',').map(Number);
+    ctl.querySelectorAll('select')[0].value = String(D); fillLP(); view.redraw(); });
+  MW.check(ctl, 'Show domain shape', showShape, x => { showShape = x; view.redraw(); });
+  MW.button(ctl, 'Reset view', () => view.resetView());
+
+})();
+</script>
+</body>
+</html>
