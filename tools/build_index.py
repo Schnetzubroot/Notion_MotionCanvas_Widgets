@@ -58,7 +58,7 @@ for (folder, key), name in ANA.items():
     parts.append(f'<h2>{html.escape(name)}</h2><ul>{items}</ul>')
 
 # Chemistry (Brown, Chemistry: The Central Science)
-CHEM = {('chemistry-w2', '10-4'): 'Chemistry 10.3–10.4 Gas laws and ideal gas law', ('chemistry-w2', '10-6'): 'Chemistry 10.6 Kinetic-molecular theory'}
+CHEM = {('chemistry-w2', '10-4'): 'Chemistry 10.3–10.4 Gas laws and ideal gas law', ('chemistry-w2', '10-6'): 'Chemistry 10.6 Kinetic-molecular theory', ('chemistry-w5', '19-6'): 'Chemistry 19.5–19.6 Gibbs free energy and temperature', ('chemistry-w6', '6-3'): 'Chemistry 6.1–6.3 Hydrogen spectrum and Bohr model', ('chemistry-w7', '9-2'): 'Chemistry 9.1–9.2 Molecular shapes (VSEPR)'}
 parts.append('<h1 style="margin-top:32px">Chemistry</h1><p class="sub">Companion widgets for 151-0909-00L Chemistry (ETH Zürich), Brown et al.: Chemistry: The Central Science.</p>')
 for (folder, key), name in CHEM.items():
     files = sorted((ROOT / folder).glob(f'{key}-*.html'))
