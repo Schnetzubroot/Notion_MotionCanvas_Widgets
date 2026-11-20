@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moment einer Kraft bezüglich Punkt und Achse im Raum</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Moment einer Kraft bezüglich Punkt und Achse im Raum</h1>
+  <p class="sub">Das Moment einer Kraft F in A bezüglich O ist M<sub>O</sub> = OA × F. Das Moment bezüglich einer Achse durch O mit Einheitsvektor e ist die Komponente M<sub>e</sub> = e·M<sub>O</sub>. Der Betrag |M<sub>O</sub>| = F·d mit dem Hebelarm d (Abstand der Wirkungslinie von O).</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>Kraft F in A</div><div><span class="sw" style="background:var(--c2)"></span>Moment M_O = OA × F</div><div><span class="sw" style="background:var(--c3)"></span>Achse e</div><div><span class="sw" style="background:var(--c4)"></span>Achsenmoment M_e = (e·M_O) e</div></div>
+    <div class="hint">Regler für A und F, Achse wählen, Ansicht ziehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let Ap = [1.2, 0.8, 0.4], Fv = [0.3, 1.0, 0.8], ax = 'z';
+  const axes = { x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1], d1: V.unit([1, 1, 0]), d2: V.unit([1, 1, 1]) };
+  const view = MW.View3D(cv, { extent: 2.2, yaw: 40, pitch: 22, center: [0.5, 0.4, 0.5] }, v => {
+    const C = v.C, O = [0, 0, 0], e = axes[ax], Mo = V.cross(Ap, Fv), Me = V.dot(e, Mo), Fn = V.norm(Fv), d = Fn > 1e-9 ? V.norm(Mo) / Fn : 0;
+    v.floor(3); v.axes(2.6);
+    v.line(V.mul(e, -2.3), V.mul(e, 2.3), C.c3, 2, [8, 4]); v.text(V.mul(e, 2.3), 'e', C.c3, 4, 4, 15);
+    v.line(O, Ap, C.muted, 1.5, [4, 3]); v.dot(Ap, C.c5, 5); v.text(Ap, 'A', C.c5, 6, 14, 14);
+    v.arrow(Ap, Fv, C.c1, 3.4); v.text(V.add(Ap, Fv), 'F', C.c1, 6, -4, 15);
+    v.arrow(O, V.mul(Mo, 0.4), C.c2, 3.4); v.text(V.mul(Mo, 0.4), 'M_O', C.c2, 6, -4, 14);
+    if (Math.abs(Me) > 1e-3) { v.arrow(O, V.mul(e, Me * 0.4), C.c4, 5, 12); }
+    MW.info(infoEl, 'Moment bezüglich Punkt O und Achse e', [['OA, F', fv(Ap) + ',  ' + fv(Fv)], ['M_O = OA × F', fv(Mo)], ['|M_O|, Hebelarm d = |M_O| / |F|', fmt(V.norm(Mo), 2) + ',  d = ' + fmt(d, 2)], ['e', fv(e)], ['M_e = e·M_O', fmt(Me, 2)]],
+      'M_O ist senkrecht zu OA und F. Die Achse e = e_z liefert M_z = (OA × F)_z = x F_y − y F_x, also nur die Komponente in der xy-Ebene. M_e ist null, wenn die Wirkungslinie die Achse schneidet oder parallel zu ihr ist.');
+  });
+  [['A_x', 0], ['A_y', 1], ['A_z', 2]].forEach(([n, i]) => MW.slider(ctl, { label: n, min: -2, max: 2, step: 0.1, value: Ap[i], onInput: x => { Ap[i] = x; view.redraw(); } }));
+  [['F_x', 0], ['F_y', 1], ['F_z', 2]].forEach(([n, i]) => MW.slider(ctl, { label: n, min: -2, max: 2, step: 0.1, value: Fv[i], onInput: x => { Fv[i] = x; view.redraw(); } }));
+  MW.select(ctl, 'Achse', [['z', 'e_z'], ['x', 'e_x'], ['y', 'e_y'], ['d1', '(1,1,0)/√2'], ['d2', '(1,1,1)/√3']], x => { ax = x; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

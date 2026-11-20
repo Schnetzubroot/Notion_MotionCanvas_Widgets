@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reaktionsprinzip und Freischneiden: innere und äussere Kräfte</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Reaktionsprinzip und Freischneiden: innere und äussere Kräfte</h1>
+  <p class="sub">Klotz A liegt auf Klotz B, B auf dem Boden. Wählen Sie das System, das Sie freischneiden. Nur die äusseren Kräfte (die Kräfte der Umgebung auf das System) bestimmen das Gleichgewicht. Kräfte zwischen zwei Teilen desselben Systems sind innere Kräfte und treten paarweise mit F<sub>AB</sub> = −F<sub>BA</sub> auf (Reaktionsprinzip).</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>äussere Kräfte</div><div><span class="sw" style="background:var(--c3)"></span>innere Kräfte (heben sich paarweise auf)</div><div><span class="sw" style="background:var(--c5)"></span>Systemgrenze</div></div>
+    <div class="hint">System wählen, Massen ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let mA = 2, mB = 3, sys = 'A'; const g = 10, S = 0.025;
+  const view = MW.View2D(cv, { xmin: -3.8, xmax: 3.8, ymin: -0.9, ymax: 3.1 }, v => {
+    const C = v.C, NAB = mA * g, Fl = (mA + mB) * g;
+    // Körper
+    v.poly([[-3.4, 0], [3.4, 0]], C.fg, 2.5);
+    for (let x = -3.4; x < 3.4; x += 0.3) v.line([x, 0], [x - 0.2, -0.2], C.muted, 1);
+    v.poly([[-1.3, 0], [1.3, 0], [1.3, 1], [-1.3, 1]], C.line, 1.5, null, true, C.fill);
+    v.poly([[-0.8, 1], [0.8, 1], [0.8, 1.8], [-0.8, 1.8]], C.line, 1.5, null, true, C.fill);
+    v.text([-1.2, 0.5], 'B', C.fg, 0, 5, 16); v.text([0, 1.4], 'A', C.fg, -5, 5, 16);
+    // Systemgrenze
+    const box = sys === 'A' ? [[-0.95, 0.95], [0.95, 0.95], [0.95, 1.95], [-0.95, 1.95]] : sys === 'B' ? [[-1.45, -0.12], [1.45, -0.12], [1.45, 1.0], [-1.45, 1.0]] : [[-1.45, -0.12], [1.45, -0.12], [1.45, 1.95], [-1.45, 1.95]];
+    if (sys === 'B') { box[2] = [1.45, 0.96]; box[3] = [-1.45, 0.96]; }
+    v.poly(box, C.c5, 2, [6, 4], true);
+    const ext = [], int = [];
+    const WA = ['m_A g', [0, 1.4], [0, -mA * g * S]], WB = ['m_B g', [-0.7, 0.5], [0, -mB * g * S]];
+    const BA = ['N_BA', [-0.35, 0.98], [0, NAB * S]], AB = ['N_AB', [0.35, 1.02], [0, -NAB * S]], FL = ['N_Boden', [0.7, 0], [0, Fl * S]];
+    if (sys === 'A') { ext.push(WA, BA); }
+    if (sys === 'B') { ext.push(WB, AB, FL); }
+    if (sys === 'AB') { ext.push(WA, WB, FL); int.push(BA, AB); }
+    const draw = (l, col) => l.forEach(([n, p, f]) => { v.arrow(p, f, col, 3); v.text(V.add(p, V.mul(f, 0.5)), n.replace(/_(\w+)/, '$1'), col, 8, 4, 12); });
+    draw(ext, C.c1); draw(int, C.c3);
+    const sum = ext.reduce((s, e) => s + e[2][1], 0) / S;
+    const rows = ext.map(e => [e[0].replace('_', '') + ' (y)', fmt(e[2][1] / S, 0) + ' N']);
+    rows.push(['Σ F_y (äussere)', fmt(sum, 0) + ' N']);
+    MW.info(infoEl, sys === 'AB' ? 'System A+B: N_AB und N_BA sind innere Kräfte und fallen heraus' : sys === 'A' ? 'System A: der Kontakt mit B ist eine äussere Kraft N_BA' : 'System B: der Kontakt mit A ist eine äussere Kraft N_AB',
+      [...rows, ['Reaktionsprinzip', 'N_BA = ' + fmt(NAB, 0) + ' N nach oben, N_AB = ' + fmt(NAB, 0) + ' N nach unten']],
+      'Ruht das System, ist die Summe der äusseren Kräfte null. Für A: N_BA = m_A g. Für B: N_Boden = N_AB + m_B g. Für A+B: N_Boden = (m_A + m_B) g. Alle drei Rechnungen liefern dasselbe Ergebnis.');
+  });
+  MW.select(ctl, 'System', [['A', 'A (Klotz oben)'], ['B', 'B (Klotz unten)'], ['AB', 'A + B zusammen']], x => { sys = x; view.redraw(); });
+  MW.slider(ctl, { label: 'm_A', min: 1, max: 5, step: 0.5, value: mA, unit: ' kg', onInput: x => { mA = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'm_B', min: 1, max: 5, step: 0.5, value: mB, unit: ' kg', onInput: x => { mB = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

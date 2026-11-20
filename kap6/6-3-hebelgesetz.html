@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parallele Kräfte: Kräftemittelpunkt und Hebelgesetz</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Parallele Kräfte: Kräftemittelpunkt und Hebelgesetz</h1>
+  <p class="sub">Zwei parallele Kräfte F<sub>1</sub> in x<sub>1</sub> und F<sub>2</sub> in x<sub>2</sub> haben die Resultierende R = F<sub>1</sub> + F<sub>2</sub> im Kräftemittelpunkt x<sub>S</sub> = (F<sub>1</sub>x<sub>1</sub> + F<sub>2</sub>x<sub>2</sub>)/R. Das Hebelgesetz: |F<sub>1</sub>|·|x<sub>S</sub> − x<sub>1</sub>| = |F<sub>2</sub>|·|x<sub>S</sub> − x<sub>2</sub>|. Für F<sub>2</sub> = −F<sub>1</sub> entsteht ein Kräftepaar.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>F_1</div><div><span class="sw" style="background:var(--c3)"></span>F_2</div><div><span class="sw" style="background:var(--c4)"></span>Resultierende R in S</div></div>
+    <div class="hint">Kräfte F₁, F₂ und Positionen x₁, x₂ einstellen (Pfeilspitzen und Fusspunkte ziehbar).</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let x1 = -1.8, x2 = 2.2, f1 = 2, f2 = 3, s1, s2;
+  const view = MW.View2D(cv, { xmin: -4.4, xmax: 4.4, ymin: -2.4, ymax: 2.6 }, v => {
+    const C = v.C, k = 0.45, R = f1 + f2, par = Math.abs(R) < 1e-6;
+    v.poly([[-4, 0], [4, 0]], C.fg, 4);
+    v.arrow([x1, 0], [0, f1 * k], C.c1, 3.6); v.text([x1, f1 * k], 'F₁', C.c1, 8, 0, 15); v.dot([x1, 0], C.c1, 4);
+    v.arrow([x2, 0], [0, f2 * k], C.c3, 3.6); v.text([x2, f2 * k], 'F₂', C.c3, 8, 0, 15); v.dot([x2, 0], C.c3, 4);
+    let rows, head, note;
+    if (!par) { const xS = (f1 * x1 + f2 * x2) / R; v.arrow([xS, 0], [0, R * k], C.c4, 4.6, 12); v.dot([xS, 0], C.c4, 6); v.text([xS, R * k], 'R', C.c4, 8, 0, 16); v.text([xS, 0], 'S', C.c4, -4, 20, 14);
+      rows = [['R = F₁ + F₂', fmt(R, 2)], ['x_S', fmt(xS, 2)], ['|F₁|·|x_S − x₁|', fmt(Math.abs(f1) * Math.abs(xS - x1), 2)], ['|F₂|·|x_S − x₂|', fmt(Math.abs(f2) * Math.abs(xS - x2), 2)]];
+      head = f1 * f2 > 0 ? 'Gleichsinnig: S liegt zwischen den Kräften, näher an der grösseren' : 'Gegensinnig: S liegt ausserhalb, auf der Seite der grösseren Kraft';
+      note = 'Die beiden Produkte sind gleich: das ist das Hebelgesetz (Momentengleichgewicht um S).'; }
+    else { const M = f1 * (x2 - x1) * -1; rows = [['R', '0'], ['Moment M = F₁·(x₂ − x₁)', fmt(Math.abs(f1 * (x2 - x1)), 2)], ['Breite b', fmt(Math.abs(x2 - x1), 2)]]; head = 'F₂ = −F₁: Kräftepaar, kein Kräftemittelpunkt'; note = 'Es gibt keine Einzelkraft, die dieselbe Wirkung hat. M = b F.'; }
+    MW.info(infoEl, head, rows, note, par);
+  });
+  view.handle(() => [x1, f1 * 0.45], p => { f1 = Math.round(p[1] / 0.45 * 4) / 4; s1.set(f1); x1 = p[0]; });
+  view.handle(() => [x2, f2 * 0.45], p => { f2 = Math.round(p[1] / 0.45 * 4) / 4; s2.set(f2); x2 = p[0]; });
+  s1 = MW.slider(ctl, { label: 'F₁', min: -4, max: 4, step: 0.25, value: f1, onInput: x => { f1 = x; view.redraw(); } });
+  s2 = MW.slider(ctl, { label: 'F₂', min: -4, max: 4, step: 0.25, value: f2, onInput: x => { f2 = x; view.redraw(); } });
+  MW.button(ctl, 'F₂ = −F₁ (Kräftepaar)', () => { f2 = -f1; s2.set(f2); view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

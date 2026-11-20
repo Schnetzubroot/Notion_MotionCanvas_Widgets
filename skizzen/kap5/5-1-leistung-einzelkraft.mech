@@ -1,0 +1,6 @@
+titel "Übungsheft Abb. 3.6 – Zur Leistung einer Einzelkraft"
+punkte O(0,0)  M(1.6,0.25)
+linie O M ; marke O M
+kraft ~F bei M richtung 55° länge 0.8
+vektor ~v_M bei M richtung 0° länge 0.75
+winkel M zwischen 0 und 55 "α" radius 20

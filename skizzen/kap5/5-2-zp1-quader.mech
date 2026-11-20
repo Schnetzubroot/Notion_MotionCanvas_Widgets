@@ -1,0 +1,11 @@
+titel "ZP 2024, Aufgabe 3 – Quader (Grundfläche a×a, Höhe b) mit Kräften F_B = −3F e_z, F_D = F e_z, F_G = 2F e_y"
+3d achsen (-0.5,-0.4) (1,0) (0,1)
+param a=1  b=1.6
+punkte A(0,0,0) B(a,0,0) C(a,a,0) D(0,a,0) E(0,0,b) G(a,0,b) H(a,a,b) I(0,a,b)
+quader von A bis H dick
+pfeil von A nach (1.6a,0,0) "x" grau ; pfeil von D nach (0,1.8a,0) "y" grau ; pfeil von E nach (0,0,b+0.5) "z" grau
+kraft "3F" bei B richtung -z länge 0.6
+kraft F bei D richtung +z zu länge 0.4
+kraft "2F" bei G richtung +y zu länge 0.6
+kante B-C "a" unten  C-D "a" unten  B-G "b" links  C-H "b" links  D-I "b" rechts
+basis (0,-0.8,b+0.3) länge 0.3

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gleichgewicht eines Balkens: R = 0 und MA = 0</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Gleichgewicht eines Balkens: R = 0 und M<sub>A</sub> = 0</h1>
+  <p class="sub">Ein starrer Körper ist im Gleichgewicht, wenn die Resultierende R und das Moment M<sub>O</sub> aller Kräfte (Lasten und Lagerreaktionen) verschwinden. In der Ebene gibt das drei Gleichungen: ΣF<sub>x</sub> = 0, ΣF<sub>y</sub> = 0, ΣM<sub>A</sub> = 0, genau genug für Festlager A (A<sub>x</sub>, A<sub>y</sub>) und Loslager B (B<sub>y</sub>).</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>Last F und q</div><div><span class="sw" style="background:var(--c4)"></span>Lagerreaktionen (unbekannte Vektoren positiv angesetzt)</div></div>
+    <div class="hint">Einzelkraft (Betrag, Richtung, Lage) und Gleichlast verändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let L = 4, xF = 2.5, Fm = 3, th = -60, q = 0.5;
+  const view = MW.View2D(cv, { xmin: -1.2, xmax: 9.0, ymin: -2.6, ymax: 3.2 }, v => {
+    const C = v.C, k = 0.3, thr = th * MW.deg, Fx = Fm * Math.cos(thr), Fy = Fm * Math.sin(thr), Q = q * L;
+    const Ax = -Fx, By = (Q * L / 2 - xF * Fy) / L, Ay = Q - Fy - By;
+    // Balken und Lager
+    v.poly([[0, 0], [L, 0]], C.fg, 6);
+    v.poly([[0, 0], [-0.28, -0.5], [0.28, -0.5]], C.fg, 2, null, true, 'rgba(120,120,120,0.15)'); v.poly([[-0.5, -0.55], [0.5, -0.55]], C.fg, 2);
+    v.poly([[L, 0], [L - 0.28, -0.45], [L + 0.28, -0.45]], C.fg, 2, null, true, 'rgba(120,120,120,0.15)'); v.circle([L - 0.14, -0.57], 0.1, C.fg, 2); v.circle([L + 0.14, -0.57], 0.1, C.fg, 2); v.poly([[L - 0.5, -0.67], [L + 0.5, -0.67]], C.fg, 2);
+    v.text([0, 0], 'A', C.muted, -18, -14, 15); v.text([L, 0], 'B', C.muted, 10, -14, 15);
+    // Gleichlast
+    if (q > 0.01) { v.poly([[0, 0.55], [L, 0.55]], C.c1, 1.5); for (let i = 0; i <= 8; i++) v.arrow([L * i / 8, 0.55], [0, -0.5], C.c1, 1.6, 7); v.text([L / 2, 0.55], 'q', C.c1, 0, -6, 14, true, 'center'); }
+    // Einzelkraft: Spitze im Lastpunkt
+    if (Fm > 0.01) { v.arrow([xF - Fx * k, -Fy * k], [Fx * k, Fy * k], C.c1, 3.6); v.dot([xF, 0], C.c1, 4); v.text([xF - Fx * k, -Fy * k], 'F', C.c1, -4, -8, 15); }
+    // Reaktionen
+    const react = (p, f, n) => { if (Math.hypot(f[0], f[1]) > 0.02) { v.arrow(p, V.mul(f, k), C.c4, 3.6); v.text(V.add(p, V.mul(f, k)), n, C.c4, 8, -4, 14); } };
+    react([0, 0], [Ax, 0], 'A_x'); react([0, 0], [0, Ay], 'A_y'); react([L, 0], [0, By], 'B_y');
+    // Kräftepolygon
+    const O = [6.4, 0.8], seq = [['F', [Fx, Fy], C.c1], ['Q', [0, -Q], C.c1], ['A_x', [Ax, 0], C.c4], ['A_y', [0, Ay], C.c4], ['B_y', [0, By], C.c4]];
+    let p = O; const ks = 0.38; v.text([5.2, -2.3], 'Kräftepolygon (geschlossen)', C.muted, 0, 0, 12, false);
+    seq.forEach(([n, f, c]) => { if (Math.hypot(f[0], f[1]) < 0.02) return; const d = V.mul(f, ks); v.arrow(p, d, c, 2.4, 8); p = V.add(p, d); });
+    v.dot(O, C.fg, 3);
+    MW.info(infoEl, 'Lagerreaktionen aus ΣF = 0 und ΣM_A = 0', [['ΣF_x = A_x + F cosθ = 0', 'A_x = ' + fmt(Ax, 2) + ' kN'], ['ΣM_A = B_y L + x_F F sinθ − Q L/2 = 0', 'B_y = ' + fmt(By, 2) + ' kN'], ['ΣF_y = A_y + B_y + F sinθ − Q = 0', 'A_y = ' + fmt(Ay, 2) + ' kN'], ['Q = qL', fmt(Q, 2) + ' kN'], ['Kontrolle ΣM_B', fmt(-Ay * L + Fy * (xF - L) + Q * L / 2, 2) + ' kNm']],
+      'Unbekannte Vektoren positiv ansetzen: ein negatives Ergebnis heisst, dass die Reaktion in Wirklichkeit entgegengesetzt wirkt (Pfeil wird dann umgedreht). Das Kräftepolygon schliesst sich, weil R = 0.');
+  });
+  MW.slider(ctl, { label: 'F', min: 0, max: 6, step: 0.5, value: Fm, unit: ' kN', onInput: x => { Fm = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'θ', min: -180, max: 0, step: 5, value: th, unit: '°', onInput: x => { th = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'x_F', min: 0, max: 4, step: 0.25, value: xF, unit: ' m', onInput: x => { xF = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'q', min: 0, max: 3, step: 0.25, value: q, unit: ' kN/m', onInput: x => { q = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

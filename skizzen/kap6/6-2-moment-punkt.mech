@@ -1,0 +1,11 @@
+titel "Übungsheft Abb. 3.4 – Moment einer Kraft F im Punkt O"
+punkte O(0,0)  A(2.3,0)  _P(0.62,1.0)
+linie (2.3,0)+(0.45*cos(-31),0.45*sin(-31)) _P+(-0.35*cos(-31),-0.35*sin(-31))
+linie O _P
+pfeil von O nach A dick ; text mitte(O,A) "~O~A" lage u
+marke A
+kraft ~F bei A richtung 149° länge 1.5
+rechtwinklig _P zwischen O und A
+kante O-_P "a" links
+winkel A zwischen 0 und 149 "α" radius 16
+aus O "~M_O" lage ol

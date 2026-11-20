@@ -1,0 +1,10 @@
+titel "Übungsheft Abb. 3.2 (rechts) – freigeschnittenes System"
+system s = gedreht -27°
+punkte _B(0,0)  _A(3.2,-1.63)  _K1(1.2,-0.62)
+linie _B _A
+körper Klotz = polygon _K1 _K1+(1.0,0) _K1+(1.0,0.55) _K1+(0,0.55) in s
+kraft ~mg bei mitte(Klotz) richtung -y länge 0.9
+kraft ~B_y bei _B richtung +y länge 0.55
+kraft ~A_y bei _A+(0,0.05) richtung +y länge 0.55
+kraft ~A_x bei _A richtung +x länge 0.55
+text (-0.1,-0.9) "S"

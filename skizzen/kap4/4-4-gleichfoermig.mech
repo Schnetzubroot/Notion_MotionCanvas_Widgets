@@ -1,0 +1,10 @@
+titel "Übungsheft Abb. 3.9 (links) – Gleichförmige Kräfteverteilung"
+param L=3
+punkte _O(0,0)  _E(L,0)  _S(1.5,0)
+linie (-0.15,0) (3.3,0) dick
+last von _O nach _E q (1,1) richtung -65° höhe 0.9 nachaussen "s_0"
+kraft ~R bei _S richtung -65° länge 1.6 dick
+marke _S ; text _S "L" lage or
+vektor ~e_y bei _O richtung 90° länge 0.4
+vektor ~e_x bei (3.4,0) richtung 0° länge 0.4 ; vektor ~e_η bei (3.4,0) richtung -65° länge 0.4
+mass _O-_S "x_S" versatz 0.2 seite oben

@@ -11,7 +11,9 @@ SECTIONS = {
     '2-3': '2.3 Ortsvektor und Geschwindigkeit', '2-4': '2.4 Komponenten der Geschwindigkeit',
     '3-1': '3.1 Satz der projizierten Geschwindigkeiten', '3-2': '3.2 Translation', '3-3': '3.3 Rotation',
     '3-4': '3.4 Kreiselung', '3-5': '3.5 Allgemeinste Bewegung: Kinemate, Zentralachse, Schraube', '3-6': '3.6 Ebene Bewegung: Momentanzentrum, Polbahnen, Fachwerke',
-    '4-1': '4.1 Zum Kraftbegriff',
+    '4-1': '4.1 Zum Kraftbegriff', '4-3': '4.3 Reaktionsprinzip und Freischneiden', '4-4': '4.4 Kraftdichten',
+    '5-1': '5.1 Leistung einer Einzelkraft und eines Moments', '5-2': '5.2 Gesamtleistung am starren Körper',
+    '6-1': '6.1 Statische Äquivalenz', '6-2': '6.2 Moment bezüglich Punkt und Achse', '6-3': '6.3 Kräftepaar, parallele Kräfte', '6-4': '6.4 Gleichgewicht',
 }
 
 def title(p):
