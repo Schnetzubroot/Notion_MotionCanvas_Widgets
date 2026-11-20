@@ -22,11 +22,14 @@ Die Seiten werden über GitHub Pages ausgeliefert und in Notion eingebettet. Üb
 | `analysis-w6/` | Analysis I, Woche 6, Anhang A: Polarform, Euler-Formel, Multiplikation in Polarform, n-te Wurzeln |
 | `analysis-w7/` | Analysis I, Woche 7, Anhang A und Kapitel II.5–6: Nullstellen reeller Polynome, DGL-Ansatz e^(αx), Exponentialfunktion und e, Logarithmus zur Basis a, cosh/sinh, Grössenordnungen |
 | `chemistry-w2/` | Chemistry (151-0909-00L), Woche 2, Brown Kap. 10: Gasgesetze, Geschwindigkeitsverteilung |
+| `chemistry-w5/` | Chemistry (151-0909-00L), Woche 5, Brown Kap. 19: ΔG = ΔH − TΔS in Abhängigkeit von T |
+| `chemistry-w6/` | Chemistry (151-0909-00L), Woche 6, Brown Kap. 6: Wasserstoff-Übergänge und Spektrallinien |
+| `chemistry-w7/` | Chemistry (151-0909-00L), Woche 7, Brown Kap. 9: VSEPR-Geometrien in 3D |
 | `werkzeuge/` | Werkzeugkasten `werkzeuge/` (alle Werkzeuge in Tabs: `#2d`, `#3d`, `#vektoren`, `#koordinaten`, `#skizzen`); Vektorrechner, 3D-Plotter (`rechenblatt.html`), 2D-Plotter (`funktionsplotter.html`, Beispiele per `?beispiel=2`) und Koordinaten (`koordinaten-spielplatz.html`) (freie Werkzeuge, Szenario per `?szenario=zp25` wählbar) |
 | `lib/` | gemeinsame Bibliothek (`core.js`, `core.css`) und MechSkizze-Renderer (`mechskizze.js`, läuft auch in Node) |
-| `tools/` | Build-Skripte: `python3 tools/build_kap1.py`, `build_kap2.py`, `build_kap3.py`, `build_kap3_w4.py`, `build_kap3_w5.py`, `build_kap4.py`, `build_skizzen.py`, `build_analysis_w1.py`, `build_analysis_w2.py`, `build_analysis_w3.py`, `build_analysis_w4.py`, `build_analysis_w5.py`, `build_analysis_w6.py`, `build_analysis_w7.py`, `build_chemistry_w2.py`, `build_index.py` |
+| `tools/` | Build-Skripte: `python3 tools/build_kap1.py`, `build_kap2.py`, `build_kap3.py`, `build_kap3_w4.py`, `build_kap3_w5.py`, `build_kap4.py`, `build_skizzen.py`, `build_analysis_w1.py`, `build_analysis_w2.py`, `build_analysis_w3.py`, `build_analysis_w4.py`, `build_analysis_w5.py`, `build_analysis_w6.py`, `build_analysis_w7.py`, `build_chemistry_w2.py`, `build_chemistry_w5.py`, `build_chemistry_w6_w7.py`, `build_index.py` |
 
-Jedes Widget zeigt genau eine Situation. Die HTML-Dateien in `kap1/`, `kap2/`, `kap3/`, `kap4/`, `analysis-w1/`, `analysis-w2/`, `analysis-w3/`, `analysis-w4/`, `analysis-w5/`, `analysis-w6/`, `analysis-w7/` und `chemistry-w2/` werden aus den Build-Skripten erzeugt.
+Jedes Widget zeigt genau eine Situation. Die HTML-Dateien in `kap1/`, `kap2/`, `kap3/`, `kap4/`, `analysis-w1/`, `analysis-w2/`, `analysis-w3/`, `analysis-w4/`, `analysis-w5/`, `analysis-w6/`, `analysis-w7/`, `chemistry-w2/`, `chemistry-w5/`, `chemistry-w6/` und `chemistry-w7/` werden aus den Build-Skripten erzeugt.
 
 ## MechSkizze
 
