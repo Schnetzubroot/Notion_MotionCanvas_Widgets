@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>aˣ und der Logarithmus zur Basis a</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>aˣ und der Logarithmus zur Basis a</h1>
+  <p class="sub">aˣ = e^(x ln a) hat die Ableitung ln a · aˣ. Für a > 1 ist aˣ streng wachsend, also umkehrbar. Die Umkehrfunktion log_a x = ln x / ln a ist das Spiegelbild an y = x. Die Tangentensteigungen in gespiegelten Punkten sind Kehrwerte.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>y = aˣ</div><div><span class="sw" style="background:var(--c1)"></span>y = log_a x</div><div><span class="sw" style="background:var(--c3)"></span>Tangenten</div><div><span class="sw" style="background:var(--muted)"></span>y = x</div></div>
+    <div class="hint">Basis a und die Stelle x₀ verschieben.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  function gplot(v, f, a, b, color, w = 2.4, ylo = -9, yhi = 9, N = 700) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || y < ylo || y > yhi) { fl(); continue; } seg.push([x, y]); } fl(); }
+  let a = Math.E, x0 = 0.6;
+  const view = MW.View2D(cv, { xmin: -3.2, xmax: 6.2, ymin: -2.4, ymax: 2.97 }, v => {
+    const C = v.C; v.grid(1);
+    const b = v.bounds(); v.line([b.x0, b.x0], [b.y1 + 1, b.y1 + 1], C.muted, 1.2, [5, 4]);
+    if (Math.abs(a - 1) < 0.02) { gplot(v, x => 1, b.x0, b.x1, C.c2); MW.info(infoEl, 'a = 1', [['1ˣ', '= 1 für alle x']], 'Für a = 1 ist aˣ konstant, also nicht injektiv: Es gibt keinen Logarithmus zur Basis 1.', true); return; }
+    const la = Math.log(a), f = x => Math.exp(la * x), g = x => Math.log(x) / la;
+    gplot(v, f, b.x0, b.x1, C.c2, 2.6, b.y0 - 1, b.y1 + 1); gplot(v, g, 1e-4, b.x1, C.c1, 2.6, b.y0 - 1, b.y1 + 1, 2000);
+    const y0 = f(x0), m1 = la * y0, m2 = 1 / m1, h = 0.8 / Math.hypot(1, m1), k = 0.8 / Math.hypot(1, m2);
+    v.line([x0 - h, y0 - m1 * h], [x0 + h, y0 + m1 * h], C.c3, 2); v.line([y0 - k, x0 - m2 * k], [y0 + k, x0 + m2 * k], C.c3, 2);
+    v.line([x0, y0], [y0, x0], C.muted, 1, [2, 3]);
+    v.dot([x0, y0], C.c2, 5.5); v.text([x0, y0], '(x₀, aˣ⁰)', C.c2, -8, -10, 12, true, 'right'); v.dot([y0, x0], C.c1, 5.5); v.text([y0, x0], '(aˣ⁰, x₀)', C.c1, 8, 16, 12);
+    MW.info(infoEl, 'a = ' + fmt(a, 3) + ',  ln a = ' + fmt(la, 4), [['aˣ⁰ = e^(x₀ ln a)', fmt(y0, 4)], ['(aˣ)′ an x₀ = ln a · aˣ⁰', fmt(m1, 4)],
+      ['log_a(aˣ⁰) = ln(aˣ⁰)/ln a', fmt(g(y0), 4) + ' = x₀'], ['(log_a)′ an aˣ⁰ = 1/(aˣ⁰ ln a)', fmt(m2, 4)], ['Produkt der Steigungen', fmt(m1 * m2, 4)]],
+      'Vorlesung S. 26, Skript S. 42–43: aˣ := e^(x ln a), (aˣ)′ = ln a · aˣ, log_a x = ln x / ln a. Im Skript heisst der natürliche Logarithmus log, in der Vorlesung ln. '
+      + (a < 1 ? 'Hier ist 0 < a < 1: aˣ ist streng fallend, aber ebenfalls umkehrbar (Vorlesung S. 26, Bemerkung).' : 'Für a > 1 ist ln a > 0, also aˣ streng wachsend.'));
+  });
+  const sa = MW.slider(ctl, { label: 'a', min: 0.2, max: 5, step: 0.01, value: a, onInput: u => { a = u; view.redraw(); } });
+  MW.slider(ctl, { label: 'x₀', min: -2, max: 1.5, step: 0.01, value: x0, onInput: u => { x0 = u; view.redraw(); } });
+  MW.select(ctl, 'Basis', [['e', 'a = e'], ['2', 'a = 2'], ['10', 'a = 10'], ['0.5', 'a = 1/2']], u => { a = u === 'e' ? Math.E : +u; sa.set(a); view.redraw(); }).set('e');
+
+})();
+</script>
+</body>
+</html>

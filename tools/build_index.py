@@ -50,6 +50,11 @@ ANA = {
     ('analysis-w5', '3-2'): 'Analysis II.3 Mittelwertsatz', ('analysis-w5', '3-3'): 'Analysis II.3 Regel von Bernoulli-Hôpital',
     ('analysis-w5', '4-1'): 'Analysis II.4 Kandidaten für Extremalstellen', ('analysis-w5', '4-2'): 'Analysis II.4 Abstand Punkt–Strecke',
     ('analysis-w5', '4-3'): 'Analysis II.4 Kreuzförmiger Querschnitt', ('analysis-w5', 'A-1'): 'Analysis Anhang A: Komplexe Zahlen',
+    ('analysis-w6', 'A-2'): 'Analysis Anhang A: Polarform und Euler-Formel', ('analysis-w6', 'A-3'): 'Analysis Anhang A: Multiplikation in Polarform',
+    ('analysis-w6', 'A-4'): 'Analysis Anhang A: Wurzeln komplexer Zahlen',
+    ('analysis-w7', 'A-5'): 'Analysis Anhang A: Polynome und Nullstellen', ('analysis-w7', 'A-6'): 'Analysis Anhang A: Lineare DGL mit Ansatz e^(αx)',
+    ('analysis-w7', '5-1'): 'Analysis II.5 Exponentialfunktion und e', ('analysis-w7', '5-2'): 'Analysis II.5 Logarithmus und Basis a',
+    ('analysis-w7', '5-3'): 'Analysis II.5 Hyperbolische Funktionen', ('analysis-w7', '6-1'): 'Analysis II.6 Grössenordnungen',
 }
 parts.append('<h1 style="margin-top:32px">Analysis I</h1><p class="sub">Begleitmaterial zu U. Stammbach: Analysis I/II, Teil A (ETH Zürich).</p>')
 for (folder, key), name in ANA.items():
