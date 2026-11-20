@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hydrogen atom: energy levels and spectral lines</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Hydrogen atom: energy levels and spectral lines</h1>
+  <p class="sub">E<sub>n</sub> = −hcR<sub>H</sub>/n² = −2.18 × 10⁻¹⁸ J / n². A jump from n<sub>i</sub> to n<sub>f</sub> changes the energy by ΔE = E<sub>f</sub> − E<sub>i</sub>. ΔE &lt; 0: a photon is emitted; ΔE &gt; 0: a photon must be absorbed. Its wavelength is λ = hc/|ΔE|.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>selected transition</div><div><span class="sw" style="background:var(--muted)"></span>other lines of the same series</div></div>
+    <div class="hint">Choose n_i and n_f. The right side shows all lines that end (or start) on n_f, on a logarithmic wavelength axis.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const h = 6.626e-34, c = 2.998e8, A = 2.18e-18, NMAX = 8;
+  const En = n => n === Infinity ? 0 : -A / (n * n);
+  let ni = 3, nf = 2;
+  const lam = (a, b) => h * c / Math.abs(En(b) - En(a)) * 1e9;  // nm
+  // wavelength -> CSS color (approximation for display only)
+  function wl2rgb(w) {
+    let r = 0, g = 0, b = 0;
+    if (w >= 380 && w < 440) { r = (440 - w) / 60; b = 1; } else if (w < 490) { g = (w - 440) / 50; b = 1; } else if (w < 510) { g = 1; b = (510 - w) / 20; }
+    else if (w < 580) { r = (w - 510) / 70; g = 1; } else if (w < 645) { r = 1; g = (645 - w) / 65; } else if (w <= 780) { r = 1; }
+    const f = w < 420 ? 0.3 + 0.7 * (w - 380) / 40 : w > 700 ? 0.3 + 0.7 * (780 - w) / 80 : 1;
+    return 'rgb(' + [r, g, b].map(x => Math.round(255 * Math.pow(x * f, 0.8))).join(',') + ')';
+  }
+  const region = w => w < 10 ? 'X-ray' : w < 400 ? 'ultraviolet' : w <= 750 ? 'visible' : w < 1e6 ? 'infrared' : 'microwave';
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C;
+    // ---- left: energy-level diagram, x in [0, 2.4], E in [-2.18e-18, 0] -> y in [0.1, 3.3]
+    const Y = E => 3.3 + (E / A) * 3.2;
+    v.text([0, 3.45], 'E (10⁻¹⁹ J)', C.muted, 0, 0, 11, false);
+    const levels = [1, 2, 3, 4, 5, 6, 7, 8, Infinity];
+    levels.forEach(n => { const y = Y(En(n)), act = n === ni || n === nf;
+      v.line([0.55, y], [2.3, y], act ? C.fg : C.line, act ? 2.2 : 1.2);
+      if (n <= 4 || n === Infinity) { v.text([0.5, y], fmt(En(n) * 1e19, 2), C.muted, 0, 4, 10, false, 'right');
+        v.text([2.3, y], n === Infinity ? 'n = ∞' : 'n = ' + n, C.muted, 6, 4, 11, false); } });
+    v.text([2.3, Y(En(6))], '…', C.muted, 10, 2, 11, false);
+    if (ni !== nf) { const x = 1.45; v.arrow([x, Y(En(ni))], [0, Y(En(nf)) - Y(En(ni))], C.c1, 3, 11); }
+    // ---- right: series on a log wavelength axis, x in [3.0, 6.1]
+    const L0 = Math.log10(50), L1 = Math.log10(5000), X = w => 3.0 + (Math.log10(w) - L0) / (L1 - L0) * 3.1, yb = 1.2, yt = 2.4;
+    for (let w = 380; w < 780; w += 4) v.poly([[X(w), yb], [X(w + 4), yb], [X(w + 4), yt], [X(w), yt]], null, 1, null, true, wl2rgb(w + 2));
+    v.line([3.0, yb], [6.1, yb], C.muted, 1.2);
+    [50, 100, 200, 500, 1000, 2000, 5000].forEach(w => { v.line([X(w), yb], [X(w), yb - 0.06], C.muted, 1); v.text([X(w), yb], String(w), C.muted, 0, 26, 10, false, 'center'); });
+    v.text([6.1, yb], 'λ (nm)', C.muted, 0, 42, 11, false, 'right');
+    v.text([X(150), yt], 'UV', C.muted, 0, -8, 11, false, 'center'); v.text([X(540), yt], 'visible', C.muted, 0, -8, 11, false, 'center'); v.text([X(2200), yt], 'infrared', C.muted, 0, -8, 11, false, 'center');
+    const lo = Math.min(ni, nf);
+    for (let n = lo + 1; n <= 40; n++) { const w = lam(lo, n); if (w >= 50 && w <= 5000) v.line([X(w), yb], [X(w), yt], C.muted, 1.4); }
+    const wInf = lam(lo, Infinity); if (wInf >= 50 && wInf <= 5000) v.line([X(wInf), yb], [X(wInf), yt + 0.15], C.muted, 1, [3, 3]);
+    let rows, head, warn = false;
+    if (ni === nf) { head = 'n_i = n_f: no transition'; rows = []; warn = true; }
+    else {
+      const dE = En(nf) - En(ni), w = lam(ni, nf), em = dE < 0;
+      if (w >= 50 && w <= 5000) { v.line([X(w), yb - 0.1], [X(w), yt + 0.3], C.c1, 3); v.text([X(w), yt + 0.3], fmt(w, w < 1000 ? 1 : 0) + ' nm', C.c1, 0, -6, 12, true, 'center'); }
+      const fi = ni === Infinity ? '0' : '1/' + ni + '²', ff = nf === Infinity ? '0' : '1/' + nf + '²';
+      head = (em ? 'Emission' : 'Absorption') + ': n = ' + (ni === Infinity ? '∞' : ni) + ' → ' + (nf === Infinity ? '∞' : nf);
+      rows = [['ΔE = −2.18 × 10⁻¹⁸ J (' + ff + ' − ' + fi + ')', fmt(dE * 1e19, 3) + ' × 10⁻¹⁹ J'],
+              ['photon', em ? 'emitted, E = ' + fmt(-dE * 1e19, 3) + ' × 10⁻¹⁹ J' : 'absorbed, E = ' + fmt(dE * 1e19, 3) + ' × 10⁻¹⁹ J'],
+              ['λ = hc/|ΔE|', fmt(w, 1) + ' nm (' + region(w) + ')'],
+              ['ν = c/λ', (c / (w * 1e-9)).toExponential(3).replace('e+', ' × 10^') + ' s⁻¹']];
+      if (nf === Infinity) rows.push(['n_f = ∞', 'ionization: H → H⁺ + e⁻' + (ni === 1 ? ' (Exercise 6 SP5 gets 91.7 nm with R_H rounded to 1.09 × 10⁷ m⁻¹)' : '')]);
+    }
+    MW.info(infoEl, head, rows, 'Grey lines: all transitions between n = ' + lo + ' and higher levels; dashed: the series limit (n = ∞). '
+      + 'Lines ending on n = 1 are UV, on n = 2 partly visible, on n = 3 infrared. Colors are approximate.', warn);
+  });
+  const opt = [1, 2, 3, 4, 5, 6, 7, 8].map(n => [String(n), String(n)]).concat([['inf', '∞']]);
+  const val = s => s === 'inf' ? Infinity : +s;
+  MW.select(ctl, 'n_i (start)', opt, x => { ni = val(x); view.redraw(); }).set(String(ni));
+  MW.select(ctl, 'n_f (end)', opt, x => { nf = val(x); view.redraw(); }).set(String(nf));
+  const presets = [['3→2: red line, PS6 8B', 3, 2], ['2→1: PS6 8A', 2, 1], ['4→3: PS6 8C', 4, 3], ['3→1: Lecture 6', 3, 1], ['5→1: PS6 Problem 2', 5, 1], ['1→∞: Exercise 6 SP5', 1, Infinity]];
+  const selI = ctl.querySelectorAll('select')[0], selF = ctl.querySelectorAll('select')[1];
+  MW.select(ctl, 'Course example', [['', '—']].concat(presets.map((p, i) => [String(i), p[0]])), x => { if (x === '') return; const p = presets[+x];
+    ni = p[1]; nf = p[2]; selI.value = ni === Infinity ? 'inf' : String(ni); selF.value = nf === Infinity ? 'inf' : String(nf); view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

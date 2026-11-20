@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nullstellen reeller Polynome: komplexe Nullstellen kommen in Paaren</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Nullstellen reeller Polynome: komplexe Nullstellen kommen in Paaren</h1>
+  <p class="sub">Links die Nullstellen in der komplexen Ebene, rechts der Graph von p(x) für reelle x. Mit z₀ ist auch z̄₀ eine Nullstelle. Der Graph zeigt nur die reellen Nullstellen. Die Vielfachheiten zusammen ergeben immer den Grad.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>komplexes Paar z₀, z̄₀</div><div><span class="sw" style="background:var(--c3)"></span>reelle Nullstellen</div><div><span class="sw" style="background:var(--c2)"></span>p(x)</div></div>
+    <div class="hint">z₀ und die reellen Nullstellen ziehen. z₀ auf die reelle Achse ziehen: doppelte reelle Nullstelle.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  function dplot(v, A, f, color, w = 1.3, N = 300, a = A.x0, b = A.x1) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w, [5, 4]); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || !A.inY(y)) { fl(); continue; } seg.push(A.P(x, y)); } fl(); }
+  const inv = (A, p) => [A.x0 + (p[0] - A.ox) / A.W * (A.x1 - A.x0), A.y0 + (p[1] - A.oy) / A.H * (A.y1 - A.y0)];
+  const sci = x => !isFinite(x) ? '–' : (x !== 0 && (Math.abs(x) >= 1e6 || Math.abs(x) < 1e-4)) ? x.toExponential(3).replace('.', ',').replace(/e\+?(-?)(\d+)/, (m, s, d) => ' · 10^' + (s ? '−' : '') + d) : fmt(x, 5);
+
+  const cm = (p, q) => [p[0] * q[0] - p[1] * q[1], p[0] * q[1] + p[1] * q[0]];
+  const ab = p => Math.hypot(p[0], p[1]), arg = p => Math.atan2(p[1], p[0]);
+  const pol = (r, t) => [r * Math.cos(t), r * Math.sin(t)];
+  const cs = p => { const r = x => Math.round(x * 1000) / 1000; const a = r(p[0]), b = r(p[1]);
+    return (a === 0 && b !== 0 ? '' : fmt(a, 3)) + (b === 0 ? (a === 0 ? '0' : '') : (b < 0 ? (a === 0 ? '−' : ' − ') : (a === 0 ? '' : ' + ')) + (Math.abs(b) === 1 ? '' : fmt(Math.abs(b), 3)) + 'i'); };
+  // Winkel als Vielfaches von π, wenn möglich (Nenner bis 12)
+  const piF = x => { const q = x / Math.PI; for (let d = 1; d <= 12; d++) { const n = Math.round(q * d); if (Math.abs(q * d - n) < 1e-6) {
+      if (n === 0) return '0'; const a = Math.abs(n); return (n < 0 ? '−' : '') + (a === 1 ? '' : a) + 'π' + (d === 1 ? '' : '/' + d); } } return fmt(x, 4); };
+  const deg = x => fmt(x * 180 / Math.PI, 2) + '°';
+  // Betrag schön: √n, wenn r² fast ganzzahlig ist
+  const rF = r => { const s = r * r, n = Math.round(s); if (Math.abs(s - n) < 1e-6 && n > 0) { const k = Math.round(Math.sqrt(n)); return k * k === n ? String(k) : '√' + n + ' ≈ ' + fmt(r, 4); } return fmt(r, 4); };
+  const norm = t => { while (t <= -Math.PI + 1e-12) t += 2 * Math.PI; while (t > Math.PI + 1e-12) t -= 2 * Math.PI; return t; };
+  const snap = p => [Math.round(p[0] * 4) / 4, Math.round(p[1] * 4) / 4];
+
+  const L = mkAx(-2.4, 2.4, -2.4, 2.4, 3.3, 3.3, -0.6, 0), G = mkAx(-2.4, 2.4, -6, 6, 3.05, 3.3, 3.1, 0);
+  const s3 = Math.sqrt(3) / 2;
+  const EX = { g2: ['Grad 2: α² − 2α + 2 (Vorlesung A S. 10)', 2, [1, 1], []], g3: ['Grad 3: x³ − 1 (Vorlesung A S. 10)', 3, [-0.5, s3], [1]],
+    g4: ['Grad 4: x⁴ − x (Vorlesung A S. 10)', 4, [-0.5, s3], [0, 1]], g4b: ['Grad 4: (x² + 1)(x² − 4) (eigenes Beispiel)', 4, [0, 1], [-2, 2]] };
+  let gr = 2, z0 = [1, 1], R = [];
+  const coeffs = () => { let c = [z0[0] * z0[0] + z0[1] * z0[1], -2 * z0[0], 1];   // aufsteigend
+    R.slice(0, gr - 2).forEach(r => { const d = [0].concat(c); for (let i = 0; i < c.length; i++) d[i] -= r * c[i]; c = d; }); return c; };
+  const ev = (c, x) => c.reduceRight((s, a) => s * x + a, 0);
+  const sup = k => String(k).split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]).join('');
+  const pstr = c => { let s = ''; for (let k = c.length - 1; k >= 0; k--) { const a = Math.round(c[k] * 1000) / 1000; if (a === 0) continue;
+      const m = k === 0 || Math.abs(a) !== 1 ? fmt(Math.abs(a), 3) : ''; s += (s ? (a < 0 ? ' − ' : ' + ') : (a < 0 ? '−' : '')) + m + (k ? 'x' + (k > 1 ? sup(k) : '') : ''); } return s || '0'; };
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C;
+    for (let k = -2; k <= 2; k++) { v.line(L.P(k, -2.4), L.P(k, 2.4), C.grid, 1); v.line(L.P(-2.4, k), L.P(2.4, k), C.grid, 1); }
+    v.line(L.P(-2.4, 0), L.P(2.4, 0), C.muted, 1.3); v.line(L.P(0, -2.4), L.P(0, 2.4), C.muted, 1.3);
+    v.text(L.P(2.4, 0), 'Re', C.muted, -4, -6, 12, false, 'right'); v.text(L.P(0, 2.4), 'Im', C.muted, 6, 12, 12, false);
+    axes(v, G, 'x', 'p(x)', 1, 2);
+    const real = Math.abs(z0[1]) < 1e-9, c = coeffs(), rs = R.slice(0, gr - 2);
+    v.line(L.P(z0[0], z0[1]), L.P(z0[0], -z0[1]), C.c1, 1, [3, 3]);
+    v.dot(L.P(z0[0], z0[1]), C.c1, 6.5); v.dot(L.P(z0[0], -z0[1]), C.c1, 6.5, true);
+    if (!real) { v.text(L.P(z0[0], z0[1]), 'z₀', C.c1, 8, -6, 13); v.text(L.P(z0[0], -z0[1]), 'z̄₀', C.c1, 8, 16, 13); }
+    rs.forEach((r, i) => { v.dot(L.P(r, 0), C.c3, 6); v.text(L.P(r, 0), 'x' + '₁₂'[i], C.c3, -4, 18, 12); });
+    fplot(v, G, x => ev(c, x), C.c2, 2.5, 800);
+    // Nullstellen mit Vielfachheit
+    const all = [[z0[0], z0[1]], [z0[0], -z0[1]]].concat(rs.map(r => [r, 0])), cl = [];
+    all.forEach(p => { const f = cl.find(q => Math.hypot(q.p[0] - p[0], q.p[1] - p[1]) < 1e-6); if (f) f.k++; else cl.push({ p, k: 1 }); });
+    const reals = cl.filter(q => Math.abs(q.p[1]) < 1e-9);
+    reals.forEach(q => { v.dot(G.P(q.p[0], 0), C.c3, 5.5); if (q.k > 1) v.text(G.P(q.p[0], 0), q.k + '-fach', C.c3, 0, 18, 11, true, 'center'); });
+    const list = cl.map(q => cs(q.p) + (q.k > 1 ? ' (' + q.k + '-fach)' : '')).join(',  ');
+    const multi = cl.some(q => q.k > 1);
+    MW.info(infoEl, 'p(x) = ' + pstr(c), [['Nullstellen', list], ['verschiedene reelle Nullstellen', String(reals.length)],
+      ['nicht reelle Nullstellen', real ? '0' : '2 (z₀ und z̄₀)'], ['Summe der Vielfachheiten', cl.reduce((s, q) => s + q.k, 0) + ' = Grad ' + gr],
+      ['(x − z₀)(x − z̄₀)', 'x² − 2 Re z₀ · x + |z₀|² = ' + pstr([z0[0] ** 2 + z0[1] ** 2, -2 * z0[0], 1])]],
+      'Skript Anhang S. 20–23: Jedes Polynom vom Grad n ≥ 1 hat eine Nullstelle (Fundamentalsatz, S. 20) und zerfällt in n Linearfaktoren (S. 21). Bei reellen Koeffizienten ist mit z₀ auch z̄₀ Nullstelle, und (z − z₀)(z − z̄₀) ist ein reelles quadratisches Polynom (S. 22–23). '
+      + (multi ? 'Hier gibt es eine mehrfache Nullstelle: Bei gerader Vielfachheit berührt der Graph die x-Achse nur.' : 'Vorlesung A S. 9: Bei ungeradem Grad bleibt mindestens eine reelle Nullstelle übrig.'));
+  });
+  const snapC = p => { const q = [Math.round(p[0] * 4) / 4, Math.round(p[1] * 4) / 4]; return [Math.max(-2.25, Math.min(2.25, q[0])), Math.max(-2.25, Math.min(2.25, q[1]))]; };
+  view.handle(() => L.P(z0[0], z0[1]), p => { z0 = snapC(inv(L, p)); });
+  [0, 1].forEach(i => view.handle(() => gr - 2 > i ? L.P(R[i], 0) : [99, 99], p => { R[i] = snapC(inv(L, p))[0]; }));
+  MW.select(ctl, 'Beispiel', Object.entries(EX).map(([k, e]) => [k, e[0]]), u => { const e = EX[u]; gr = e[1]; z0 = e[2].slice(); R = e[3].slice(); view.redraw(); }).set('g2');
+
+})();
+</script>
+</body>
+</html>

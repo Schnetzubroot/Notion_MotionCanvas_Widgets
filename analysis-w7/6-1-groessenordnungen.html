@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grössenordnungen: f = o(g), wenn f(x)/g(x) → 0</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Grössenordnungen: f = o(g), wenn f(x)/g(x) → 0</h1>
+  <p class="sub">Oben f und g, unten der Quotient f/g auf dem gewählten Fenster. f ist von kleinerer Grössenordnung als g, wenn f/g gegen 0 strebt. Kleine Fenster täuschen: x¹⁰ liegt lange über eˣ, und ln x / x^(1/10) fällt erst nach x ≈ 22 000.</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>f</div><div><span class="sw" style="background:var(--c4)"></span>g</div><div><span class="sw" style="background:var(--c1)"></span>f/g</div></div>
+    <div class="hint">Paar wählen und das Fenster vergrössern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  function dplot(v, A, f, color, w = 1.3, N = 300, a = A.x0, b = A.x1) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w, [5, 4]); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || !A.inY(y)) { fl(); continue; } seg.push(A.P(x, y)); } fl(); }
+  const inv = (A, p) => [A.x0 + (p[0] - A.ox) / A.W * (A.x1 - A.x0), A.y0 + (p[1] - A.oy) / A.H * (A.y1 - A.y0)];
+  const sci = x => !isFinite(x) ? '–' : (x !== 0 && (Math.abs(x) >= 1e6 || Math.abs(x) < 1e-4)) ? x.toExponential(3).replace('.', ',').replace(/e\+?(-?)(\d+)/, (m, s, d) => ' · 10^' + (s ? '−' : '') + d) : fmt(x, 5);
+
+  const S = {
+    x3e: { name: 'f = x³, g = eˣ', f: x => x ** 3, g: Math.exp, lo: 0, s: [0.3, 1.6], s0: 0.6, res: 'x³ = o(eˣ) für x → ∞',
+      note: 'Vorlesung S. 27–28, Skript S. 52–54: xʳ = o(eˣ) für alle r > 0. Die Graphen schneiden sich noch einmal bei x ≈ 4.54 (Skript S. 53, Fig. 5).' },
+    x10: { name: 'f = x¹⁰, g = eˣ', f: x => x ** 10, g: Math.exp, lo: 0, s: [0.3, 2.2], s0: 1.4, res: 'x¹⁰ = o(eˣ) für x → ∞',
+      note: 'Skript S. 52–53, Fig. 4 und 6: „Der Eindruck trügt.“ Erst bei x ≈ 35.8 überholt eˣ wieder x¹⁰ (Vorlesung S. 28–29: ≈ 35). Danach geht der Quotient schnell gegen 0.' },
+    lnx3: { name: 'f = ln x, g = x³', f: Math.log, g: x => x ** 3, lo: 1, s: [0.3, 1.5], s0: 0.8, res: 'ln x = o(x³) für x → ∞',
+      note: 'Vorlesung S. 27: lim ln x / x³ = lim (1/x)/(3x²) = 0 mit Bernoulli-Hôpital.' },
+    lnsq: { name: 'f = ln x, g = √x', f: Math.log, g: Math.sqrt, lo: 1, s: [0.5, 4], s0: 2, res: 'ln x = o(√x) für x → ∞', logx: true,
+      note: 'Skript S. 55, Fig. 7: ln x = o(xᵏ) für jedes k > 0. Achse: log₁₀ x.' },
+    ln10: { name: 'f = ln x, g = x^(1/10)', f: Math.log, g: x => x ** 0.1, lo: 1, s: [1, 40], s0: 3, res: 'ln x = o(x^(1/10)) für x → ∞', logx: true,
+      note: 'Skript S. 55, Fig. 7. Der Quotient wächst bis x = e¹⁰ ≈ 22 026 (Maximum 10/e ≈ 3.68) und fällt erst danach gegen 0. Achse: log₁₀ x. (Die Lage des Maximums ist eigene Rechnung.)' },
+    lin: { name: 'f = x, g = 2x', f: x => x, g: x => 2 * x, lo: 0.01, s: [0.3, 3], s0: 1, res: 'f/g = 1/2 ↛ 0: gleiche Grössenordnung, nicht o',
+      note: 'Vorlesung S. 27, Skript S. 51: x, 2x und x + c sind von gleicher Grössenordnung. Strebt f/g gegen A ≠ 0, wachsen f und g gleich schnell.' },
+    em: { name: 'f = e⁻ˣ, g = x⁻²', f: x => Math.exp(-x), g: x => x ** -2, lo: 0.5, s: [0.5, 1.7], s0: 1, res: 'e⁻ˣ = o(x⁻²) für x → ∞',
+      note: 'Vorlesung S. 28, Skript S. 55: Beide gehen gegen 0, aber e⁻ˣ schneller: e⁻ˣ / x⁻ʳ = xʳ/eˣ → 0.' },
+    ln0: { name: 'f = ln x, g = −x^(−1/2) für x → 0⁺', f: Math.log, g: x => -(x ** -0.5), zero: true, s: [-12, -0.5], s0: -2, res: 'ln x = o(−x^(−1/2)) für x → 0⁺', logx: true,
+      note: 'Vorlesung S. 29, Skript S. 56: ln x = o(−x⁻ʳ) für x → 0⁺ und jedes r > 0. Beide streben gegen −∞, −x⁻ʳ schneller. Hier ist das Fenster [10^s, 1], Achse: log₁₀ x.' },
+    pole: { name: 'f = 1/x, g = 1/(1 − cos x) für x → 0⁺', f: x => 1 / x, g: x => 1 / (1 - Math.cos(x)), zero: true, s: [-6, -0.3], s0: -1, res: '1/x = o(1/(1 − cos x)) für x → 0⁺', logx: true,
+      note: 'Vorlesung S. 29: lim (1 − cos x)/x = lim sin x = 0, also hat 1/(1 − cos x) die „stärkere“ Polstelle. Fenster [10^s, 1], Achse: log₁₀ x.' },
+  };
+  let key = 'x10', s = 1.4;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.55, ymax: 3.75 }, v => {
+    const C = v.C, c = S[key], N = 700;
+    const a = c.zero ? 10 ** s : c.lo, b = c.zero ? 1 : 10 ** s;
+    const ua = c.logx ? Math.log10(a) : a, ub = c.logx ? Math.log10(b) : b, X = u => c.logx ? 10 ** u : u;
+    const fs = [], gs = [], qs = [];
+    for (let i = 0; i <= N; i++) { const x = X(ua + (ub - ua) * i / N); fs.push(c.f(x)); gs.push(c.g(x)); qs.push(c.f(x) / c.g(x)); }
+    const rng = (arr, inc0) => { let lo = Infinity, hi = -Infinity; arr.forEach(y => { if (isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); } });
+      if (inc0) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); } if (hi - lo < 1e-12) { hi += 1; lo -= 1; } const p = 0.06 * (hi - lo); return [lo - p, hi + p]; };
+    const r1 = rng(fs.concat(gs), false), r2 = rng(qs, true);
+    const A = mkAx(ua, ub, r1[0], r1[1], 6, 1.75, 0, 1.95), B = mkAx(ua, ub, r2[0], r2[1], 6, 1.6, 0, 0);
+    const xl = c.logx ? 'log₁₀ x' : 'x';
+    axes(v, A, xl, ''); axes(v, B, xl, 'f/g');
+    fplot(v, A, u => c.g(X(u)), C.c4, 2.4, N); fplot(v, A, u => c.f(X(u)), C.c2, 2.4, N); fplot(v, B, u => c.f(X(u)) / c.g(X(u)), C.c1, 2.4, N);
+    const xe = c.zero ? a : b, q = c.f(xe) / c.g(xe);
+    MW.info(infoEl, c.res, [[c.zero ? 'linker Fensterrand x' : 'rechter Fensterrand X', sci(xe)], ['f', sci(c.f(xe))], ['g', sci(c.g(xe))], ['f/g', sci(q)]], c.note);
+  });
+  const sl = MW.slider(ctl, { label: 'Fenster s', min: 0.3, max: 2.2, step: 0.01, value: s, fmt: u => (S[key].zero ? '[10^' + fmt(u, 2) + ', 1]' : 'bis 10^' + fmt(u, 2)), onInput: u => { s = u; view.redraw(); } });
+  MW.select(ctl, 'Paar', Object.entries(S).map(([k, c]) => [k, c.name]), u => { key = u; const c = S[key], inp = sl.el.querySelector('input');
+    inp.min = c.s[0]; inp.max = c.s[1]; inp.step = (c.s[1] - c.s[0]) / 400; s = c.s0; sl.set(s); view.redraw(); }).set(key);
+
+})();
+</script>
+</body>
+</html>
