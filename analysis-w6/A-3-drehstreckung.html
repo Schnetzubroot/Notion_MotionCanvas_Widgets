@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multiplikation in Polarform: Beträge multiplizieren, Winkel addieren</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Multiplikation in Polarform: Beträge multiplizieren, Winkel addieren</h1>
+  <p class="sub">Mit w = |w| · eⁱᵅ ist z · w = |z||w| · e^(i(φ + α)). Die Multiplikation mit w dreht z um den Winkel α und streckt um den Faktor |w|. Für |w| = 1 ist es eine reine Drehung, z bleibt auf seinem Kreis um 0. Potenzen: zⁿ = |z|ⁿ eⁱⁿᵠ.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>z</div><div><span class="sw" style="background:var(--c4)"></span>w</div><div><span class="sw" style="background:var(--c1)"></span>z · w bzw. zᵏ</div><div><span class="sw" style="background:var(--muted)"></span>Kreis um 0 durch z</div></div>
+    <div class="hint">z ziehen, |w| und den Winkel α einstellen, oder zu „Potenzen“ wechseln.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const cm = (p, q) => [p[0] * q[0] - p[1] * q[1], p[0] * q[1] + p[1] * q[0]];
+  const ab = p => Math.hypot(p[0], p[1]), arg = p => Math.atan2(p[1], p[0]);
+  const pol = (r, t) => [r * Math.cos(t), r * Math.sin(t)];
+  const cs = p => { const r = x => Math.round(x * 1000) / 1000; const a = r(p[0]), b = r(p[1]);
+    return (a === 0 && b !== 0 ? '' : fmt(a, 3)) + (b === 0 ? (a === 0 ? '0' : '') : (b < 0 ? (a === 0 ? '−' : ' − ') : (a === 0 ? '' : ' + ')) + (Math.abs(b) === 1 ? '' : fmt(Math.abs(b), 3)) + 'i'); };
+  // Winkel als Vielfaches von π, wenn möglich (Nenner bis 12)
+  const piF = x => { const q = x / Math.PI; for (let d = 1; d <= 12; d++) { const n = Math.round(q * d); if (Math.abs(q * d - n) < 1e-6) {
+      if (n === 0) return '0'; const a = Math.abs(n); return (n < 0 ? '−' : '') + (a === 1 ? '' : a) + 'π' + (d === 1 ? '' : '/' + d); } } return fmt(x, 4); };
+  const deg = x => fmt(x * 180 / Math.PI, 2) + '°';
+  // Betrag schön: √n, wenn r² fast ganzzahlig ist
+  const rF = r => { const s = r * r, n = Math.round(s); if (Math.abs(s - n) < 1e-6 && n > 0) { const k = Math.round(Math.sqrt(n)); return k * k === n ? String(k) : '√' + n + ' ≈ ' + fmt(r, 4); } return fmt(r, 4); };
+  const norm = t => { while (t <= -Math.PI + 1e-12) t += 2 * Math.PI; while (t > Math.PI + 1e-12) t -= 2 * Math.PI; return t; };
+  const snap = p => [Math.round(p[0] * 4) / 4, Math.round(p[1] * 4) / 4];
+
+  const S3 = Math.sqrt(3), D = Math.PI / 180;
+  const EX = {
+    i: ['· i (Drehung um 90°)', 'mul', [2, 1], 1, 90, 3],
+    mi: ['· (−i) mit z = 3 − √3 i (Vorlesung S. 3)', 'mul', [3, -S3], 1, -90, 3],
+    half: ['· ½e^(−iπ/4) (Vorlesung S. 5)', 'mul', [2, 2], 0.5, -45, 3],
+    rot: ['· eⁱᵅ mit α < 0 (Vorlesung S. 5)', 'mul', [1.5, 1.5], 1, -60, 3],
+    p3: ['(cos φ + i sin φ)³ (Vorlesung S. 5)', 'pow', pol(1, 35 * D), 1, 0, 3],
+    sp: ['Spirale z, z², …, z¹² (eigenes Beispiel)', 'pow', pol(1.12, 28 * D), 1, 0, 12],
+  };
+  let mode = 'mul', z = [2, 1], R = 1, al = 90 * D, n = 3;
+  const view = MW.View2D(cv, { xmin: -5.2, xmax: 5.2, ymin: -3.3, ymax: 3.3, xlabel: 'Re', ylabel: 'Im' }, v => {
+    const C = v.C; v.grid(1); v.circle([0, 0], 1, C.grid, 1.2);
+    const r = ab(z), ph = arg(z); v.circle([0, 0], r, C.muted, 1.3, [5, 4]);
+    v.arc([0, 0], 0.55, 0, ph, C.c2, 1.8);
+    if (mode === 'mul') {
+      const w = pol(R, al), p = cm(z, w);
+      v.arc([0, 0], 0.95, ph, ph + al, C.c4, 2, [4, 3]); v.text(pol(1.15, ph + al / 2), 'α', C.c4, -4, 5, 13);
+      v.arrow([0, 0], w, C.c4, 2, 9); v.dot(w, C.c4, 5); v.text(w, 'w', C.c4, 8, -6, 13);
+      v.arrow([0, 0], z, C.c2, 2.4, 10); v.dot(z, C.c2, 6); v.text(z, 'z', C.c2, 8, -6, 13);
+      v.arrow([0, 0], p, C.c1, 2.6, 10); v.text(p, 'z · w', C.c1, 8, 16, 13);
+      MW.info(infoEl, 'z · w = ' + cs(p), [['z', cs(z) + ',  |z| = ' + fmt(r, 3) + ',  arg z = ' + deg(ph)],
+        ['w = |w| eⁱᵅ', cs(w) + ',  |w| = ' + fmt(R, 3) + ',  α = ' + deg(al)],
+        ['|z · w| = |z| · |w|', fmt(r, 3) + ' · ' + fmt(R, 3) + ' = ' + fmt(r * R, 4)],
+        ['arg(z · w) = arg z + α', deg(ph) + ' + ' + deg(al) + (Math.abs(norm(ph + al) - (ph + al)) > 1e-9 ? ' ≙ ' + deg(norm(ph + al)) : '')]],
+        'Skript S. 5: |z · z′| = |z| · |z′|, arg(z · z′) = arg z + arg z′. Skript S. 14–16: · eⁱᵅ ist eine Drehung um α, · r (reell) eine Streckung. '
+        + (R === 1 ? 'Hier |w| = 1: z · w bleibt auf dem Kreis durch z (Vorlesung S. 5).' : 'Vorlesung S. 5: w = ½e^(−iπ/4) dreht um 45° im Uhrzeigersinn und halbiert den Betrag.'));
+    } else {
+      const pts = [[1, 0]]; let q = [1, 0];
+      for (let k = 1; k <= n; k++) { q = cm(q, z); pts.push(q); }
+      v.poly(pts, C.c1, 1.6, [3, 3]);
+      const sup = k => String(k).split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]).join('');
+      pts.forEach((p, k) => { if (k) { v.dot(p, C.c1, 4.5); if (n <= 8 || k === n) v.text(p, k === 1 ? 'z' : 'z' + sup(k), C.c1, 7, -6, 12); } });
+      v.arc([0, 0], 0.8, 0, n * ph, C.c1, 1.6, [4, 3]);
+      v.arrow([0, 0], z, C.c2, 2.4, 10); v.dot(z, C.c2, 6);
+      const zn = pts[n];
+      MW.info(infoEl, 'zⁿ = ' + cs(zn) + '  (n = ' + n + ')', [['z', cs(z) + ',  |z| = ' + fmt(r, 4) + ',  φ = ' + deg(ph)],
+        ['|zⁿ| = |z|ⁿ', fmt(r, 4) + '^' + n + ' = ' + fmt(r ** n, 4)], ['arg zⁿ = n · φ', n + ' · ' + deg(ph) + ' = ' + deg(n * ph) + ' ≙ ' + deg(norm(n * ph))]],
+        'Skript S. 7: zⁿ = |z|ⁿ · eⁱⁿᵠ. Für |z| = 1 bleiben alle Potenzen auf dem Einheitskreis, sonst laufen sie spiralförmig nach aussen oder innen. Vorlesung S. 5: Im((cos φ + i sin φ)³) = sin 3φ.');
+    }
+  });
+  view.handle(() => z, p => { z = snap(p); });
+  const sR = MW.slider(ctl, { label: '|w|', min: 0.25, max: 2, step: 0.05, value: R, onInput: u => { R = u; view.redraw(); } });
+  const sA = MW.slider(ctl, { label: 'α', min: -180, max: 180, step: 1, value: 90, fmt: u => fmt(u, 0) + '°', onInput: u => { al = u * D; view.redraw(); } });
+  const sN = MW.slider(ctl, { label: 'n', min: 1, max: 12, step: 1, value: n, fmt: u => fmt(u, 0), onInput: u => { n = u; view.redraw(); } });
+  const show = () => { sR.el.style.display = sA.el.style.display = mode === 'mul' ? '' : 'none'; sN.el.style.display = mode === 'pow' ? '' : 'none'; };
+  const md = MW.select(ctl, 'Rechnung', [['mul', 'z · w'], ['pow', 'Potenzen z, z², …, zⁿ']], u => { mode = u; show(); view.redraw(); });
+  MW.select(ctl, 'Beispiel', Object.entries(EX).map(([k, e]) => [k, e[0]]), u => { const e = EX[u];
+    mode = e[1]; md.set(mode); z = e[2].slice(); R = e[3]; sR.set(R); al = e[4] * D; sA.set(e[4]); n = e[5]; sN.set(n); show(); view.redraw(); }).set('i');
+  show();
+
+})();
+</script>
+</body>
+</html>

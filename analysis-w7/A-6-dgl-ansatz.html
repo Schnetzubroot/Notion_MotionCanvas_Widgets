@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lineare DGL y″ + p y′ + q y = 0: Ansatz y = eᵅˣ</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Lineare DGL y″ + p y′ + q y = 0: Ansatz y = eᵅˣ</h1>
+  <p class="sub">Der Ansatz y = eᵅˣ führt auf das Polynom α² + pα + q = 0. Links seine Nullstellen in der komplexen Ebene, rechts die Lösung zu den Anfangswerten y(0) und y′(0). Komplexe Nullstellen μ ± iω geben eine Schwingung e^(μx)(A cos ωx + B sin ωx).</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>Nullstellen α</div><div><span class="sw" style="background:var(--c2)"></span>Lösung y(x)</div><div><span class="sw" style="background:var(--muted)"></span>Hüllkurve ±√(A² + B²) e^(μx)</div></div>
+    <div class="hint">p und q einstellen, Anfangswerte verschieben.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  function dplot(v, A, f, color, w = 1.3, N = 300, a = A.x0, b = A.x1) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w, [5, 4]); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || !A.inY(y)) { fl(); continue; } seg.push(A.P(x, y)); } fl(); }
+  const inv = (A, p) => [A.x0 + (p[0] - A.ox) / A.W * (A.x1 - A.x0), A.y0 + (p[1] - A.oy) / A.H * (A.y1 - A.y0)];
+  const sci = x => !isFinite(x) ? '–' : (x !== 0 && (Math.abs(x) >= 1e6 || Math.abs(x) < 1e-4)) ? x.toExponential(3).replace('.', ',').replace(/e\+?(-?)(\d+)/, (m, s, d) => ' · 10^' + (s ? '−' : '') + d) : fmt(x, 5);
+
+  const cm = (p, q) => [p[0] * q[0] - p[1] * q[1], p[0] * q[1] + p[1] * q[0]];
+  const ab = p => Math.hypot(p[0], p[1]), arg = p => Math.atan2(p[1], p[0]);
+  const pol = (r, t) => [r * Math.cos(t), r * Math.sin(t)];
+  const cs = p => { const r = x => Math.round(x * 1000) / 1000; const a = r(p[0]), b = r(p[1]);
+    return (a === 0 && b !== 0 ? '' : fmt(a, 3)) + (b === 0 ? (a === 0 ? '0' : '') : (b < 0 ? (a === 0 ? '−' : ' − ') : (a === 0 ? '' : ' + ')) + (Math.abs(b) === 1 ? '' : fmt(Math.abs(b), 3)) + 'i'); };
+  // Winkel als Vielfaches von π, wenn möglich (Nenner bis 12)
+  const piF = x => { const q = x / Math.PI; for (let d = 1; d <= 12; d++) { const n = Math.round(q * d); if (Math.abs(q * d - n) < 1e-6) {
+      if (n === 0) return '0'; const a = Math.abs(n); return (n < 0 ? '−' : '') + (a === 1 ? '' : a) + 'π' + (d === 1 ? '' : '/' + d); } } return fmt(x, 4); };
+  const deg = x => fmt(x * 180 / Math.PI, 2) + '°';
+  // Betrag schön: √n, wenn r² fast ganzzahlig ist
+  const rF = r => { const s = r * r, n = Math.round(s); if (Math.abs(s - n) < 1e-6 && n > 0) { const k = Math.round(Math.sqrt(n)); return k * k === n ? String(k) : '√' + n + ' ≈ ' + fmt(r, 4); } return fmt(r, 4); };
+  const norm = t => { while (t <= -Math.PI + 1e-12) t += 2 * Math.PI; while (t > Math.PI + 1e-12) t -= 2 * Math.PI; return t; };
+  const snap = p => [Math.round(p[0] * 4) / 4, Math.round(p[1] * 4) / 4];
+
+  const L = mkAx(-3, 3, -3, 3, 2.1, 2.1, -0.65, 1.4), G = mkAx(-2, 6, -6, 6, 3.95, 3.6, 2.05, -0.3);
+  const EX = { lec: ['y″ − 2y′ + 2y = 0 (Vorlesung A S. 9–10)', -2, 2, 1, 0], harm: ['y″ + 4y = 0, ω = 2 (Skript Anhang S. 12)', 0, 4, 1, 0],
+    damp: ['y″ + 0.6y′ + 4y = 0, gedämpft (eigenes Beispiel)', 0.6, 4, 2, 0], real: ['y″ − y′ − 2y = 0, reelle α (eigenes Beispiel)', -1, -2, 1, 0] };
+  let p = -2, q = 2, y0 = 1, v0 = 0;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.55, ymax: 3.75 }, v => {
+    const C = v.C;
+    for (let k = -3; k <= 3; k++) { v.line(L.P(k, -3), L.P(k, 3), C.grid, 1); v.line(L.P(-3, k), L.P(3, k), C.grid, 1); }
+    v.line(L.P(-3, 0), L.P(3, 0), C.muted, 1.2); v.line(L.P(0, -3), L.P(0, 3), C.muted, 1.2);
+    v.text(L.P(3, 0), 'Re α', C.muted, -2, -6, 11, false, 'right'); v.text(L.P(0, 3), 'Im α', C.muted, 5, 12, 11, false);
+    v.text(L.P(-3, 3), 'α² + pα + q = 0', C.fg, 0, -10, 12);
+    axes(v, G, 'x', 'y', 1, 2);
+    const Dis = p * p - 4 * q; let y, al, gen, note, env = null;
+    if (Dis > 1e-9) { const a1 = (-p + Math.sqrt(Dis)) / 2, a2 = (-p - Math.sqrt(Dis)) / 2, A = (v0 - a2 * y0) / (a1 - a2), B = y0 - A;
+      y = x => A * Math.exp(a1 * x) + B * Math.exp(a2 * x); al = [[a1, 0], [a2, 0]];
+      gen = 'y = A e^(' + fmt(a1, 3) + 'x) + B e^(' + fmt(a2, 3) + 'x)'; note = 'Zwei reelle Nullstellen: Der gleiche Ansatz liefert direkt zwei reelle Lösungen (Skript Teil C, Kap. VII S. 83–84). In der Vorlesung kam nur der komplexe Fall vor.';
+      gen += ',  A = ' + fmt(A, 3) + ', B = ' + fmt(B, 3); }
+    else if (Dis >= -1e-9) { const a = -p / 2, A = y0, B = v0 - a * y0; y = x => (A + B * x) * Math.exp(a * x); al = [[a, 0], [a, 0]];
+      gen = 'y = (A + Bx) e^(' + fmt(a, 3) + 'x),  A = ' + fmt(A, 3) + ', B = ' + fmt(B, 3);
+      note = 'Doppelte Nullstelle: Die zweite Lösung ist x · eᵅˣ. Das ist ausserhalb der Vorlesungsnotizen; es steht im Skript Teil C, Kap. VII S. 84.'; }
+    else { const mu = -p / 2, om = Math.sqrt(-Dis) / 2, A = y0, B = (v0 - mu * y0) / om; y = x => Math.exp(mu * x) * (A * Math.cos(om * x) + B * Math.sin(om * x));
+      al = [[mu, om], [mu, -om]]; env = x => Math.hypot(A, B) * Math.exp(mu * x);
+      gen = 'y = e^(' + fmt(mu, 3) + 'x)(A cos ' + fmt(om, 3) + 'x + B sin ' + fmt(om, 3) + 'x),  A = ' + fmt(A, 3) + ', B = ' + fmt(B, 3);
+      note = 'Vorlesung A S. 9–10: e^((μ ± iω)x) = e^(μx)(cos ωx ± i sin ωx) löst die DGL komplex. Real- und Imaginärteil sind dann reelle Lösungen. Für y″ − 2y′ + 2y = 0 ist α = 1 ± i und y = A eˣ cos x + B eˣ sin x. '
+        + (mu > 1e-9 ? 'μ > 0: die Schwingung wächst.' : mu < -1e-9 ? 'μ < 0: die Schwingung klingt ab.' : 'μ = 0: reine Schwingung mit Kreisfrequenz ω.'); }
+    if (env) { dplot(v, G, env, C.muted); dplot(v, G, x => -env(x), C.muted); }
+    fplot(v, G, y, C.c2, 2.5, 900);
+    v.dot(G.P(0, y0), C.fg, 5.5); const h = 0.5; v.line(G.P(-h, y0 - v0 * h), G.P(h, y0 + v0 * h), C.c3, 2);
+    al.forEach((a, i) => { if (Math.abs(a[0]) <= 3 && Math.abs(a[1]) <= 3) { v.dot(L.P(a[0], a[1]), C.c1, 6, i === 1 && Dis < 0); } });
+    if (Dis < -1e-9) v.text(L.P(al[0][0], al[0][1]), 'μ + iω', C.c1, 8, -4, 11);
+    MW.info(infoEl, 'α² ' + (p < 0 ? '− ' : '+ ') + fmt(Math.abs(p), 2) + 'α ' + (q < 0 ? '− ' : '+ ') + fmt(Math.abs(q), 2) + ' = 0', [
+      ['Nullstellen α', Dis < -1e-9 ? cs(al[0]) + ',  ' + cs(al[1]) : al[0][0] === al[1][0] ? fmt(al[0][0], 4) + ' (doppelt)' : fmt(al[0][0], 4) + ',  ' + fmt(al[1][0], 4)],
+      ['Lösung', gen], ['Anfangswerte', 'y(0) = ' + fmt(y0, 2) + ',  y′(0) = ' + fmt(v0, 2)]], note);
+  });
+  const sp = MW.slider(ctl, { label: 'p', min: -4, max: 4, step: 0.1, value: p, onInput: u => { p = u; view.redraw(); } });
+  const sq = MW.slider(ctl, { label: 'q', min: -4, max: 6, step: 0.1, value: q, onInput: u => { q = u; view.redraw(); } });
+  const sy = MW.slider(ctl, { label: 'y(0)', min: -3, max: 3, step: 0.1, value: y0, onInput: u => { y0 = u; view.redraw(); } });
+  const sv = MW.slider(ctl, { label: 'y′(0)', min: -3, max: 3, step: 0.1, value: v0, onInput: u => { v0 = u; view.redraw(); } });
+  MW.select(ctl, 'Beispiel', Object.entries(EX).map(([k, e]) => [k, e[0]]), u => { const e = EX[u]; [p, q, y0, v0] = e.slice(1); sp.set(p); sq.set(q); sy.set(y0); sv.set(v0); view.redraw(); }).set('lec');
+
+})();
+</script>
+</body>
+</html>

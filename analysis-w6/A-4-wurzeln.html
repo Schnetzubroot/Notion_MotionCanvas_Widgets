@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>n-te Wurzeln: zⁿ = c hat n Lösungen auf einem regelmässigen n-Eck</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>n-te Wurzeln: zⁿ = c hat n Lösungen auf einem regelmässigen n-Eck</h1>
+  <p class="sub">Ansatz z = ρeⁱᵠ: aus ρⁿ eⁱⁿᵠ = |c| eⁱᵅ folgt ρ = ⁿ√|c| und nφ = α „modulo 2π“. Das gibt φₖ = (α + 2πk)/n für k = 0, …, n − 1. Die Lösungen sind die Ecken eines regelmässigen n-Ecks um 0.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>c</div><div><span class="sw" style="background:var(--c1)"></span>Lösungen zₖ</div><div><span class="sw" style="background:var(--c3)"></span>Kreis mit Radius ⁿ√|c|</div><div><span class="sw" style="background:var(--muted)"></span>Einheitskreis</div></div>
+    <div class="hint">c ziehen, n einstellen oder ein Beispiel wählen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const cm = (p, q) => [p[0] * q[0] - p[1] * q[1], p[0] * q[1] + p[1] * q[0]];
+  const ab = p => Math.hypot(p[0], p[1]), arg = p => Math.atan2(p[1], p[0]);
+  const pol = (r, t) => [r * Math.cos(t), r * Math.sin(t)];
+  const cs = p => { const r = x => Math.round(x * 1000) / 1000; const a = r(p[0]), b = r(p[1]);
+    return (a === 0 && b !== 0 ? '' : fmt(a, 3)) + (b === 0 ? (a === 0 ? '0' : '') : (b < 0 ? (a === 0 ? '−' : ' − ') : (a === 0 ? '' : ' + ')) + (Math.abs(b) === 1 ? '' : fmt(Math.abs(b), 3)) + 'i'); };
+  // Winkel als Vielfaches von π, wenn möglich (Nenner bis 12)
+  const piF = x => { const q = x / Math.PI; for (let d = 1; d <= 12; d++) { const n = Math.round(q * d); if (Math.abs(q * d - n) < 1e-6) {
+      if (n === 0) return '0'; const a = Math.abs(n); return (n < 0 ? '−' : '') + (a === 1 ? '' : a) + 'π' + (d === 1 ? '' : '/' + d); } } return fmt(x, 4); };
+  const deg = x => fmt(x * 180 / Math.PI, 2) + '°';
+  // Betrag schön: √n, wenn r² fast ganzzahlig ist
+  const rF = r => { const s = r * r, n = Math.round(s); if (Math.abs(s - n) < 1e-6 && n > 0) { const k = Math.round(Math.sqrt(n)); return k * k === n ? String(k) : '√' + n + ' ≈ ' + fmt(r, 4); } return fmt(r, 4); };
+  const norm = t => { while (t <= -Math.PI + 1e-12) t += 2 * Math.PI; while (t > Math.PI + 1e-12) t -= 2 * Math.PI; return t; };
+  const snap = p => [Math.round(p[0] * 4) / 4, Math.round(p[1] * 4) / 4];
+
+  const EX = { i2: ['z² = i (Vorlesung S. 6)', [0, 1], 2], c3: ['z³ = −3 + 3i (Vorlesung S. 6)', [-3, 3], 3], a5: ['z⁵ = ia mit a = 2 (Vorlesung S. 7)', [0, 2], 5],
+    e6: ['z⁶ = 1 (Skript S. 22–23)', [1, 0], 6], m2: ['z² = −1', [-1, 0], 2] };
+  let c = [0, 1], n = 2;
+  const view = MW.View2D(cv, { xmin: -4.6, xmax: 4.6, ymin: -3.3, ymax: 3.3, xlabel: 'Re', ylabel: 'Im' }, v => {
+    const C = v.C; v.grid(1); v.circle([0, 0], 1, C.muted, 1.3, [5, 4]);
+    const R = ab(c), a = arg(c);
+    v.arrow([0, 0], c, C.c2, 2.2, 9); v.dot(c, C.c2, 6); v.text(c, 'c', C.c2, 8, -6, 14);
+    if (R < 1e-9) { MW.info(infoEl, 'c = 0', [['Lösung', 'nur z = 0']], 'Für c = 0 gibt es nur die Lösung z = 0 (n-fach). Der Satz „genau n Lösungen“ gilt für c ≠ 0 (Vorlesung S. 6).', true); return; }
+    const rho = Math.pow(R, 1 / n), Z = [];
+    for (let k = 0; k < n; k++) Z.push(pol(rho, (a + 2 * Math.PI * k) / n));
+    v.circle([0, 0], rho, C.c3, 1.4, [3, 3]);
+    v.arc([0, 0], 0.5, 0, a, C.c2, 1.6); v.arc([0, 0], 0.8, 0, a / n, C.c1, 2);
+    if (n > 2) v.poly(Z, C.c1, 1.6, null, true, C.fill); else v.line(Z[0], Z[1], C.c1, 1.4, [4, 3]);
+    Z.forEach((p, k) => { v.line([0, 0], p, C.c1, 1, [2, 3]); v.dot(p, C.c1, 6); v.text(p, 'z' + '₁₂₃₄₅₆₇₈₉'[k], C.c1, 8, p[1] >= 0 ? -6 : 16, 13); });
+    const rows = [['c in Polarform', fmt(R, 3) + ' · e^(i · ' + piF(a) + ')'], ['ρ = ⁿ√|c|', rF(rho)],
+      ['Winkelabstand 2π/n', piF(2 * Math.PI / n) + ' = ' + deg(2 * Math.PI / n)]];
+    Z.forEach((p, k) => rows.push(['z' + '₁₂₃₄₅₆₇₈₉'[k] + ', φ = (' + piF(a) + ' + ' + (k ? (k === 1 ? '' : k) + '2π' : '0') + ')/' + n, cs(p) + ' = ' + fmt(rho, 3) + ' e^(i · ' + piF((a + 2 * Math.PI * k) / n) + ')']));
+    MW.info(infoEl, 'zⁿ = ' + cs(c) + ' mit n = ' + n + ': ' + n + ' Lösungen', rows,
+      'Skript S. 8–10: Ansatz z = ρeⁱᵠ, ρ = ⁿ√|c|, nφ = α modulo 2π. Vorlesung S. 6: z² = i = e^(iπ/2) = e^(i5π/2) gibt z₁ = e^(iπ/4) und z₂ = e^(i5π/4); der Repräsentant e^(i9π/2) gibt wieder z₁. Vorlesung S. 7: Drei Punkte sind nur dann die dritten Wurzeln einer Zahl, wenn sie ein gleichseitiges Dreieck um 0 bilden.');
+  });
+  view.handle(() => c, p => { c = snap(p); });
+  const sN = MW.slider(ctl, { label: 'n', min: 2, max: 9, step: 1, value: n, fmt: u => fmt(u, 0), onInput: u => { n = u; view.redraw(); } });
+  MW.select(ctl, 'Beispiel', Object.entries(EX).map(([k, e]) => [k, e[0]]), u => { const e = EX[u]; c = e[1].slice(); n = e[2]; sN.set(n); view.redraw(); }).set('i2');
+
+})();
+</script>
+</body>
+</html>

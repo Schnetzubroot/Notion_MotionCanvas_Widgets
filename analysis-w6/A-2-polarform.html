@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polarform z = r · eⁱᵠ und Euler-Formel</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Polarform z = r · eⁱᵠ und Euler-Formel</h1>
+  <p class="sub">Jede Zahl z ≠ 0 hat einen Betrag r = |z| und einen Winkel φ = arg z. Dann ist z = r(cos φ + i sin φ) = r · eⁱᵠ. Der Punkt eⁱᵠ liegt auf dem Einheitskreis. Achtung beim Winkel: arctan(b/a) allein trifft für a < 0 den falschen Quadranten.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>z</div><div><span class="sw" style="background:var(--c3)"></span>a = r cos φ, b = r sin φ</div><div><span class="sw" style="background:var(--c1)"></span>Winkel φ</div><div><span class="sw" style="background:var(--c5)"></span>eⁱᵠ</div><div><span class="sw" style="background:var(--c4)"></span>z̄</div></div>
+    <div class="hint">z ziehen oder ein Beispiel wählen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const cm = (p, q) => [p[0] * q[0] - p[1] * q[1], p[0] * q[1] + p[1] * q[0]];
+  const ab = p => Math.hypot(p[0], p[1]), arg = p => Math.atan2(p[1], p[0]);
+  const pol = (r, t) => [r * Math.cos(t), r * Math.sin(t)];
+  const cs = p => { const r = x => Math.round(x * 1000) / 1000; const a = r(p[0]), b = r(p[1]);
+    return (a === 0 && b !== 0 ? '' : fmt(a, 3)) + (b === 0 ? (a === 0 ? '0' : '') : (b < 0 ? (a === 0 ? '−' : ' − ') : (a === 0 ? '' : ' + ')) + (Math.abs(b) === 1 ? '' : fmt(Math.abs(b), 3)) + 'i'); };
+  // Winkel als Vielfaches von π, wenn möglich (Nenner bis 12)
+  const piF = x => { const q = x / Math.PI; for (let d = 1; d <= 12; d++) { const n = Math.round(q * d); if (Math.abs(q * d - n) < 1e-6) {
+      if (n === 0) return '0'; const a = Math.abs(n); return (n < 0 ? '−' : '') + (a === 1 ? '' : a) + 'π' + (d === 1 ? '' : '/' + d); } } return fmt(x, 4); };
+  const deg = x => fmt(x * 180 / Math.PI, 2) + '°';
+  // Betrag schön: √n, wenn r² fast ganzzahlig ist
+  const rF = r => { const s = r * r, n = Math.round(s); if (Math.abs(s - n) < 1e-6 && n > 0) { const k = Math.round(Math.sqrt(n)); return k * k === n ? String(k) : '√' + n + ' ≈ ' + fmt(r, 4); } return fmt(r, 4); };
+  const norm = t => { while (t <= -Math.PI + 1e-12) t += 2 * Math.PI; while (t > Math.PI + 1e-12) t -= 2 * Math.PI; return t; };
+  const snap = p => [Math.round(p[0] * 4) / 4, Math.round(p[1] * 4) / 4];
+
+  const S3 = Math.sqrt(3);
+  const EX = { a: ['1 + √3 i (Vorlesung S. 3)', [1, S3]], b: ['3 − √3 i (Vorlesung S. 3)', [3, -S3]], c: ['−√3 + √3 i (Skript S. 7)', [-S3, S3]],
+    d: ['−2 − i (eigenes Beispiel)', [-2, -1]], e: ['−1 (eigenes Beispiel)', [-1, 0]] };
+  let z = [1, S3], conj = false;
+  const view = MW.View2D(cv, { xmin: -3.6, xmax: 3.6, ymin: -2.3, ymax: 2.3, xlabel: 'Re', ylabel: 'Im' }, v => {
+    const C = v.C; v.grid(1); v.circle([0, 0], 1, C.muted, 1.4, [5, 4]);
+    const r = ab(z), ph = arg(z);
+    if (r < 1e-9) { v.dot([0, 0], C.c2, 6); MW.info(infoEl, 'z = 0', [['arg z', 'nicht definiert']], 'Für z = 0 gibt es keinen Winkel, die Polarform braucht z ≠ 0 (Skript S. 5).', true); return; }
+    v.line([z[0], 0], z, C.c3, 1.3, [4, 3]); v.line([0, z[1]], z, C.c3, 1.3, [4, 3]);
+    v.text([z[0], 0], 'a', C.c3, 0, z[1] >= 0 ? 16 : -8, 12, true, 'center'); v.text([0, z[1]], 'b', C.c3, z[0] >= 0 ? -12 : 6, 4, 12);
+    v.arc([0, 0], 0.42, 0, ph, C.c1, 2.2); v.text(pol(0.62, ph / 2), 'φ', C.c1, -4, 5, 13);
+    const u = pol(1, ph); v.line([0, 0], u, C.c5, 1.2); v.dot(u, C.c5, 5); v.text(u, 'eⁱᵠ', C.c5, 6, ph > 0 ? 16 : -8, 12);
+    if (conj) { const w = [z[0], -z[1]]; v.arc([0, 0], 0.7, 0, -ph, C.c4, 1.6, [4, 3]); v.arrow([0, 0], w, C.c4, 2, 9); v.dot(w, C.c4, 5); v.text(w, 'z̄ = r e⁻ⁱᵠ', C.c4, 8, 14, 12); }
+    v.arrow([0, 0], z, C.c2, 2.6, 10); v.dot(z, C.c2, 6); v.text(z, 'z', C.c2, 8, -8, 14);
+    v.text(pol(r / 2, ph), 'r', C.c2, 6, -6, 13);
+    const naive = Math.abs(z[0]) < 1e-12 ? null : Math.atan(z[1] / z[0]);
+    const rows = [['kartesisch z = a + ib', cs(z)], ['r = |z| = √(a² + b²)', rF(r)],
+      ['arctan(b/a)', naive === null ? 'nicht definiert (a = 0)' : piF(naive) + ' = ' + deg(naive)],
+      ['φ = arg z ∈ (−π, π]', piF(ph) + ' = ' + deg(ph)],
+      ['Polarform', fmt(r, 3) + ' · e^(i · ' + piF(ph) + ')'],
+      ['Euler: r(cos φ + i sin φ)', fmt(r, 3) + ' · (' + fmt(Math.cos(ph), 4) + ' + ' + fmt(Math.sin(ph), 4) + ' i)']];
+    if (conj) rows.push(['z̄ = r · e⁻ⁱᵠ', cs([z[0], -z[1]])]);
+    const bad = z[0] < 0;
+    MW.info(infoEl, 'z = ' + cs(z) + ' = ' + fmt(r, 3) + ' · e^(i · ' + piF(ph) + ')', rows,
+      bad ? 'Hier ist a < 0: arctan(b/a) liegt in (−π/2, π/2) und zeigt in den falschen Quadranten. Skript S. 4: φ = arctan(b/a) + π für a < 0 (danach, falls nötig, 2π abziehen, damit φ ∈ (−π, π]).'
+          : 'Skript S. 4–5: r = √(a² + b²), z = |z| · eⁱᵠ mit eⁱᵠ = cos φ + i sin φ (Formel (1.3)). Vorlesung S. 3: 1 + √3 i hat r = 2 und φ = arctan √3 = π/3, weil z im 1. Quadranten liegt.', bad);
+  });
+  view.handle(() => z, p => { z = snap(p); });
+  MW.select(ctl, 'Beispiel', Object.entries(EX).map(([k, e]) => [k, e[0]]), u => { z = EX[u][1].slice(); view.redraw(); }).set('a');
+  MW.check(ctl, 'Konjugierte z̄', conj, t => { conj = t; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>
