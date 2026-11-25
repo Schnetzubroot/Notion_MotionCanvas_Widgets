@@ -1,0 +1,11 @@
+titel "Übungsheft Abb. 4.7 – Freischneiden und Einführen der Lagerkräfte"
+3d achsen (0.9,-0.28) (0.62,0.42) (0,1)
+param L=1
+punkte A(0,0,0)  B(2L,0,0)  C(2L,L,0)  D(0,0,L)  E(2L,L/2,0)  _E2(0,L,0)
+balken A B ; balken B C
+linie D B dünn ; linie D C dünn ; linie A D gestrichelt ; linie A _E2 gestrichelt ; linie _E2 C gestrichelt
+kraft S_1 bei B richtung B->D länge 0.45L ; kraft S_2 bei C richtung C->D länge 0.45L
+kraft P bei E richtung -z zu länge 0.5L
+kraft A_x bei A richtung +x länge 0.4L ; kraft A_y bei A richtung +y länge 0.4L ; kraft A_z bei A richtung +z länge 0.4L
+vektor ~e_x bei B richtung +x länge 0.35L ; vektor ~e_y bei (0,1.3L,0) richtung +y länge 0.3L ; vektor ~e_z bei D richtung +z länge 0.3L
+kante A-B "2L" unten  B-E "L/2" unten  E-C "L/2" unten

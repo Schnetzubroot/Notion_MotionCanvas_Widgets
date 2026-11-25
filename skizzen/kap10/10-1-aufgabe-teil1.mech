@@ -1,0 +1,8 @@
+titel "Übungsheft Abb. 5.7 (links) – Teilsystem I (Stab AC)"
+param a=1
+punkte _A(0,0)  _C(1.1a,1.45a)
+stab _A-_C ; schiebehülse _C richtung 0°
+moment M bei (0.6a,0.8a) ; moment M_C bei _C uhrzeiger
+kraft C_y bei _C+(0,0.1a) richtung +y länge 0.5a
+kraft A_x bei _A richtung +x länge 0.45a ; kraft A_y bei _A richtung +y zu länge 0.45a
+text (0.1a,1.2a) "I" normal

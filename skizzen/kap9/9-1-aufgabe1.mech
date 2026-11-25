@@ -1,0 +1,12 @@
+titel "Übungsheft Abb. 4.4 – Kubischer Klotz auf reibungsfreier Ebene (Aufgabe 1)"
+param a=1
+punkte _A(0,0) _B(a,0) _C(a,a) _D(0,a)
+boden (-0.45a,0) (1.4a,0) schraffur unten
+körper Klotz = polygon _A _B _C _D "Würfel, Gewicht G"
+schwerpunkt mitte(Klotz) ; kraft G bei mitte(Klotz) richtung -y länge 0.45a
+kraft F bei mitte(_D,_C) richtung +y länge 0.45a
+kraft "2F" bei _C richtung 180° zu länge 0.85a
+kraft "2F" bei (0,0.5a) richtung 0° zu länge 0.85a
+kante _D-_C "a" innen  _B-_C "a" rechts
+text (0,0.75a) "a/2" lage r ; text (0,0.25a) "a/2" lage r
+ohne namen

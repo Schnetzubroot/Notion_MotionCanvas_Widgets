@@ -1,0 +1,8 @@
+titel "Übungsheft Abb. 4.2 – Musterbeispiel: Balken mit Kräften F_x, F_y"
+param L=3  x1=1.6
+punkte A(0,0)  B(L,0)  _F(x1,0)
+stab A-B ; festlager A ; loslager B ; marke A B
+kraft F_y bei _F richtung -y zu länge 0.75
+kraft F_x bei _F+(0,0.08) richtung 180° zu länge 0.7
+mass A-_F "x_1" versatz 0.3 seite oben
+text (1.6,0) "L" lage u

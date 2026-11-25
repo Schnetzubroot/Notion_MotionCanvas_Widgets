@@ -1,0 +1,19 @@
+titel "Übungsheft S. 54 – Statische Bestimmtheit: Balken mit verschiedenen Lagerungen"
+param L=2
+untereinander
+teilbild "unbestimmt (2+2)"
+punkte _A(0,0) _B(L,0)
+stab _A-_B knoten ; festlager _A ; festlager _B
+kraft F bei (0.95,0) richtung -y zu länge 0.75 ; kraft F bei (1.0,0.08) richtung +x länge 0.75
+text _A "(2)" lage u ; text _B "(2)" lage u
+teilbild "bestimmt (2+1)"
+punkte _A(0,0) _B(L,0)
+stab _A-_B knoten ; festlager _A ; loslager _B
+kraft F bei (0.95,0) richtung -y zu länge 0.75 ; kraft F bei (1.0,0.08) richtung +x länge 0.75
+text _A "(2)" lage u ; text _B "(1)" lage u
+teilbild "Mechanismus (1+1)"
+punkte _A(0,0) _B(L,0)
+stab _A-_B knoten ; loslager _A ; loslager _B
+kraft F bei (0.95,0) richtung -y zu länge 0.75 ; kraft F bei (1.0,0.08) richtung +x länge 0.75
+text _A "(1)" lage u ; text _B "(1)" lage u
+ohne namen

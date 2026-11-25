@@ -1,0 +1,13 @@
+titel "Übungsheft S. 53 – Längslager: Symbol (einseitig und zweiseitig)"
+massstab 0.45
+teilbild "einseitig"
+punkte _A(0,0)
+fläche (0,-0.15) (0.9,-0.15) (0.9,0.15) (0,0.15)
+bruch (0.9,0) richtung 0°
+loslager _A richtung 0°
+teilbild "beidseitig"
+punkte _A(0,0)
+fläche (0,-0.15) (0.9,-0.15) (0.9,0.15) (0,0.15)
+bruch (0.9,0) richtung 0°
+loslager _A richtung 0° ; loslager _A+(0,0.32) richtung 180° ; loslager _A+(0,-0.32) richtung 180°
+ohne namen

@@ -1,0 +1,11 @@
+titel "Übungsheft Abb. 5.5 – Zwei Stäbe AC und BD mit Linienlast, Kraft P und Moment M (Aufgabe)"
+param a=1
+punkte A(0,0)  B(3a,0)  D(0,1.45a)  C(1.1a,1.45a)  _K(2a,1.45a)
+stab A-C ; stab D-_K ; stab _K-B
+schiebehülse C richtung 0°
+festlager A ; festlager B ; marke A B D
+last von D nach C q (1,0) seite oben höhe 0.6a "q_0"
+kraft P bei D richtung -y länge 0.55a
+moment M bei (0.75a,0.75a)
+punkte _m0(0,-0.3a) _m1(a,-0.3a) _m2(2a,-0.3a) _m3(3a,-0.3a)
+mass _m0-_m1 "a" strich versatz 0 ; mass _m1-_m2 "a" strich versatz 0 ; mass _m2-_m3 "a" strich versatz 0

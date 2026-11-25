@@ -1,0 +1,13 @@
+titel "Übungsheft S. 51 – Standfestigkeit: freigeschnitten"
+param a=1  e=0.33
+punkte _A(0,0) _B(a,0) _C(a,a) _D(0,a)
+körper Klotz = polygon _A _B _C _D
+kraft G bei mitte(Klotz) richtung -y länge 0.35a
+schwerpunkt mitte(Klotz)
+kraft F bei mitte(_D,_C) richtung -y zu länge 0.3a
+kraft "2F" bei _C richtung 180° zu länge 0.6a
+kraft "2F" bei (0,0.5a) richtung 0° zu länge 0.6a
+kraft N bei (e,0) richtung +y zu länge 0.35a
+mass _A-(e,0) "e" versatz 0.15 seite unten
+kante _B-_C "a" rechts ; text (0.7a,0) "a" lage u
+ohne namen

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abzählen reicht nicht: L-förmiger Träger mit drei Auflagern (Buch Fig. 10.8)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Abzählen reicht nicht: L-förmiger Träger mit drei Auflagern (Buch Fig. 10.8)</h1>
+  <p class="sub">Drei Auflagerkräfte, drei Gleichgewichtsbedingungen: das Abzählen gibt u = n − m = 0. Die Lösung (Buch S. 155) A = P sin α / (2(cos α − sin α)), B = P (cos α − 2 sin α) / (2(cos α − sin α)), C = P / (2(cos α − sin α)) hat aber den Nenner cos α − sin α. Für α = π/4 gibt es keine Lösung: der Träger kann momentan um A rotieren, er ist ein Mechanismus.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>A / P</div><div><span class="sw" style="background:var(--c3)"></span>B / P</div><div><span class="sw" style="background:var(--c4)"></span>C / P</div></div>
+    <div class="hint">α gegen 45° schieben.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let al = 20;
+  const f = t => { const c = Math.cos(t), s = Math.sin(t), d = 2 * (c - s); return [s / d, (c - 2 * s) / d, 1 / d]; };
+  const view = MW.View2D(cv, { xmin: -6, xmax: 50, ymin: -4.5, ymax: 6.5 }, v => {
+    const C = v.C, col = [C.c1, C.c3, C.c4], nm = ['A', 'B', 'C'];
+    for (let y = -4; y <= 6; y += 2) { v.line([0, y], [47, y], C.grid, 1); v.text([0, y], String(y), C.muted, -8, 4, 11, false, 'right'); }
+    for (let x = 0; x <= 45; x += 15) { v.line([x, -4.2], [x, 6.2], C.grid, 1); v.text([x, -4.2], x + '°', C.muted, 0, 16, 11, false, 'center'); }
+    v.line([0, 0], [47, 0], C.muted, 1.4); v.line([45, -4.4], [45, 6.4], C.warn, 1.4, [5, 4]); v.text([45, 6.2], 'α = π/4', C.warn, -4, 4, 12, true, 'right');
+    for (let j = 0; j < 3; j++) { const pts = []; for (let i = 0; i <= 440; i++) { const a = i / 10; const y = f(a * MW.deg)[j]; if (y > 6.4 || y < -4.4) break; pts.push([a, y]); } v.poly(pts, col[j], 2.4);
+      if (al < 45) { const y = f(al * MW.deg)[j]; if (y <= 6.4 && y >= -4.4) { v.dot([al, y], col[j], 5); v.text([al, y], nm[j], col[j], 8, -4, 13); } } }
+    v.line([al, -4.4], [al, 6.4], C.fg, 1, [2, 3]);
+    const sing = Math.abs(al - 45) < 0.05, [A, B, Cc] = f(al * MW.deg);
+    MW.info(infoEl, sing ? 'α = π/4: keine Lösung, das System ist ein Mechanismus' : 'u = 0, und hier tatsächlich statisch bestimmt',
+      sing ? [['cos α − sin α', '0']] : [['A / P', fmt(A, 3)], ['B / P', fmt(B, 3)], ['C / P', fmt(Cc, 3)], ['cos α − sin α', fmt(Math.cos(al * MW.deg) - Math.sin(al * MW.deg), 4)]],
+      'Je näher α an π/4, desto grösser werden die Lagerkräfte. Statische Bestimmtheit heisst: eindeutige Lagerkräfte für beliebige Lasten. Prüfen Sie deshalb immer auch kinematisch, ob ein zulässiger Bewegungszustand existiert (Buch 10.3).', sing);
+  });
+  MW.slider(ctl, { label: 'α', min: 0, max: 45, step: 0.5, value: al, unit: '°', onInput: x => { al = x; view.redraw(); } });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mechanismus mit Feder: Hauptsatz am zerlegten System oder PdvL am Ganzen</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Mechanismus mit Feder: Hauptsatz am zerlegten System oder PdvL am Ganzen</h1>
+  <p class="sub">Buch Fig. 10.1: Stab AD (Länge 2L, Gewicht 2G) in A gelenkig, in seiner Mitte B gelenkig mit Stab BC (Länge L, Gewicht G) verbunden. Der Kolben C gleitet reibungsfrei und drückt auf eine Feder (k), die um Δx = 2L sin φ verkürzt ist. Gesucht ist die Last P in D für die Ruhelage φ. Ergebnis (Buch Gl. 10.4): P = (2kL sin φ − 7G/4) cos φ.</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>Lasten (2G, G, P)</div><div><span class="sw" style="background:var(--c4)"></span>Federkraft F</div><div><span class="sw" style="background:var(--c3)"></span>virtuelle Geschwindigkeiten</div><div><span class="sw" style="background:var(--c5)"></span>Momentanzentrum Z_BC ≡ D</div></div>
+    <div class="hint">Winkel φ und Federsteifigkeit k einstellen. Die Lage der Teile ist aus den Gleichungen des Buches nachgebildet.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let ph = 35, kk = 2.5, showV = true;
+  const L = 1, G = 1;
+  const view = MW.View2D(cv, { xmin: -1.3, xmax: 5.2, ymin: -3.0, ymax: 1.2 }, v => {
+    const C = v.C, r = ph * MW.deg, c = Math.cos(r), s = Math.sin(r);
+    const A = [0, 0], D = [2 * L * c, -2 * L * s], B = [L * c, -L * s], Cp = [0, -2 * L * s], S2 = V.mul(V.add(B, Cp), 0.5);
+    const F = kk * 2 * L * s, P = (F - 7 * G / 4) * c;
+    // Wand, Führung, Feder
+    v.line([-0.12, 0.9], [-0.12, -2.8], C.fg, 2); for (let i = 0; i < 14; i++) v.line([-0.12, 0.85 - i * 0.26], [-0.3, 0.7 - i * 0.26], C.muted, 1);
+    v.line([0.12, -0.2], [0.12, -2.8], C.muted, 1.2);
+    const yb = -2.75, n = 10, pts = [[0, Cp[1] - 0.08]];
+    for (let i = 1; i < n; i++) pts.push([(i % 2 ? 0.08 : -0.08), Cp[1] - 0.08 + (yb - Cp[1] + 0.08) * i / n]); pts.push([0, yb]);
+    v.poly(pts, C.c4, 1.6); v.line([-0.12, yb], [0.12, yb], C.fg, 3);
+    v.poly([V.add(Cp, [-0.09, 0.06]), V.add(Cp, [0.09, 0.06]), V.add(Cp, [0.09, -0.08]), V.add(Cp, [-0.09, -0.08])], C.fg, 2, null, true, 'rgba(120,120,120,0.25)');
+    // Stäbe
+    v.line(A, D, C.fg, 5); v.line(B, Cp, C.fg, 4);
+    [A, B, Cp].forEach(p => { v.dot(p, C.bg, 5); v.dot(p, C.fg, 5, true); });
+    [['A', A, -18, -8], ['B', B, 6, -10], ['C', Cp, 14, 4], ['D', D, 8, -8]].forEach(([t, p, dx, dy]) => v.text(p, t, C.fg, dx, dy, 14));
+    // Lasten
+    const k = 0.45;
+    v.arrow(B, [0, -2 * G * k], C.c1, 2.8, 9); v.text(V.add(B, [0, -2 * G * k]), '2G', C.c1, 6, 8, 13);
+    v.arrow(S2, [0, -G * k], C.c1, 2.8, 9); v.text(V.add(S2, [0, -G * k]), 'G', C.c1, 6, 8, 13);
+    const ep = [-s, -c];
+    if (Math.abs(P) > 0.01) { v.arrow(V.sub(D, V.mul(ep, P * k)), V.mul(ep, P * k), C.c1, 3.2, 10); v.text(V.sub(D, V.mul(ep, P * k)), 'P', C.c1, 8, 0, 14); }
+    v.arrow(V.add(Cp, [0.25, -F * k * 0.5]), [0, F * k * 0.5], C.c4, 2.6, 9); v.text(V.add(Cp, [0.25, -F * k * 0.5]), 'F = kΔx', C.c4, 6, 10, 13);
+    v.line([-0.55, 0], [-0.55, Cp[1]], C.muted, 1); v.line([-0.62, 0], [-0.1, 0], C.muted, 0.8, [2, 3]); v.line([-0.62, Cp[1]], [-0.1, Cp[1]], C.muted, 0.8, [2, 3]); v.text([-0.55, Cp[1] / 2], 'Δx', C.muted, -6, 4, 12, true, 'right');
+    // virtuelle Bewegung: ω̃ von AD (φ wächst), Z_BC = D
+    if (showV) { const w = 0.45, vB = V.mul(ep, L * w), vD = V.mul(ep, 2 * L * w), vC = [0, -2 * L * c * w], vS = V.mul(V.add(vB, vC), 0.5);
+      [[B, vB], [D, vD], [Cp, vC], [S2, vS]].forEach(([p, q]) => v.arrow(p, q, C.c3, 2.2, 8));
+      v.dot(D, C.c5, 7, true); v.text(D, 'Z_BC', C.c5, 10, 14, 13);
+      v.line(D, [D[0], -2.8], C.c5, 1, [3, 3]); }
+    // Diagramm P(φ)
+    const gx = 2.7, gy = -2.7, gw = 2.3, gh = 1.6, Pmax = Math.max(2, kk * 2 * L + 0.2);
+    v.line([gx, gy], [gx + gw, gy], C.muted, 1.2); v.line([gx, gy - 0.05], [gx, gy + gh], C.muted, 1.2);
+    const y0 = gy + gh * (7 / 4) / (Pmax + 7 / 4); v.line([gx, y0], [gx + gw, y0], C.grid, 1);
+    const curve = []; for (let i = 0; i <= 90; i++) { const t = i * MW.deg, Pi = (kk * 2 * L * Math.sin(t) - 7 * G / 4) * Math.cos(t); curve.push([gx + gw * i / 90, y0 + (gh - (y0 - gy)) * Pi / Pmax]); }
+    v.poly(curve, C.c1, 2); v.dot([gx + gw * ph / 90, y0 + (gh - (y0 - gy)) * P / Pmax], C.c1, 5);
+    v.text([gx + gw, gy], 'φ', C.muted, 4, 4, 12, false); v.text([gx, gy + gh], 'P / G', C.muted, 4, 0, 12, false); v.text([gx, y0], '0', C.muted, -10, 4, 11, false);
+    const ok = P > 0, soft = 2 * kk * L < 7 * G / 4;
+    MW.info(infoEl, soft ? 'Feder zu weich (2kL < 7G/4): P > 0 ist in keiner Lage möglich' : ok ? 'Ruhelage mit P = ' + fmt(P, 3) + ' G' : 'P < 0: die Last müsste umgekehrt wirken',
+      [['Federkraft F = k · 2L sin φ', fmt(F, 3) + ' G'], ['PdvL: Ł = 2G·Lω̃ cos φ + G·(3/2)Lω̃ cos φ + P·2Lω̃ − F·2Lω̃ cos φ', '= 0'], ['P = (F − 7G/4) cos φ', fmt(P, 3) + ' G'], ['Bedingung P > 0', '2kL sin φ > 7G/4']],
+      'Mit dem PdvL braucht man keine Zerlegung: der zulässige Bewegungszustand (ω̃ von AD um A, BC um Z_BC ≡ D) lässt alle reibungsfreien Bindungskräfte (A, B, N in C) ohne Leistung. Über den Hauptsatz braucht es 6 Gleichungen an den zwei Teilen (Buch Gl. 10.2), oder geschickt ΣM_A am Ganzen und ΣM_B an BC.', soft || !ok);
+  });
+  MW.slider(ctl, { label: 'φ', min: 2, max: 85, step: 1, value: ph, unit: '°', onInput: x => { ph = x; view.redraw(); } });
+  MW.slider(ctl, { label: 'k L / G', min: 0.2, max: 4, step: 0.05, value: kk, onInput: x => { kk = x; view.redraw(); } });
+  MW.check(ctl, 'virtuelle Geschwindigkeiten', true, x => { showV = x; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

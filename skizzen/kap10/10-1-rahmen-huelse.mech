@@ -1,0 +1,7 @@
+titel "Übungsheft S. 63 – Rahmen mit Hülse: ungetrenntes System"
+punkte _A(0,0) _B(1.0,0) _P(1.0,-0.95)
+stab _A-_B ; stab _B+(0,0.3)-_P
+schiebehülse _B richtung 0°
+festlager _A richtung 0° ; festlager _P
+moment M_0 bei (0.5,0)
+ohne namen

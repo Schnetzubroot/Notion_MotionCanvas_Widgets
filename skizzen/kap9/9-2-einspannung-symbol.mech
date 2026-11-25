@@ -1,0 +1,6 @@
+titel "Übungsheft S. 53 – Einspannung: Symbol 2D"
+massstab 0.45
+punkte _A(0,0)
+linie _A (1.2,0) dick ; bruch (1.2,0) richtung 0°
+einspannung _A richtung 0°
+ohne namen

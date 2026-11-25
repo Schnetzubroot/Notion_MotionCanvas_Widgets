@@ -1,0 +1,12 @@
+titel "Übungsheft Abb. 4.5 – Freigeschnittener Klotz mit Lagerkraft N"
+param a=1  e=0.3
+punkte A(0,0) B(a,0) C(a,a) D(0,a) O(0.5a,0.5a)
+körper Klotz = polygon A B C D
+marke O ; kraft G bei O richtung -y länge 0.42a
+kraft F bei mitte(D,C) richtung +y länge 0.4a
+kraft "2F" bei C richtung 180° zu länge 0.8a
+kraft "2F" bei (0,0.5a) richtung 0° zu länge 0.8a
+kraft N bei (e,0) richtung +y zu länge 0.35a
+mass A-(e,0) "e" versatz 0.12 seite unten
+kante D-C "a" innen  B-C "a" rechts
+text (0,0.75a) "a/2" lage r ; text (0,0.25a) "a/2" lage r

@@ -1,5 +1,33 @@
 [
  {
+  "s": "kap10/10-1-aufgabe-lager",
+  "titel": "Übungsheft Abb. 5.6 – Gesamtsystem mit Lagerreaktionen"
+ },
+ {
+  "s": "kap10/10-1-aufgabe-teil1",
+  "titel": "Übungsheft Abb. 5.7 (links) – Teilsystem I (Stab AC)"
+ },
+ {
+  "s": "kap10/10-1-aufgabe-teil2",
+  "titel": "Übungsheft Abb. 5.7 (rechts) – Teilsystem II (Stab DB)"
+ },
+ {
+  "s": "kap10/10-1-aufgabe",
+  "titel": "Übungsheft Abb. 5.5 – Zwei Stäbe AC und BD mit Linienlast, Kraft P und Moment M (Aufgabe)"
+ },
+ {
+  "s": "kap10/10-1-rahmen-huelse-getrennt",
+  "titel": "Übungsheft Abb. 5.4 – Systemtrennung mit sichtbar gemachten Verbindungsreaktionen"
+ },
+ {
+  "s": "kap10/10-1-rahmen-huelse",
+  "titel": "Übungsheft S. 63 – Rahmen mit Hülse: ungetrenntes System"
+ },
+ {
+  "s": "kap10/10-1-verbindungselemente",
+  "titel": "Übungsheft S. 61 – Verbindungselemente: Gelenk und Pendelstab"
+ },
+ {
   "s": "kap11/11-1-ideales-fachwerk",
   "titel": "Übungsheft Abb. 6.1 – Ideales ebenes Fachwerk"
  },
@@ -262,5 +290,105 @@
  {
   "s": "kap6/6-3-kraeftepaar",
   "titel": "Übungsheft Abb. 3.5 – Kräftepaar"
+ },
+ {
+  "s": "kap9/9-1-aufgabe1-frei",
+  "titel": "Übungsheft Abb. 4.5 – Freigeschnittener Klotz mit Lagerkraft N"
+ },
+ {
+  "s": "kap9/9-1-aufgabe1",
+  "titel": "Übungsheft Abb. 4.4 – Kubischer Klotz auf reibungsfreier Ebene (Aufgabe 1)"
+ },
+ {
+  "s": "kap9/9-1-klotz-ueb-frei",
+  "titel": "Übungsheft S. 51 – Standfestigkeit: freigeschnitten"
+ },
+ {
+  "s": "kap9/9-1-klotz-ueb",
+  "titel": "Übungsheft S. 51 – Standfestigkeit: Klotz mit Kräften"
+ },
+ {
+  "s": "kap9/9-2-auflager",
+  "titel": "Übungsheft S. 52 – Einseitiges Auflager: Lagerreaktion (2D)"
+ },
+ {
+  "s": "kap9/9-2-buch-fig-9-4-frei",
+  "titel": "Buch Fig. 9.4 – Freigeschnitten: Auflagerkräfte A_y ≥ 0, B_y ≥ 0"
+ },
+ {
+  "s": "kap9/9-2-buch-fig-9-4",
+  "titel": "Buch Fig. 9.4 – Balken auf zwei Auflagern mit Kragarm: Lasten F_1 bei L/2, F_2 bei 3L/2"
+ },
+ {
+  "s": "kap9/9-2-einspannung-symbol",
+  "titel": "Übungsheft S. 53 – Einspannung: Symbol 2D"
+ },
+ {
+  "s": "kap9/9-2-einspannung",
+  "titel": "Übungsheft S. 53 – Einspannung: Lagerreaktionen 2D (A_x, A_y, M_Az) und 3D (A_x, A_y, A_z, M_x, M_y, M_z)"
+ },
+ {
+  "s": "kap9/9-2-festlager-reaktionen",
+  "titel": "Übungsheft S. 52 – Lagerreaktionen des festen Gelenklagers (2D: A_x, A_y; 3D: A_x, A_y, A_z)"
+ },
+ {
+  "s": "kap9/9-2-festlager-symbol",
+  "titel": "Übungsheft S. 52 – Festes Gelenklager: Symbol 2D und 3D (Kugelgelenk)"
+ },
+ {
+  "s": "kap9/9-2-kurzes-querlager",
+  "titel": "Übungsheft S. 52 – Kurzes Querlager: Lagerreaktionen (3D: A_y, A_z)"
+ },
+ {
+  "s": "kap9/9-2-laengslager",
+  "titel": "Übungsheft S. 53 – Längslager: Symbol (einseitig und zweiseitig)"
+ },
+ {
+  "s": "kap9/9-2-langes-querlager",
+  "titel": "Übungsheft S. 53 – Langes Querlager: Lagerreaktionen 3D (A_y, A_z, M_y, M_z)"
+ },
+ {
+  "s": "kap9/9-2-loslager-symbol",
+  "titel": "Übungsheft S. 52 – Loslager (2D) und Rollenlager auf Ebene (3D)"
+ },
+ {
+  "s": "kap9/9-3-aufgabe2-frei",
+  "titel": "Übungsheft Abb. 4.7 – Freischneiden und Einführen der Lagerkräfte"
+ },
+ {
+  "s": "kap9/9-3-aufgabe2",
+  "titel": "Übungsheft Abb. 4.6 – L-förmiger Träger mit zwei Seilen und Linienlast (Aufgabe 2)"
+ },
+ {
+  "s": "kap9/9-3-bestimmtheit-balken",
+  "titel": "Übungsheft S. 54 – Statische Bestimmtheit: Balken mit verschiedenen Lagerungen"
+ },
+ {
+  "s": "kap9/9-3-musterbeispiel-lager",
+  "titel": "Übungsheft Abb. 4.3 – Trennung und Einführung der Lagerkräfte"
+ },
+ {
+  "s": "kap9/9-3-musterbeispiel",
+  "titel": "Übungsheft Abb. 4.2 – Musterbeispiel: Balken mit Kräften F_x, F_y"
+ },
+ {
+  "s": "kap9/9-4-buch-schiefer-balken",
+  "titel": "Buch Fig. 9.15 – Schiefer Balken: Gelenk A, Auflager B normal zum Balken, Gewicht G im Schwerpunkt S"
+ },
+ {
+  "s": "kap9/9-4-dreigelenkbogen-lager",
+  "titel": "Übungsheft Abb. 5.2 (rechts) – Dreigelenkbogen mit Lagerreaktionen"
+ },
+ {
+  "s": "kap9/9-4-dreigelenkbogen-trennung",
+  "titel": "Übungsheft Abb. 5.3 – Systemtrennung und Einführung der Schnittkräfte"
+ },
+ {
+  "s": "kap9/9-4-dreigelenkbogen",
+  "titel": "Übungsheft Abb. 5.2 (links) – Dreigelenkbogen"
+ },
+ {
+  "s": "kap9/9-4-zweigelenkbogen",
+  "titel": "Übungsheft Abb. 5.1 – Zweigelenkbogen (statisch unbestimmt: Verformung grau)"
  }
 ]

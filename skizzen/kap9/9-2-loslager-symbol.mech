@@ -1,0 +1,13 @@
+titel "Übungsheft S. 52 – Loslager (2D) und Rollenlager auf Ebene (3D)"
+massstab 0.45
+teilbild "2D" 2d
+punkte _A(0,0) _B(1.2,0.45)
+linie _A _B dick ; marke _B ; linie _B _B+(0.2,-0.17) dick ; bruch _B+(0.2,-0.17) richtung -40°
+loslager _A
+teilbild "3D"
+3d
+punkte _P(0,0,0) _Q(0.2,1.0,0.5)
+fläche (-0.6,-0.6,-0.3) (0.6,-0.6,-0.3) (0.6,0.8,-0.3) (-0.6,0.8,-0.3)
+linie _P _Q dick ; bruch _Q richtung (0,1,0.5)
+loslager _P
+ohne namen

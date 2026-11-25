@@ -14,6 +14,9 @@ SECTIONS = {
     '4-1': '4.1 Zum Kraftbegriff', '4-3': '4.3 Reaktionsprinzip und Freischneiden', '4-4': '4.4 Kraftdichten',
     '5-1': '5.1 Leistung einer Einzelkraft und eines Moments', '5-2': '5.2 Gesamtleistung am starren Körper',
     '6-1': '6.1 Statische Äquivalenz', '6-2': '6.2 Moment bezüglich Punkt und Achse', '6-3': '6.3 Kräftepaar, parallele Kräfte', '6-4': '6.4 Gleichgewicht',
+    '6-5': '6.5 Reduktion einer Kräftegruppe', '7-2': '7.1–7.2 Kräftemittelpunkt, verteilte Kräfte', '7-3': '7.3 Schwerpunkt',
+    '8-2': '8.2–8.4 Prinzip der virtuellen Leistungen, Hauptsatz der Statik', '9-1': '9.1 Standfestigkeit', '9-4': '9.3–9.4 Lagerkräfte, Dreigelenkbogen',
+    '10-1': '10.1–10.2 Statik der Systeme', '10-3': '10.3 Statisch unbestimmte Systeme',
     '11-1': '11.1 Ideale Fachwerke, Pendelstützen', '11-2': '11.2 Knotengleichgewicht, statische Bestimmtheit', '11-3': '11.3 Dreikräfteschnitt',
     '11-4': '11.4 Prinzip der virtuellen Leistungen am Fachwerk', '11-5': '11.5 Räumliche Fachwerke',
 }

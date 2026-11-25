@@ -1,0 +1,9 @@
+titel "Übungsheft Abb. 5.3 – Systemtrennung und Einführung der Schnittkräfte"
+param R=1.5
+punkte _A(0,0)  _C1(R,R)  _C2(R+0.6,R)  _B(2R+0.6,0)
+bogen (R,0) radius R von 90 bis 180 dick ; bogen (R+0.6,0) radius R von 0 bis 90 dick
+kraft A_x bei _A richtung +x länge 0.5 ; kraft A_y bei _A richtung +y zu länge 0.5
+kraft B_x bei _B richtung +x länge 0.5 ; kraft B_y bei _B richtung +y zu länge 0.5
+kraft C_y bei _C1 richtung -y zu länge 0.55 ; kraft C_x bei _C1 richtung +x länge 0.5
+kraft C_x bei _C2 richtung 180° länge 0.5 ; kraft C_y bei _C2 richtung +y länge 0.55
+text (-0.1,1.0R) "I" normal ; text (2R+0.7,1.0R) "II" normal

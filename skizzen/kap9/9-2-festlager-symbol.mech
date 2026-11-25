@@ -1,0 +1,11 @@
+titel "Übungsheft S. 52 – Festes Gelenklager: Symbol 2D und 3D (Kugelgelenk)"
+massstab 0.45
+teilbild "2D" 2d
+punkte _A(0,0) _B(1.3,0.5)
+stab _A-_B ; bruch _B richtung 20° ; festlager _A
+teilbild "3D"
+3d
+punkte _P(0,0,0) _Q(0.1,1.3,0.5)
+fläche (-0.7,-0.7,-0.3) (0.7,-0.7,-0.3) (0.7,0.9,-0.3) (-0.7,0.9,-0.3)
+stab _P-_Q ; bruch _Q richtung (0,1,0.4) ; kugelgelenk _P
+ohne namen

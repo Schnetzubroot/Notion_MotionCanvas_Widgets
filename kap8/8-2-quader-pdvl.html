@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quader auf schiefer Ebene: drei virtuelle Bewegungen, drei Gleichungen</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Quader auf schiefer Ebene: drei virtuelle Bewegungen, drei Gleichungen</h1>
+  <p class="sub">Buch Fig. 8.7: Quader (Breite a, Höhe 2a, Gewicht G) auf reibungsfreier Ebene mit Neigung α, gehalten durch eine horizontale Kraft F in der oberen Ecke A. Unbekannt sind F, N und die Lage x der Normalkraft. Jede virtuelle Starrkörperbewegung liefert mit Ł = 0 eine Gleichung (Buch Gl. 8.2–8.7): F = G tan α, N = G / cos α, x = a sin α (cos α − ½ sin α).</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c1)"></span>G und F</div><div><span class="sw" style="background:var(--c4)"></span>Normalkraft N</div><div><span class="sw" style="background:var(--c3)"></span>virtuelle Geschwindigkeiten</div></div>
+    <div class="hint">Neigung α einstellen und eine virtuelle Bewegung wählen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  let al = 25, mode = 'par';
+  const a = 1, G = 1;
+  const view = MW.View2D(cv, { xmin: -2.6, xmax: 2.6, ymin: -1.9, ymax: 2.9 }, v => {
+    const C = v.C, r = al * MW.deg, d = [Math.cos(r), -Math.sin(r)], n = [Math.sin(r), Math.cos(r)];
+    const P = (u, w) => V.add(V.mul(d, u), V.mul(n, w));      // Koordinaten längs/normal zur Ebene, Ursprung unter S
+    v.line(P(-3, 0), P(3, 0), C.fg, 2.4);
+    for (let i = -12; i <= 12; i++) { const q = P(i * 0.25, 0); v.line(q, V.add(q, V.add(V.mul(n, -0.14), V.mul(d, -0.1))), C.muted, 1); }
+    v.poly([P(-a / 2, 0), P(a / 2, 0), P(a / 2, 2 * a), P(-a / 2, 2 * a)], C.fg, 2, null, true, 'rgba(120,120,120,0.10)');
+    const S = P(0, a), A = P(a / 2, 2 * a);
+    const F = G * Math.tan(r), N = G / Math.cos(r), x = a * Math.sin(r) * (Math.cos(r) - 0.5 * Math.sin(r));
+    const Np = P(-x, 0), k = 0.7;
+    v.dot(S, C.fg, 4); v.text(S, 'S', C.fg, 8, -6, 14);
+    v.arrow(S, [0, -G * k], C.c1, 3, 10); v.text(V.add(S, [0, -G * k]), 'G', C.c1, 6, 4, 14);
+    v.arrow(V.add(A, [F * k, 0]), [-F * k, 0], C.c1, 3, 10); v.text(V.add(A, [F * k, 0]), 'F', C.c1, 4, -6, 14); v.dot(A, C.fg, 3); v.text(A, 'A', C.fg, -6, -8, 13, true, 'right');
+    v.arrow(V.sub(Np, V.mul(n, N * k * 0.6)), V.mul(n, N * k * 0.6), C.c4, 3, 10); v.text(Np, 'N', C.c4, -16, 20, 14);
+    v.line(Np, P(-x, a), C.c4, 1, [3, 3]); v.line(P(0, 0), P(0, a), C.muted, 1, [3, 3]);
+    v.text(P(-x / 2, 0.15), 'x', C.c4, 0, 0, 13, true, 'center');
+    // virtuelle Bewegung
+    const s = 0.45, w = 0.5;
+    let pts = [], rows, eq;
+    if (mode === 'par') { const t = V.mul(d, -s); pts = [S, A, Np].map(p => [p, t]);
+      rows = [['Ł(G) = G·ṽ', fmt(G * Math.sin(r) * -1, 3) + ' ṽ'], ['Ł(F) = F·ṽ', fmt(F * Math.cos(r), 3) + ' ṽ'], ['Ł(N)', '0 (N ⊥ ṽ)']];
+      eq = 'Translation parallel zur Ebene (zulässig): ṽ G sin α − ṽ F cos α = 0 ⇒ F = G tan α = ' + fmt(F, 3) + ' G'; }
+    else if (mode === 'nor') { const t = V.mul(n, s); pts = [S, A, Np].map(p => [p, t]);
+      rows = [['Ł(G)', fmt(-G * Math.cos(r), 3) + ' ṽ′'], ['Ł(F)', fmt(-F * Math.sin(r), 3) + ' ṽ′'], ['Ł(N)', fmt(N, 3) + ' ṽ′']];
+      eq = 'Translation normal zur Ebene (unzulässig, aber erlaubt): ṽ′ G cos α + ṽ′ F sin α − ṽ′ N = 0 ⇒ N = G / cos α = ' + fmt(N, 3) + ' G'; }
+    else { pts = [A, Np, P(a / 2, 0), P(-a / 2, 2 * a)].map(p => { const q = V.sub(p, S); return [p, V.mul([-q[1], q[0]], w)]; });
+      v.arc(S, 0.35, 0.3, 4.6, C.c3, 2); v.text(S, 'ω̃', C.c3, 14, 22, 14);
+      const MF = (-a / 2 * Math.sin(r) + a * Math.cos(r)) * F;
+      rows = [['Ł(G)', '0 (Wirkungslinie durch S)'], ['Ł(F) = (−a/2 sin α + a cos α) F ω̃', fmt(MF, 3) + ' ω̃'], ['Ł(N) = −x N ω̃', fmt(-x * N, 3) + ' ω̃']];
+      eq = 'Rotation um S (unzulässig, aber erlaubt): ⇒ x = a sin α (cos α − ½ sin α) = ' + fmt(x, 3) + ' a'; }
+    pts.forEach(([p, t]) => v.arrow(p, t, C.c3, 2.2, 8));
+    const ok = Math.abs(x) <= a / 2 + 1e-9;
+    rows.push(['F', fmt(F, 3) + ' G'], ['N', fmt(N, 3) + ' G'], ['x', fmt(x, 3) + ' a  (Standfläche: |x| ≤ a/2)']);
+    MW.info(infoEl, ok ? eq : 'x > a/2: die Normalkraft läge ausserhalb der Standfläche, der Quader kippt', rows,
+      'Der Hauptsatz (ΣF = 0, ΣM = 0) liefert dieselben drei Gleichungen: Jede virtuelle Starrkörperbewegung „pickt“ eine Komponente von R oder M heraus (Buch 8.4). Kippgrenze siehe 9.1.', !ok);
+  });
+  MW.slider(ctl, { label: 'α', min: 0, max: 60, step: 1, value: al, unit: '°', onInput: x => { al = x; view.redraw(); } });
+  MW.select(ctl, 'virtuelle Bewegung', [['par', 'Translation ∥ Ebene'], ['nor', 'Translation ⊥ Ebene'], ['rot', 'Rotation um S']], x => { mode = x; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

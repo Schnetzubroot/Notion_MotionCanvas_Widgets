@@ -1,0 +1,7 @@
+titel "Buch Fig. 9.4 – Balken auf zwei Auflagern mit Kragarm: Lasten F_1 bei L/2, F_2 bei 3L/2"
+param L=2
+punkte A(0,0)  B(L,0)  _E(1.5L,0)  _F1(0.5L,0)
+balken A _E ; loslager A ; loslager B ; marke A B
+kraft F_1 bei _F1 richtung -y zu länge 0.6
+kraft F_2 bei _E richtung -y zu länge 0.6
+mass A-_F1 "L/2" versatz 0.45 seite unten ; mass _F1-B "L/2" versatz 0.45 seite unten ; mass B-_E "L/2" versatz 0.45 seite unten

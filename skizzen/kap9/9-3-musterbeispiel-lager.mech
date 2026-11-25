@@ -1,0 +1,14 @@
+titel "Übungsheft Abb. 4.3 – Trennung und Einführung der Lagerkräfte"
+param L=3  x1=1.6
+untereinander
+teilbild "Balken"
+punkte _A(0,0)  _B(L,0)  _F(x1,0)
+stab _A-_B
+kraft F_y bei _F richtung -y zu länge 0.75 ; kraft F_x bei _F+(0,0.08) richtung 180° zu länge 0.7
+kraft A_x bei _A richtung +x zu länge 0.55 ; kraft A_y bei _A richtung +y zu länge 0.6 ; kraft B_y bei _B richtung +y zu länge 0.6
+mass _A-_F "x_1" versatz 0.3 seite oben ; text (1.4,0) "L" lage u
+teilbild "Lager"
+punkte _A(0,0)  _B(L,0)
+festlager _A ; loslager _B
+kraft A_y bei _A richtung -y zu länge 0.6 ; kraft A_x bei _A richtung 180° zu länge 0.55 ; kraft B_y bei _B richtung -y zu länge 0.6
+ohne namen

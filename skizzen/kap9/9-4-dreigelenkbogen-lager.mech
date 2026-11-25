@@ -1,0 +1,7 @@
+titel "Übungsheft Abb. 5.2 (rechts) – Dreigelenkbogen mit Lagerreaktionen"
+param R=1.5
+punkte _A(0,0)  _B(2R,0)  C(R,R)
+bogen (R,0) radius R von 0 bis 180 dick ; marke C
+kraft A_x bei _A richtung +x länge 0.55 ; kraft A_y bei _A richtung +y zu länge 0.55
+kraft B_x bei _B richtung +x zu länge 0.55 ; kraft B_y bei _B richtung +y zu länge 0.55
+text (-0.1,1.1R) "I" normal ; text (2.1R,1.1R) "II" normal

@@ -1,0 +1,7 @@
+titel "Übungsheft S. 52 – Einseitiges Auflager: Lagerreaktion (2D)"
+massstab 0.45
+punkte _A(0,0) _B(1.2,0.45)
+stab _A-_B ; marke _B ; linie _B _B+(0.2,-0.17) dick ; bruch _B+(0.2,-0.17) richtung -40°
+kraft A bei _A richtung +y länge 0.45
+text (0.6,-0.2) "A > 0" kasten
+ohne namen
