@@ -31,6 +31,13 @@ canvas.tall { height: 400px; }
 .hint { position: absolute; left: 10px; bottom: 7px; font-size: 12px; color: var(--muted); pointer-events: none; }
 .legend { position: absolute; right: 8px; top: 7px; font-size: 12px; background: var(--bg); opacity: 0.92;
   border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; pointer-events: none; }
+/* Legende verschiebbar (lib/core.js, MW.legends): ziehen, rastet an Ecken und Kantenmitten ein */
+.legend.movable { pointer-events: auto; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  transition: left 0.18s ease, top 0.18s ease, opacity 0.15s; }
+.legend.movable:hover { opacity: 1; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18); }
+.legend.movable.dragging { transition: none; cursor: grabbing; opacity: 1; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
+.legend-spot { position: absolute; border: 1.5px dashed var(--muted); border-radius: 8px; opacity: 0; pointer-events: none; transition: opacity 0.12s; }
+.legend-spot.show { opacity: 0.35; } .legend-spot.near { opacity: 0.9; border-color: var(--c2); }
 .legend div { display: flex; align-items: center; gap: 6px; }
 .sw { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
 .ctl { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 8px 0; align-items: center; }
