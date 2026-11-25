@@ -1,0 +1,7 @@
+titel "Buch Fig. 11.7a – Knotengleichgewicht in A: Stabkräfte als Zugkräfte eingeführt"
+punkte _A(0,0)
+marke _A
+beschrifte _A "A" lage ul
+kraft A_x bei _A richtung +x zu länge 0.6 ; kraft A_y bei _A richtung +y zu länge 0.6
+kraft S_1 bei _A richtung 0° länge 0.7 ; kraft S_2 bei _A richtung 60° länge 0.7
+winkel _A zwischen 0° und 60° "60°" radius 30

@@ -1,0 +1,5 @@
+titel "Übungsheft Abb. 6.4 – Knotengleichgewicht im Punkt A"
+punkte _A(0,0)
+marke _A
+kraft A_x bei _A richtung +x zu länge 0.6 ; kraft A_y bei _A richtung +y zu länge 0.6
+kraft S_1 bei _A richtung 45° länge 0.75 ; kraft S_2 bei _A richtung 0° länge 0.6

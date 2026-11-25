@@ -1,5 +1,101 @@
 [
  {
+  "s": "kap11/11-1-ideales-fachwerk",
+  "titel": "Übungsheft Abb. 6.1 – Ideales ebenes Fachwerk"
+ },
+ {
+  "s": "kap11/11-1-nicht-ideal",
+  "titel": "Übungsheft Abb. 6.3 – Stab mit Kraft in der Mitte (kein ideales Fachwerk)"
+ },
+ {
+  "s": "kap11/11-1-pendelstuetze",
+  "titel": "Übungsheft Abb. 6.2 – Pendelstütze (freigeschnittener Stab)"
+ },
+ {
+  "s": "kap11/11-2-buch-fig-11-6",
+  "titel": "Buch Fig. 11.6 – Ideales ebenes Fachwerk aus 10 Stäben der Länge L (Dreigelenkbogen, Gelenk C)"
+ },
+ {
+  "s": "kap11/11-2-buch-knoten-a",
+  "titel": "Buch Fig. 11.7a – Knotengleichgewicht in A: Stabkräfte als Zugkräfte eingeführt"
+ },
+ {
+  "s": "kap11/11-2-buch-lagerkraefte",
+  "titel": "Buch Fig. 11.6 – Freigeschnitten: Lagerkräfte A_x, A_y, B_x, B_y"
+ },
+ {
+  "s": "kap11/11-2-knoten-a-ueb",
+  "titel": "Übungsheft Abb. 6.4 – Knotengleichgewicht im Punkt A"
+ },
+ {
+  "s": "kap11/11-2-ueb-aufgabe1-knoten-l",
+  "titel": "Übungsheft Abb. 6.11 – Knotengleichgewicht im Punkt L"
+ },
+ {
+  "s": "kap11/11-2-ueb-aufgabe1",
+  "titel": "Übungsheft Abb. 6.7 – Ideales ebenes Fachwerk (Aufgabe 1)"
+ },
+ {
+  "s": "kap11/11-3-buch-schnitt-7-8-10",
+  "titel": "Buch Fig. 11.11 – Dreikräfteschnitt durch die Stäbe 7, 8, 10 am Fachwerk von Fig. 11.6 (rechter Teil)"
+ },
+ {
+  "s": "kap11/11-3-dreikraefteschnitt-ueb",
+  "titel": "Übungsheft Abb. 6.5 – Dreikräfteschnitt (Ritterschnitt) am Fachwerk von Abb. 6.1"
+ },
+ {
+  "s": "kap11/11-3-ueb-aufgabe1-lager",
+  "titel": "Übungsheft Abb. 6.8 – Freischneiden und Einführen der Lagerkräfte"
+ },
+ {
+  "s": "kap11/11-3-ueb-aufgabe1-schnitt",
+  "titel": "Übungsheft Abb. 6.9 – Dreikräfteschnitt (rechter Teil)"
+ },
+ {
+  "s": "kap11/11-3-ueb-aufgabe2-reduktion",
+  "titel": "Übungsheft Abb. 6.15 – Reduktion der Einzelkraft F auf die Knoten G und E (statisch äquivalent)"
+ },
+ {
+  "s": "kap11/11-3-ueb-aufgabe2-schnitt",
+  "titel": "Übungsheft Abb. 6.16 – Dreikräfteschnitt: rechter Teil des Fachwerks"
+ },
+ {
+  "s": "kap11/11-3-ueb-aufgabe2",
+  "titel": "Übungsheft Abb. 6.13 – Ebenes Fachwerk (Aufgabe 2)"
+ },
+ {
+  "s": "kap11/11-4-pdvl-ueb",
+  "titel": "Übungsheft Abb. 6.6 – PdvL am Fachwerk von Abb. 6.1 (Stab 5 entfernt)"
+ },
+ {
+  "s": "kap11/11-4-ueb-aufgabe1-pdvl-fl",
+  "titel": "Übungsheft Abb. 6.12 – Virtueller Bewegungszustand nach Entfernung des Stabes FL"
+ },
+ {
+  "s": "kap11/11-4-ueb-aufgabe1-pdvl",
+  "titel": "Übungsheft Abb. 6.10 – Virtueller Bewegungszustand nach Entfernung des Stabes DK"
+ },
+ {
+  "s": "kap11/11-4-ueb-aufgabe2-stab1",
+  "titel": "Übungsheft Abb. 6.17 – PdvL: Stab 1 entfernt, virtueller Bewegungszustand"
+ },
+ {
+  "s": "kap11/11-4-ueb-aufgabe2-stab2",
+  "titel": "Übungsheft Abb. 6.18 – PdvL: Stab 2 entfernt, virtueller Bewegungszustand"
+ },
+ {
+  "s": "kap11/11-4-ueb-knoten-b",
+  "titel": "Übungsheft Abb. 6.19 (richtig) – Knotengleichgewicht im Punkt B mit Querkraft 3F"
+ },
+ {
+  "s": "kap11/11-4-ueb-stab-bc",
+  "titel": "Übungsheft S. 79 – Stab BC ist keine Pendelstütze: Schnittkräfte inkl. Querkraft 3F und Moment 3Fa"
+ },
+ {
+  "s": "kap11/11-5-tetraeder",
+  "titel": "Mitschrift S. 81 – Räumliches Fachwerk: regelmässiges Tetraeder mit Last F in der Spitze D"
+ },
+ {
   "s": "kap3/3-1-leiter",
   "titel": "Stab AB zwischen zwei Führungen (Buch Fig. 3.3): Lösungsskizze mit dem SPG"
  },

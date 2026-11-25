@@ -1,0 +1,13 @@
+titel "Übungsheft Abb. 6.17 – PdvL: Stab 1 entfernt, virtueller Bewegungszustand"
+param a=1  h=0.866
+knoten A(0,0) I(-a/2,h) J(a/2,h) H(0,2h) F(a,2h) G(a/2,3h) E(1.5a,3h) C(2.5a,3h) D(2a,2h) B(3a,2h)  Z_2(0,4h)
+fläche A I H G E F J schraffiert ; fläche E C B D schraffiert
+fachwerk A-I A-J I-J I-H H-J J-F H-F H-G G-F G-E E-F E-D E-C C-D D-B C-B
+loslager A ; festlager B
+linie Z_2 A dünn ; linie Z_2 E dünn ; linie Z_2 G dünn ; linie E B dünn
+kraft F/2 bei G richtung -y zu länge 0.4a ; kraft F/2 bei E richtung -y zu länge 0.4a ; kraft F bei H richtung +x zu länge 0.45a ; moment M bei C
+kraft S_1 bei F richtung 0° länge 0.4a ; kraft S_1 bei D richtung 180° länge 0.4a
+vektor v_A bei A richtung 180° länge 0.8a ; vektor v_H bei H richtung 180° länge 0.45a ; vektor v_G bei G richtung 210° länge 0.35a
+vektor v_E bei E richtung -120° länge 0.6a ; vektor v_F bei F richtung 210° länge 0.5a ; vektor v_D bei D richtung -90° länge 0.4a
+drehpfeil Z_2 achse +z "ω_2" lage r ; moment ω bei B
+kante A-I "a" innen  A-J "a" innen

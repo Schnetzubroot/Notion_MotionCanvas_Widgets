@@ -1,0 +1,11 @@
+titel "Übungsheft Abb. 6.10 – Virtueller Bewegungszustand nach Entfernung des Stabes DK"
+param a=1
+knoten A(0,0) B(a/2,0) C(a,0) D(3a/2,0) E(2a,0) F(5a/2,0) G(0,a) H(a/2,a) I(a,a) J(3a/2,a) K(2a,a) L(5a/2,a)
+fläche A G J D schraffiert ; fläche E K L F schraffiert
+fachwerk G-H H-I I-J J-K K-L A-B B-C C-D D-E E-F G-A G-B H-B B-I I-C I-D J-D K-E K-F L-F
+festlager A ; loslager E
+kraft F bei G richtung +x zu ; kraft F bei L richtung +x ; kraft F bei C richtung -y
+vektor v_G bei G richtung +x länge 0.35a ; vektor v_K bei K richtung +x länge 0.35a ; vektor v_L bei L richtung -27° länge 0.4a
+vektor v_C bei C+(0.04,0) richtung -y länge 0.35a ; vektor v_D bei D richtung -y länge 0.5a
+kraft S_{DK} bei K richtung (-0.447,-0.894) länge 0.4a ; kraft S_{DK} bei D richtung (0.447,0.894) länge 0.4a
+moment ω bei A uhrzeiger ; moment ω_2 bei E uhrzeiger

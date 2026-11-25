@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Statische Bestimmtheit: u = s + r − 2k</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Statische Bestimmtheit: u = s + r − 2k</h1>
+  <p class="sub">Ein ebenes ideales Fachwerk mit s Stäben, k Knoten und r Lagerkomponenten hat s + r Unbekannte und 2k Knotengleichungen. Der Grad der statischen Unbestimmtheit ist u = s + r − 2k (Buch Gl. 11.2). u = 0 ist notwendig, aber nicht hinreichend: Stäbe am falschen Ort machen das Fachwerk beweglich.</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--fg)"></span>vorhandener Stab</div><div><span class="sw" style="background:var(--grid)"></span>möglicher Stab (aus)</div><div><span class="sw" style="background:var(--c1)"></span>Mechanismus: Knotengeschwindigkeiten</div></div>
+    <div class="hint">Stäbe anklicken (ein/aus), Lager wählen oder ein Beispiel laden.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const h3 = Math.sqrt(3) / 2;
+  const MODELS = {
+    buch: { name: 'Buch Fig. 11.6', N: { A: [0, 0], E: [1, 0], D: [0.5, h3], C: [1.5, h3], H: [2, 0], G: [2.5, h3], B: [3, 0] },
+      bars: [['A', 'E'], ['A', 'D'], ['D', 'E'], ['D', 'C'], ['E', 'C'], ['C', 'H'], ['C', 'G'], ['G', 'H'], ['G', 'B'], ['H', 'B']], num: true,
+      sup: { A: 'xy', B: 'xy' }, loads: { D: [0, -1], G: [-Math.sqrt(3), 0] }, lbl: { D: 'F', G: 'F√3' },
+      order: ['A', 'D', 'E', 'C', 'H', 'G', 'B'], box: { xmin: -0.6, xmax: 3.6, ymin: -0.55, ymax: 1.75 } },
+    ueb1: { name: 'Übungsheft Abb. 6.7 (Aufgabe 1)', N: { A: [0, 0], B: [0.5, 0], C: [1, 0], D: [1.5, 0], E: [2, 0], F: [2.5, 0], G: [0, 1], H: [0.5, 1], I: [1, 1], J: [1.5, 1], K: [2, 1], L: [2.5, 1] },
+      bars: 'G-H H-I I-J J-K K-L A-B B-C C-D D-E E-F G-A G-B H-B B-I I-C I-D J-D D-K K-E K-F L-F'.split(' ').map(s => s.split('-')), num: false,
+      sup: { A: 'xy', E: 'y' }, loads: { G: [1, 0], L: [1, 0], C: [0, -1] }, lbl: { G: 'F', L: 'F', C: 'F' },
+      box: { xmin: -0.6, xmax: 3.4, ymin: -0.6, ymax: 1.9 } },
+  };
+  const barName = (m, i) => m.num ? String(i + 1) : m.bars[i][0] + m.bars[i][1];
+  const sName = (m, i) => 'S' + (m.num ? sub(i + 1) : '_' + m.bars[i][0] + m.bars[i][1]);
+  const sub = n => String(n).split('').map(c => '₀₁₂₃₄₅₆₇₈₉'[+c]).join('');
+  const unit = (m, i, from) => { const [a, b] = m.bars[i]; const p = from === a ? m.N[a] : m.N[b], q = from === a ? m.N[b] : m.N[a]; return V.unit(V.sub(q, p)); };
+  // Gauss mit Spaltenpivot; liefert x oder null (singulär)
+  const gauss = (A, b) => { const n = A.length, M = A.map((r, i) => [...r, b[i]]);
+    for (let c = 0; c < n; c++) { let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-10) return null; [M[c], M[p]] = [M[p], M[c]];
+      for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; } }
+    return M.map((r, i) => r[n] / r[i]); };
+  // reduzierte Zeilenstufenform: Rang und Basis des Nullraums
+  const rref = A => { const M = A.map(r => [...r]), m = M.length, n = m ? M[0].length : 0, piv = []; let row = 0;
+    for (let c = 0; c < n && row < m; c++) { let p = row; for (let r = row + 1; r < m; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-9) continue; [M[row], M[p]] = [M[p], M[row]]; const d = M[row][c]; for (let k = 0; k < n; k++) M[row][k] /= d;
+      for (let r = 0; r < m; r++) if (r !== row) { const f = M[r][c]; if (f) for (let k = 0; k < n; k++) M[r][k] -= f * M[row][k]; }
+      piv.push(c); row++; }
+    const free = []; for (let c = 0; c < n; c++) if (!piv.includes(c)) free.push(c);
+    const null_ = free.map(f => { const x = new Array(n).fill(0); x[f] = 1; piv.forEach((c, r) => { x[c] = -M[r][f]; }); return x; });
+    return { rank: piv.length, null: null_ }; };
+  // Gleichgewichtsmatrix: Unbekannte = Stabkräfte (Zug positiv) + Lagerkomponenten
+  const eqSystem = m => { const keys = Object.keys(m.N), cols = m.bars.map((_, i) => ({ t: 'S', i }));
+    keys.forEach(k => { const s = m.sup[k] || ''; if (s.includes('x')) cols.push({ t: 'R', k, d: 0 }); if (s.includes('y')) cols.push({ t: 'R', k, d: 1 }); });
+    const A = [], b = [];
+    keys.forEach(k => [0, 1].forEach(d => { const row = cols.map(c => c.t === 'S' ? (m.bars[c.i].includes(k) ? unit(m, c.i, k)[d] : 0) : (c.k === k && c.d === d ? 1 : 0));
+      A.push(row); b.push(-((m.loads[k] || [0, 0])[d])); }));
+    return { keys, cols, A, b }; };
+  const solveTruss = m => { const sys = eqSystem(m); if (sys.A.length !== sys.cols.length) return null; const x = gauss(sys.A, sys.b); if (!x) return null;
+    const S = m.bars.map((_, i) => x[i]), R = {}; sys.cols.forEach((c, j) => { if (c.t === 'R') { R[c.k] = R[c.k] || [0, 0]; R[c.k][c.d] = x[j]; } }); return { S, R }; };
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  // Zahl als p/q·√r erkennen (Buchform), sonst Dezimalzahl
+  const nice = (x, d = 3) => { if (Math.abs(x) < 1e-9) return '0';
+    for (const r of [1, 3, 2, 5, 6, 15]) for (let q = 1; q <= 36; q++) { const p = x * q / Math.sqrt(r), pr = Math.round(p);
+      if (pr !== 0 && Math.abs(p - pr) < 1e-7 && Math.abs(pr) <= 300) { const g = gcd(Math.abs(pr), q), P = Math.abs(pr) / g, Q = q / g;
+        return (x < 0 ? '−' : '') + (r > 1 ? (P === 1 ? '' : P) + '√' + r : P) + (Q > 1 ? '/' + Q : ''); } }
+    return fmt(x, d); };
+  const niceF = x => { const s = nice(x); return s === '0' ? '0' : s === '1' ? 'F' : s === '−1' ? '−F' : s + '·F'; };
+  // Zeichnen: Stäbe, Knoten, Lager, Lasten
+  const drawSup = (v, p, type, C) => { const s = 0.13; v.poly([p, [p[0] - s, p[1] - 1.5 * s], [p[0] + s, p[1] - 1.5 * s]], C.fg, 1.6, null, true);
+    const y0 = p[1] - 1.5 * s - (type === 'y' ? 0.07 : 0); if (type === 'y') { v.line([p[0] - 1.4 * s, y0], [p[0] + 1.4 * s, y0], C.fg, 1.6); }
+    for (let i = -1; i <= 1; i += 0.5) v.line([p[0] + i * s * 1.2, y0], [p[0] + i * s * 1.2 - 0.06, y0 - 0.07], C.muted, 1); };
+  const drawLoads = (v, m, C, k = 0.42) => Object.entries(m.loads).forEach(([n, f]) => { const d = V.mul(f, k), p = m.N[n];
+    v.arrow(V.sub(p, d), d, C.c4, 3, 11); v.text(V.sub(p, d), m.lbl[n], C.c4, 4, -6, 13); });
+  const labelAt = (v, m, i, txt, col, bold) => { const [a, b] = m.bars[i], p = m.N[a], q = m.N[b], d = V.sub(q, p);
+    if (Math.abs(d[0]) < 1e-6) v.text(V.add(p, V.mul(d, 0.3)), txt, col, 5, 0, 10.5, bold);
+    else if (Math.abs(d[1]) < 1e-6) v.text(V.add(p, V.mul(d, 0.5)), txt, col, 0, -6, 10.5, bold, 'center');
+    else v.text(V.add(p, V.mul(d, 0.64)), txt, col, 0, 4, 10.5, bold, 'center'); };
+  const cx = (x, u) => { const c = nice(x); return c === '0' ? '0' : c === '1' ? u : c === '−1' ? '−' + u : c + '·' + u; };
+  const barCol = (C, s) => Math.abs(s) < 1e-7 ? C.muted : s > 0 ? C.c2 : C.c1;
+
+  const N = {}, cand = []; for (let i = 0; i < 4; i++) { N['u' + i] = [i, 0]; N['o' + i] = [i, 1]; }
+  for (let i = 0; i < 3; i++) cand.push(['u' + i, 'u' + (i + 1)], ['o' + i, 'o' + (i + 1)], ['u' + i, 'o' + (i + 1)], ['o' + i, 'u' + (i + 1)]);
+  for (let i = 0; i < 4; i++) cand.push(['u' + i, 'o' + i]);
+  const key = b => b.join('-');
+  const PRE = {
+    n: { t: 'N-Träger (statisch bestimmt)', b: ['u0-u1', 'u1-u2', 'u2-u3', 'o0-o1', 'o1-o2', 'o2-o3', 'u0-o0', 'u1-o1', 'u2-o2', 'u3-o3', 'u0-o1', 'u1-o2', 'u2-o3'], l: 'fl' },
+    plus: { t: 'Eine Diagonale zu viel (u = 1)', b: ['u0-u1', 'u1-u2', 'u2-u3', 'o0-o1', 'o1-o2', 'o2-o3', 'u0-o0', 'u1-o1', 'u2-o2', 'u3-o3', 'u0-o1', 'o0-u1', 'u1-o2', 'u2-o3'], l: 'fl' },
+    falsch: { t: 'u = 0, aber beweglich', b: ['u0-u1', 'u1-u2', 'u2-u3', 'o0-o1', 'o1-o2', 'o2-o3', 'u0-o0', 'u1-o1', 'u2-o2', 'u3-o3', 'u0-o1', 'o0-u1', 'u2-o3'], l: 'fl' },
+    lager: { t: 'Zwei Loslager (r = 2)', b: ['u0-u1', 'u1-u2', 'u2-u3', 'o0-o1', 'o1-o2', 'o2-o3', 'u0-o0', 'u1-o1', 'u2-o2', 'u3-o3', 'u0-o1', 'u1-o2', 'u2-o3'], l: 'll' },
+    zwei: { t: 'Zwei Festlager (u = 1, äusserlich unbestimmt)', b: ['u0-u1', 'u1-u2', 'u2-u3', 'o0-o1', 'o1-o2', 'o2-o3', 'u0-o0', 'u1-o1', 'u2-o2', 'u3-o3', 'u0-o1', 'u1-o2', 'u2-o3'], l: 'ff' },
+  };
+  let on = new Set(PRE.n.b), lag = 'fl';
+  const supOf = l => ({ fl: { u0: 'xy', u3: 'y' }, ll: { u0: 'y', u3: 'y' }, ff: { u0: 'xy', u3: 'xy' } }[l]);
+  const view = MW.View2D(cv, { xmin: -0.6, xmax: 3.6, ymin: -0.55, ymax: 1.45 }, v => {
+    const C = v.C, bars = cand.filter(b => on.has(key(b))), m = { N, bars, sup: supOf(lag), loads: {} };
+    const sys = eqSystem(m), s = bars.length, k = Object.keys(N).length, r = sys.cols.length - s, u = s + r - 2 * k;
+    const At = sys.A[0].map((_, j) => sys.A.map(row => row[j]));               // Kompatibilität: Transponierte
+    const kin = rref(At), eq = rref(sys.A), rank = eq.rank, dof = 2 * k - rank, red = s + r - rank;
+    cand.forEach(b => { if (!on.has(key(b))) v.line(N[b[0]], N[b[1]], C.grid, 2, [5, 4]); });
+    bars.forEach(b => v.line(N[b[0]], N[b[1]], C.fg, 3.4));
+    Object.entries(m.sup).forEach(([n, t]) => drawSup(v, N[n], t, C));
+    Object.keys(N).forEach(n => v.dot(N[n], C.fg, 5));
+    if (dof > 0 && kin.null.length) { const x = kin.null[0], sc = 0.35 / Math.max(...x.map(Math.abs));
+      Object.keys(N).forEach((n, i) => { const vel = [x[2 * i] * sc, x[2 * i + 1] * sc]; if (V.norm(vel) > 1e-6) v.arrow(N[n], vel, C.c1, 2.4, 9); }); }
+    let head, warn = false;
+    if (dof > 0) { head = (u >= 0 ? 'Beweglich (Mechanismus), obwohl u = ' + u : 'Beweglich: zu wenig Stäbe oder Lager') ; warn = true; }
+    else if (red > 0) head = 'Statisch unbestimmt vom Grad ' + red;
+    else head = 'Statisch bestimmt';
+    MW.info(infoEl, head, [['Stäbe s', s], ['Lagerkomponenten r', r], ['Knoten k', k], ['u = s + r − 2k', u], ['Rang der Gleichgewichtsmatrix', rank + ' von 2k = ' + 2 * k], ['Freiheitsgrade des Mechanismus', dof]],
+      dof > 0 ? 'Die roten Pfeile zeigen einen zulässigen Bewegungszustand: kein Stab ändert seine Länge (Satz der projizierten Geschwindigkeiten). Ein solches Fachwerk kann allgemeine Lasten nicht tragen.'
+        : red > 0 ? 'Mehr Unbekannte als unabhängige Gleichungen. Die Stabkräfte hängen von den Verformungen ab (Festigkeitslehre, Band 2).' : 'Jede Stabkraft und jede Lagerkraft folgt eindeutig aus den 2k Knotengleichungen.', warn);
+  });
+  cv.addEventListener('click', e => { const r = cv.getBoundingClientRect(), p = view.toW(e.clientX - r.left, e.clientY - r.top); let best = null, bd = 0.12;
+    cand.forEach(b => { const a = N[b[0]], c = N[b[1]], d = V.sub(c, a), t = Math.max(0, Math.min(1, V.dot(V.sub(p, a), d) / V.dot(d, d))), q = V.add(a, V.mul(d, t)), dist = V.norm(V.sub(p, q));
+      if (dist < bd) { bd = dist; best = b; } });
+    if (best) { const kk = key(best); on.has(kk) ? on.delete(kk) : on.add(kk); view.redraw(); } });
+  MW.select(ctl, 'Beispiel', Object.entries(PRE).map(([k, p]) => [k, p.t]), x => { on = new Set(PRE[x].b); lag = PRE[x].l; lagSel.set(lag); view.redraw(); });
+  const lagSel = MW.select(ctl, 'Lager', [['fl', 'Festlager links, Loslager rechts (r = 3)'], ['ff', 'zwei Festlager (r = 4)'], ['ll', 'zwei Loslager (r = 2)']], x => { lag = x; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

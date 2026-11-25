@@ -1,0 +1,9 @@
+titel "Übungsheft Abb. 6.6 – PdvL am Fachwerk von Abb. 6.1 (Stab 5 entfernt)"
+param a=1  h=0.866
+knoten A(0,0) C(a,0) _E(2a,0) B(3a,0) _G(0.5a,h) D(1.5a,h) _H(2.5a,h)
+fachwerk A-_G A-C _G-C _G-D C-_E D-_E D-_H _E-_H _E-B _H-B
+festlager A ; loslager B
+kraft F bei C richtung -y länge 0.5a ; vektor v_C bei C+(0.05,0) richtung -y länge 0.35a
+kraft "2F" bei D richtung (-0.88,-0.47) zu länge 0.8a ; vektor v_D bei D richtung 60° länge 0.6a
+kraft S_5 bei D richtung 240° länge 0.35a ; kraft S_5 bei C richtung 60° länge 0.35a
+moment ω bei A uhrzeiger ; moment ω bei B uhrzeiger

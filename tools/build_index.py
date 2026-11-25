@@ -14,6 +14,8 @@ SECTIONS = {
     '4-1': '4.1 Zum Kraftbegriff', '4-3': '4.3 Reaktionsprinzip und Freischneiden', '4-4': '4.4 Kraftdichten',
     '5-1': '5.1 Leistung einer Einzelkraft und eines Moments', '5-2': '5.2 Gesamtleistung am starren Körper',
     '6-1': '6.1 Statische Äquivalenz', '6-2': '6.2 Moment bezüglich Punkt und Achse', '6-3': '6.3 Kräftepaar, parallele Kräfte', '6-4': '6.4 Gleichgewicht',
+    '11-1': '11.1 Ideale Fachwerke, Pendelstützen', '11-2': '11.2 Knotengleichgewicht, statische Bestimmtheit', '11-3': '11.3 Dreikräfteschnitt',
+    '11-4': '11.4 Prinzip der virtuellen Leistungen am Fachwerk', '11-5': '11.5 Räumliche Fachwerke',
 }
 
 def title(p):
@@ -26,8 +28,9 @@ parts = ['<h2>Werkzeuge</h2><p class="sub"><a href="werkzeuge/">Werkzeugkasten</
          '<li><a href="werkzeuge/koordinaten-spielplatz.html">Koordinaten</a> (Punkte, Koordinatenlinien, Flächen, Bahnkurven)</li>'
          '<li><a href="mechskizze/index.html">Skizzen (MechSkizze-Editor)</a> (Skizzen als Text: Freikörperbilder, Lager, Kräfte, Geschwindigkeiten; <a href="mechskizze/index.html#skizzen">alle Skizzen</a>)</li></ul>']
 for key, name in SECTIONS.items():
-    files = sorted((ROOT / f'kap{key[0]}').glob(f'{key}-*.html'))
-    items = ''.join(f'<li><a href="kap{key[0]}/{f.name}">{title(f)}</a></li>' for f in files)
+    kap = 'kap' + key.split('-')[0]
+    files = sorted((ROOT / kap).glob(f'{key}-*.html'))
+    items = ''.join(f'<li><a href="{kap}/{f.name}">{title(f)}</a></li>' for f in files)
     parts.append(f'<h2>{html.escape(name)}</h2><ul>{items}</ul>')
 parts.append('<h2>3.5 / 3.6 Weitere Werkzeuge (Beispiele aus Buch und ZP1)</h2><ul>'
              '<li><a href="kinemate-3d.html">Kinemate, Invarianten und Zentralachse</a></li>'

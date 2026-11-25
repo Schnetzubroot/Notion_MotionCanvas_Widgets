@@ -1,0 +1,8 @@
+titel "Übungsheft Abb. 6.8 – Freischneiden und Einführen der Lagerkräfte"
+param a=1
+knoten _A(0,0) _B(a/2,0) _C(a,0) _D(3a/2,0) _E(2a,0) _F(5a/2,0) _G(0,a) _H(a/2,a) _I(a,a) _J(3a/2,a) _K(2a,a) _L(5a/2,a)
+fachwerk _G-_H _H-_I _I-_J _J-_K _K-_L _A-_B _B-_C _C-_D _D-_E _E-_F _G-_A _G-_B _H-_B _B-_I _I-_C _I-_D _J-_D _D-_K _K-_E _K-_F _L-_F
+kraft F bei _G richtung +x zu ; kraft F bei _L richtung +x ; kraft F bei _C richtung -y
+kraft A_x bei _A richtung +x zu ; kraft A_y bei _A richtung +y zu ; kraft E_y bei _E richtung +y zu
+kante _G-_A "a" links  _G-_H "a/2" unten
+pfeil von (3.0a,0.3a) nach (3.5a,0.3a) "x" ; pfeil von (3.0a,0.3a) nach (3.0a,0.75a) "y" ; moment bei (3.0a,0.3a)

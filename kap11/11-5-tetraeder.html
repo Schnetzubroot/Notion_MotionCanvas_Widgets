@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Räumliches Fachwerk: Tetraeder mit Last F in der Spitze</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Räumliches Fachwerk: Tetraeder mit Last F in der Spitze</h1>
+  <p class="sub">Im Raum liefert jeder Knoten drei Komponentenbedingungen, also u = s + r − 3k (Buch Gl. 11.3). Beim Tetraeder (s = 6, k = 4) braucht es r = 6 Lagerkomponenten. Mit der Last F in der Spitze D tragen die drei Schrägstäbe Druck und die drei Grundstäbe Zug (Mitschrift S. 81–82).</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>Zug</div><div><span class="sw" style="background:var(--c1)"></span>Druck</div><div><span class="sw" style="background:var(--c4)"></span>Last F</div><div><span class="sw" style="background:var(--c5)"></span>Lagerkräfte F/3</div></div>
+    <div class="hint">Höhe der Spitze ändern, Ansicht ziehen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const h3 = Math.sqrt(3) / 2;
+  const MODELS = {
+    buch: { name: 'Buch Fig. 11.6', N: { A: [0, 0], E: [1, 0], D: [0.5, h3], C: [1.5, h3], H: [2, 0], G: [2.5, h3], B: [3, 0] },
+      bars: [['A', 'E'], ['A', 'D'], ['D', 'E'], ['D', 'C'], ['E', 'C'], ['C', 'H'], ['C', 'G'], ['G', 'H'], ['G', 'B'], ['H', 'B']], num: true,
+      sup: { A: 'xy', B: 'xy' }, loads: { D: [0, -1], G: [-Math.sqrt(3), 0] }, lbl: { D: 'F', G: 'F√3' },
+      order: ['A', 'D', 'E', 'C', 'H', 'G', 'B'], box: { xmin: -0.6, xmax: 3.6, ymin: -0.55, ymax: 1.75 } },
+    ueb1: { name: 'Übungsheft Abb. 6.7 (Aufgabe 1)', N: { A: [0, 0], B: [0.5, 0], C: [1, 0], D: [1.5, 0], E: [2, 0], F: [2.5, 0], G: [0, 1], H: [0.5, 1], I: [1, 1], J: [1.5, 1], K: [2, 1], L: [2.5, 1] },
+      bars: 'G-H H-I I-J J-K K-L A-B B-C C-D D-E E-F G-A G-B H-B B-I I-C I-D J-D D-K K-E K-F L-F'.split(' ').map(s => s.split('-')), num: false,
+      sup: { A: 'xy', E: 'y' }, loads: { G: [1, 0], L: [1, 0], C: [0, -1] }, lbl: { G: 'F', L: 'F', C: 'F' },
+      box: { xmin: -0.6, xmax: 3.4, ymin: -0.6, ymax: 1.9 } },
+  };
+  const barName = (m, i) => m.num ? String(i + 1) : m.bars[i][0] + m.bars[i][1];
+  const sName = (m, i) => 'S' + (m.num ? sub(i + 1) : '_' + m.bars[i][0] + m.bars[i][1]);
+  const sub = n => String(n).split('').map(c => '₀₁₂₃₄₅₆₇₈₉'[+c]).join('');
+  const unit = (m, i, from) => { const [a, b] = m.bars[i]; const p = from === a ? m.N[a] : m.N[b], q = from === a ? m.N[b] : m.N[a]; return V.unit(V.sub(q, p)); };
+  // Gauss mit Spaltenpivot; liefert x oder null (singulär)
+  const gauss = (A, b) => { const n = A.length, M = A.map((r, i) => [...r, b[i]]);
+    for (let c = 0; c < n; c++) { let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-10) return null; [M[c], M[p]] = [M[p], M[c]];
+      for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; } }
+    return M.map((r, i) => r[n] / r[i]); };
+  // reduzierte Zeilenstufenform: Rang und Basis des Nullraums
+  const rref = A => { const M = A.map(r => [...r]), m = M.length, n = m ? M[0].length : 0, piv = []; let row = 0;
+    for (let c = 0; c < n && row < m; c++) { let p = row; for (let r = row + 1; r < m; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-9) continue; [M[row], M[p]] = [M[p], M[row]]; const d = M[row][c]; for (let k = 0; k < n; k++) M[row][k] /= d;
+      for (let r = 0; r < m; r++) if (r !== row) { const f = M[r][c]; if (f) for (let k = 0; k < n; k++) M[r][k] -= f * M[row][k]; }
+      piv.push(c); row++; }
+    const free = []; for (let c = 0; c < n; c++) if (!piv.includes(c)) free.push(c);
+    const null_ = free.map(f => { const x = new Array(n).fill(0); x[f] = 1; piv.forEach((c, r) => { x[c] = -M[r][f]; }); return x; });
+    return { rank: piv.length, null: null_ }; };
+  // Gleichgewichtsmatrix: Unbekannte = Stabkräfte (Zug positiv) + Lagerkomponenten
+  const eqSystem = m => { const keys = Object.keys(m.N), cols = m.bars.map((_, i) => ({ t: 'S', i }));
+    keys.forEach(k => { const s = m.sup[k] || ''; if (s.includes('x')) cols.push({ t: 'R', k, d: 0 }); if (s.includes('y')) cols.push({ t: 'R', k, d: 1 }); });
+    const A = [], b = [];
+    keys.forEach(k => [0, 1].forEach(d => { const row = cols.map(c => c.t === 'S' ? (m.bars[c.i].includes(k) ? unit(m, c.i, k)[d] : 0) : (c.k === k && c.d === d ? 1 : 0));
+      A.push(row); b.push(-((m.loads[k] || [0, 0])[d])); }));
+    return { keys, cols, A, b }; };
+  const solveTruss = m => { const sys = eqSystem(m); if (sys.A.length !== sys.cols.length) return null; const x = gauss(sys.A, sys.b); if (!x) return null;
+    const S = m.bars.map((_, i) => x[i]), R = {}; sys.cols.forEach((c, j) => { if (c.t === 'R') { R[c.k] = R[c.k] || [0, 0]; R[c.k][c.d] = x[j]; } }); return { S, R }; };
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  // Zahl als p/q·√r erkennen (Buchform), sonst Dezimalzahl
+  const nice = (x, d = 3) => { if (Math.abs(x) < 1e-9) return '0';
+    for (const r of [1, 3, 2, 5, 6, 15]) for (let q = 1; q <= 36; q++) { const p = x * q / Math.sqrt(r), pr = Math.round(p);
+      if (pr !== 0 && Math.abs(p - pr) < 1e-7 && Math.abs(pr) <= 300) { const g = gcd(Math.abs(pr), q), P = Math.abs(pr) / g, Q = q / g;
+        return (x < 0 ? '−' : '') + (r > 1 ? (P === 1 ? '' : P) + '√' + r : P) + (Q > 1 ? '/' + Q : ''); } }
+    return fmt(x, d); };
+  const niceF = x => { const s = nice(x); return s === '0' ? '0' : s === '1' ? 'F' : s === '−1' ? '−F' : s + '·F'; };
+  // Zeichnen: Stäbe, Knoten, Lager, Lasten
+  const drawSup = (v, p, type, C) => { const s = 0.13; v.poly([p, [p[0] - s, p[1] - 1.5 * s], [p[0] + s, p[1] - 1.5 * s]], C.fg, 1.6, null, true);
+    const y0 = p[1] - 1.5 * s - (type === 'y' ? 0.07 : 0); if (type === 'y') { v.line([p[0] - 1.4 * s, y0], [p[0] + 1.4 * s, y0], C.fg, 1.6); }
+    for (let i = -1; i <= 1; i += 0.5) v.line([p[0] + i * s * 1.2, y0], [p[0] + i * s * 1.2 - 0.06, y0 - 0.07], C.muted, 1); };
+  const drawLoads = (v, m, C, k = 0.42) => Object.entries(m.loads).forEach(([n, f]) => { const d = V.mul(f, k), p = m.N[n];
+    v.arrow(V.sub(p, d), d, C.c4, 3, 11); v.text(V.sub(p, d), m.lbl[n], C.c4, 4, -6, 13); });
+  const labelAt = (v, m, i, txt, col, bold) => { const [a, b] = m.bars[i], p = m.N[a], q = m.N[b], d = V.sub(q, p);
+    if (Math.abs(d[0]) < 1e-6) v.text(V.add(p, V.mul(d, 0.3)), txt, col, 5, 0, 10.5, bold);
+    else if (Math.abs(d[1]) < 1e-6) v.text(V.add(p, V.mul(d, 0.5)), txt, col, 0, -6, 10.5, bold, 'center');
+    else v.text(V.add(p, V.mul(d, 0.64)), txt, col, 0, 4, 10.5, bold, 'center'); };
+  const cx = (x, u) => { const c = nice(x); return c === '0' ? '0' : c === '1' ? u : c === '−1' ? '−' + u : c + '·' + u; };
+  const barCol = (C, s) => Math.abs(s) < 1e-7 ? C.muted : s > 0 ? C.c2 : C.c1;
+
+  let H = Math.sqrt(2 / 3);
+  const view = MW.View3D(cv, { extent: 0.85, yaw: -60, pitch: 20, center: [0.5, 0.29, 0.4] }, v => {
+    const C = v.C, A = [0, 0, 0], B = [1, 0, 0], Cc = [0.5, h3, 0], M = [0.5, h3 / 3, 0], D = [0.5, h3 / 3, H];
+    const l = Math.hypot(1 / Math.sqrt(3), H), sa = H / l, ca = (1 / Math.sqrt(3)) / l;
+    const Sleg = -1 / (3 * sa), Sbase = -Sleg * ca / Math.sqrt(3);
+    [[A, B], [B, Cc], [Cc, A]].forEach(([p, q]) => v.line(p, q, C.c2, 2 + Sbase * 3));
+    [A, B, Cc].forEach(p => v.line(p, D, C.c1, 2 + Math.min(6, -Sleg * 3)));
+    v.arrow(V.add(D, [0, 0, 0.45]), [0, 0, -0.45], C.c4, 3, 11); v.text(V.add(D, [0, 0, 0.45]), 'F', C.c4, 6, 0, 14);
+    [A, B, Cc].forEach(p => { v.arrow(V.add(p, [0, 0, -0.3]), [0, 0, 0.3], C.c5, 2.4, 9); });
+    [['A', A], ['B', B], ['C', Cc], ['D', D]].forEach(([n, p]) => { v.dot(p, C.fg, 4); v.text(p, n, C.fg, 6, -6, 14); });
+    v.line(D, M, C.muted, 1, [3, 3]);
+    const reg = Math.abs(H - Math.sqrt(2 / 3)) < 0.01;
+    MW.info(infoEl, reg ? 'Regelmässiges Tetraeder: H = L√(2/3)' : 'Spitze in der Höhe H = ' + fmt(H, 2) + ' L', [['Neigung der Schrägstäbe sin α', fmt(sa, 3)],
+      ['Knoten D, z-Richtung', '3·S_schräg·sin α + F = 0'], ['S_schräg', (reg ? nice(Sleg) : fmt(Sleg, 3)) + ' F  (Druck)'],
+      ['Knoten A, horizontal', '√3·S_grund + S_schräg·cos α = 0'], ['S_grund', (reg ? nice(Sbase) : fmt(Sbase, 3)) + ' F  (Zug)'], ['Lagerkraft je Fusspunkt', 'F/3 (vertikal)']],
+      'Regelmässig: S_schräg = −(F/3)√(3/2), S_grund = (F/9)√(3/2) (Mitschrift S. 82). Je flacher das Tetraeder, desto grösser werden alle Stabkräfte.');
+  });
+  const hs = MW.slider(ctl, { label: 'H / L', min: 0.2, max: 1.6, step: 0.01, value: H, onInput: x => { H = x; view.redraw(); } });
+  MW.button(ctl, 'Regelmässig', () => { H = Math.sqrt(2 / 3); hs.set(H); view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+titel "Übungsheft Abb. 6.2 – Pendelstütze (freigeschnittener Stab)"
+param L=2
+punkte A(0,0)  C(L,0)
+stab A-C ; kante A-C "L" unten
+kraft A_x bei A richtung 180° länge 0.6 ; kraft A_y bei A richtung -y länge 0.5
+kraft C_x bei C richtung +x länge 0.6 ; kraft C_y bei C richtung +y länge 0.5

@@ -1,0 +1,9 @@
+titel "Buch Fig. 11.6 – Freigeschnitten: Lagerkräfte A_x, A_y, B_x, B_y"
+param L=1  h=0.866
+knoten _A(0,0) _E(L,0) D(L/2,h) C(1.5L,h) _H(2L,0) G(2.5L,h) _B(3L,0)
+fachwerk _A-_E _A-D D-_E D-C _E-C C-_H C-G G-_H G-_B _H-_B
+beschrifte _A "A" lage ul ; beschrifte _B "B" lage ur
+kraft F bei D richtung -y zu länge 0.5L
+kraft "F√3" bei G richtung 180° zu länge 0.6L
+kraft A_x bei _A richtung +x zu länge 0.5L ; kraft A_y bei _A richtung +y zu länge 0.5L
+kraft B_x bei _B richtung +x länge 0.5L ; kraft B_y bei _B richtung +y zu länge 0.5L

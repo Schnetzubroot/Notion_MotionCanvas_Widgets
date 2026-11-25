@@ -1,0 +1,9 @@
+titel "Übungsheft Abb. 6.12 – Virtueller Bewegungszustand nach Entfernung des Stabes FL"
+param a=1
+knoten A(0,0) _B(a/2,0) _C(a,0) _D(3a/2,0) E(2a,0) F(5a/2,0) G(0,a) _H(a/2,a) _I(a,a) _J(3a/2,a) K(2a,a) L(5a/2,a)
+fläche A G K F schraffiert
+fachwerk G-_H _H-_I _I-_J _J-K K-L A-_B _B-_C _C-_D _D-E E-F G-A G-_B _H-_B _B-_I _I-_C _I-_D _J-_D _D-K K-E K-F
+festlager A ; loslager E
+kraft F bei G richtung +x zu ; kraft F bei L richtung +x ; kraft F bei _C richtung -y
+vektor v_L bei L richtung -y länge 0.3a ; kraft S_{FL} bei L+(0.05,0) richtung -y länge 0.3a ; kraft S_{FL} bei F+(0,0.2a) richtung +y länge 0.3a
+moment ω bei K uhrzeiger
