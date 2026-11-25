@@ -35,6 +35,10 @@ Die Seiten werden über GitHub Pages ausgeliefert und in Notion eingebettet. Üb
 
 Jedes Widget zeigt genau eine Situation. Die HTML-Dateien in `kap1/`, `kap2/`, `kap3/`, `kap4/`, `kap5/`, `kap6/`, `kap11/`, `analysis-w1/`, `analysis-w2/`, `analysis-w3/`, `analysis-w4/`, `analysis-w5/`, `analysis-w6/`, `analysis-w7/`, `analysis-w11/`, `chemistry-w2/`, `chemistry-w5/`, `chemistry-w6/` und `chemistry-w7/` werden aus den Build-Skripten erzeugt.
 
+## Legende
+
+In allen Widgets mit `lib/core.js` lässt sich die Legende mit der Maus (oder dem Finger) verschieben. Beim Loslassen rastet sie an der nächsten Ecke oder Kantenmitte ein; die Lage wird pro Seite im Browser gespeichert, Doppelklick setzt sie zurück. Ohne gespeicherte Lage wählt sie die Ecke, in der sie am wenigsten von der Zeichnung verdeckt (`MW.legends`, `lib/core.js`).
+
 ## MechSkizze
 
 MechSkizze ist eine Textsprache für Mechanik-Skizzen (Sprache: `mechskizze/REFERENZ.md`). Eine Skizze ist eine `.mech`-Datei in `skizzen/`.
