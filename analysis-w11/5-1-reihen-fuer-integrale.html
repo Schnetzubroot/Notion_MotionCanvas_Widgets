@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nicht elementare Integrale als Reihe</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Nicht elementare Integrale als Reihe</h1>
+  <p class="sub">Integrand in eine Potenzreihe entwickeln, dann gliedweise integrieren. Gestrichelt der numerisch berechnete Wert, durchgezogen die abgebrochene Reihe mit N Gliedern. Für kleine Parameter reichen wenige Glieder.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>numerischer Wert</div><div><span class="sw" style="background:var(--c1)"></span>Reihe mit N Gliedern</div></div>
+    <div class="hint">Anwendung wählen und die Anzahl Glieder N erhöhen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  function dplot(v, A, f, color, w = 1.3, N = 300, a = A.x0, b = A.x1) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w, [5, 4]); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || !A.inY(y)) { fl(); continue; } seg.push(A.P(x, y)); } fl(); }
+  const fac = k => { let s = 1; for (let i = 2; i <= k; i++) s *= i; return s; };
+  const poly = (c, x, x0 = 0) => { let s = 0; for (let k = c.length - 1; k >= 0; k--) s = s * (x - x0) + c[k]; return s; };
+  const sci = x => !isFinite(x) ? '–' : (x !== 0 && (Math.abs(x) >= 1e6 || Math.abs(x) < 1e-4)) ? x.toExponential(2).replace('.', ',').replace(/e\+?(-?)(\d+)/, (m, s, d) => ' · 10^' + (s ? '−' : '') + d) : fmt(x, 5);
+  const simpson = (f, a, b, n = 400) => { const h = (b - a) / n; let s = f(a) + f(b); for (let i = 1; i < n; i++) s += f(a + i * h) * (i % 2 ? 4 : 2); return s * h / 3; };
+  // Intervall-Band für den Konvergenzbereich auf der x-Achse
+  function band(v, A, a, b, inA, inB, color) {
+    const y = A.y0, lo = Math.max(a, A.x0), hi = Math.min(b, A.x1);
+    if (hi > lo) { v.poly([A.P(lo, A.y0), A.P(hi, A.y0), A.P(hi, A.y1), A.P(lo, A.y1)], color, 0, null, true, v.C.fill); v.line(A.P(lo, y), A.P(hi, y), color, 5); }
+    if (isFinite(a) && a >= A.x0) v.dot(A.P(a, y), color, 6, !inA);
+    if (isFinite(b) && b <= A.x1) v.dot(A.P(b, y), color, 6, !inB);
+  }
+
+  const dfr = n => { let s = 1; for (let i = 1; i <= n; i++) s *= (2 * i - 1) / (2 * i); return s; };   // 1·3⋯(2n−1) / (2·4⋯2n)
+  const M = {
+    pend: { name: 'Pendel: T/T₀ über Maximalausschlag α', xl: 'α in °', yl: 'T/T₀', ax: [0, 175, 0.9, 3],
+      ex: a => { const k = Math.sin(a * Math.PI / 360); return 2 / Math.PI * simpson(u => 1 / Math.sqrt(1 - k * k * Math.sin(u) ** 2), 0, Math.PI / 2, 600); },
+      se: (a, N) => { const k = Math.sin(a * Math.PI / 360); let s = 0; for (let n = 0; n < N; n++) s += dfr(n) ** 2 * k ** (2 * n); return s; },
+      at: 60, lab: 'α = 60°', note: 'Skript S. 24–26: T = 2π√(l/g)(1 + (1/2)²k² + (1·3/(2·4))²k⁴ + …) mit k = sin(α/2). Für kleine α bleibt T ≈ T₀ = 2π√(l/g), der Wert der linearisierten Theorie. Für grosse α wird T deutlich länger.' },
+    ell: { name: 'Ellipsenumfang: U/(2πa) über k² = (a² − b²)/a²', xl: 'k', yl: 'U/(2πa)', ax: [0, 1, 0.6, 1.02],
+      ex: k => 2 / Math.PI * simpson(t => Math.sqrt(1 - k * k * Math.cos(t) ** 2), 0, Math.PI / 2, 600),
+      se: (k, N) => { let s = 1; for (let n = 1; n < N; n++) s -= dfr(n) ** 2 * k ** (2 * n) / (2 * n - 1); return s; },
+      at: 0.6, lab: 'k = 0.6', note: 'Skript S. 22–24: U = 2πa(1 − (1/2)² k²/1 − (1·3/(2·4))² k⁴/3 − …). Für kreisähnliche Ellipsen (k klein) konvergiert die Reihe schnell, für k → 1 langsam.' },
+    erf: { name: 'Fehlerfunktion Φ(x) = (2/√π) ∫₀ˣ e^(−t²) dt', xl: 'x', yl: 'Φ(x)', ax: [-3, 3, -1.5, 1.5],
+      ex: x => 2 / Math.sqrt(Math.PI) * simpson(t => Math.exp(-t * t), 0, x, 400),
+      se: (x, N) => { let s = 0; for (let n = 0; n < N; n++) s += (n % 2 ? -1 : 1) * x ** (2 * n + 1) / ((2 * n + 1) * fac(n)); return 2 / Math.sqrt(Math.PI) * s; },
+      at: 1, lab: 'x = 1', note: 'Skript S. 26–27: e^(−t²) = 1 − t² + t⁴/2! − …, gliedweise integriert Φ(x) = (2/√π)(x − x³/3 + x⁵/(5·2!) − x⁷/(7·3!) + …). Die Reihe konvergiert für alle x, braucht für grosse |x| aber viele Glieder.' },
+  };
+  let key = 'pend', N = 2;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, m = M[key], A = mkAx(...m.ax); axes(v, A, m.xl, m.yl);
+    dplot(v, A, x => m.ex(x), C.c2, 2, key === 'pend' ? 140 : 160); fplot(v, A, x => m.se(x, N), C.c1, 2.3, 400);
+    const e = m.ex(m.at), s = m.se(m.at, N); v.dot(A.P(m.at, e), C.c2, 5); v.dot(A.P(m.at, s), C.c1, 5);
+    MW.info(infoEl, m.name, [['Glieder N', String(N)], [m.lab + ': Reihe', fmt(s, 6)], [m.lab + ': numerisch', fmt(e, 6)], ['Fehler', sci(Math.abs(s - e))]],
+      m.note + ' Der gestrichelte Vergleichswert ist numerisch mit der Simpson-Regel berechnet (nicht aus den Kursunterlagen).');
+  });
+  MW.slider(ctl, { label: 'Glieder N', min: 1, max: 12, step: 1, value: N, fmt: u => fmt(u, 0), onInput: u => { N = u; view.redraw(); } });
+  MW.select(ctl, 'Anwendung', Object.entries(M).map(([k, m]) => [k, m.name]), u => { key = u; view.redraw(); }).set(key);
+
+})();
+</script>
+</body>
+</html>
