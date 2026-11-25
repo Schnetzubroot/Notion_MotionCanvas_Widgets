@@ -1,0 +1,9 @@
+titel "Übungsheft Abb. 6.9 – Dreikräfteschnitt (rechter Teil)"
+param a=1
+knoten K(0,a) L(a/2,a) E(0,0) F(a/2,0)
+fachwerk K-L K-E K-F E-F L-F
+kraft F bei L richtung +x länge 0.4a
+kraft S_{JK} bei K richtung 180° länge 0.4a ; kraft S_{DK} bei K richtung (-0.447,-0.894) länge 0.5a ; kraft S_{DE} bei E richtung 180° länge 0.4a
+kraft E_y bei E richtung +y zu länge 0.45a
+winkel K zwischen E und F "α" radius 22 ; winkel K zwischen (-0.447,-0.894) und E "α" radius 28
+kante K-F "√5/2 a" rechts  L-F "a" rechts  E-F "a/2" oben

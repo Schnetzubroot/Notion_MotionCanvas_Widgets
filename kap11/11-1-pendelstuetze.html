@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pendelstütze: Stabkraft S als Zug positiv</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Pendelstütze: Stabkraft S als Zug positiv</h1>
+  <p class="sub">Ein Stab eines idealen Fachwerks ist gelenkig angeschlossen, gewichtslos und nur an den Enden belastet. Gleichgewicht am Stab verlangt, dass beide Endkräfte auf der Stabachse liegen und entgegengesetzt gleich sind: S′ = −S. Eine Zahl S genügt; S > 0 heisst Zug, S < 0 Druck (Buch Gl. 11.1).</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>Zug (S > 0)</div><div><span class="sw" style="background:var(--c1)"></span>Druck (S < 0)</div><div><span class="sw" style="background:var(--c5)"></span>Kräfte auf die Knoten</div><div><span class="sw" style="background:var(--c4)"></span>Querlast F</div></div>
+    <div class="hint">Stabenden A und A′ ziehen, S einstellen, Querlast zuschalten.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const h3 = Math.sqrt(3) / 2;
+  const MODELS = {
+    buch: { name: 'Buch Fig. 11.6', N: { A: [0, 0], E: [1, 0], D: [0.5, h3], C: [1.5, h3], H: [2, 0], G: [2.5, h3], B: [3, 0] },
+      bars: [['A', 'E'], ['A', 'D'], ['D', 'E'], ['D', 'C'], ['E', 'C'], ['C', 'H'], ['C', 'G'], ['G', 'H'], ['G', 'B'], ['H', 'B']], num: true,
+      sup: { A: 'xy', B: 'xy' }, loads: { D: [0, -1], G: [-Math.sqrt(3), 0] }, lbl: { D: 'F', G: 'F√3' },
+      order: ['A', 'D', 'E', 'C', 'H', 'G', 'B'], box: { xmin: -0.6, xmax: 3.6, ymin: -0.55, ymax: 1.75 } },
+    ueb1: { name: 'Übungsheft Abb. 6.7 (Aufgabe 1)', N: { A: [0, 0], B: [0.5, 0], C: [1, 0], D: [1.5, 0], E: [2, 0], F: [2.5, 0], G: [0, 1], H: [0.5, 1], I: [1, 1], J: [1.5, 1], K: [2, 1], L: [2.5, 1] },
+      bars: 'G-H H-I I-J J-K K-L A-B B-C C-D D-E E-F G-A G-B H-B B-I I-C I-D J-D D-K K-E K-F L-F'.split(' ').map(s => s.split('-')), num: false,
+      sup: { A: 'xy', E: 'y' }, loads: { G: [1, 0], L: [1, 0], C: [0, -1] }, lbl: { G: 'F', L: 'F', C: 'F' },
+      box: { xmin: -0.6, xmax: 3.4, ymin: -0.6, ymax: 1.9 } },
+  };
+  const barName = (m, i) => m.num ? String(i + 1) : m.bars[i][0] + m.bars[i][1];
+  const sName = (m, i) => 'S' + (m.num ? sub(i + 1) : '_' + m.bars[i][0] + m.bars[i][1]);
+  const sub = n => String(n).split('').map(c => '₀₁₂₃₄₅₆₇₈₉'[+c]).join('');
+  const unit = (m, i, from) => { const [a, b] = m.bars[i]; const p = from === a ? m.N[a] : m.N[b], q = from === a ? m.N[b] : m.N[a]; return V.unit(V.sub(q, p)); };
+  // Gauss mit Spaltenpivot; liefert x oder null (singulär)
+  const gauss = (A, b) => { const n = A.length, M = A.map((r, i) => [...r, b[i]]);
+    for (let c = 0; c < n; c++) { let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-10) return null; [M[c], M[p]] = [M[p], M[c]];
+      for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; } }
+    return M.map((r, i) => r[n] / r[i]); };
+  // reduzierte Zeilenstufenform: Rang und Basis des Nullraums
+  const rref = A => { const M = A.map(r => [...r]), m = M.length, n = m ? M[0].length : 0, piv = []; let row = 0;
+    for (let c = 0; c < n && row < m; c++) { let p = row; for (let r = row + 1; r < m; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-9) continue; [M[row], M[p]] = [M[p], M[row]]; const d = M[row][c]; for (let k = 0; k < n; k++) M[row][k] /= d;
+      for (let r = 0; r < m; r++) if (r !== row) { const f = M[r][c]; if (f) for (let k = 0; k < n; k++) M[r][k] -= f * M[row][k]; }
+      piv.push(c); row++; }
+    const free = []; for (let c = 0; c < n; c++) if (!piv.includes(c)) free.push(c);
+    const null_ = free.map(f => { const x = new Array(n).fill(0); x[f] = 1; piv.forEach((c, r) => { x[c] = -M[r][f]; }); return x; });
+    return { rank: piv.length, null: null_ }; };
+  // Gleichgewichtsmatrix: Unbekannte = Stabkräfte (Zug positiv) + Lagerkomponenten
+  const eqSystem = m => { const keys = Object.keys(m.N), cols = m.bars.map((_, i) => ({ t: 'S', i }));
+    keys.forEach(k => { const s = m.sup[k] || ''; if (s.includes('x')) cols.push({ t: 'R', k, d: 0 }); if (s.includes('y')) cols.push({ t: 'R', k, d: 1 }); });
+    const A = [], b = [];
+    keys.forEach(k => [0, 1].forEach(d => { const row = cols.map(c => c.t === 'S' ? (m.bars[c.i].includes(k) ? unit(m, c.i, k)[d] : 0) : (c.k === k && c.d === d ? 1 : 0));
+      A.push(row); b.push(-((m.loads[k] || [0, 0])[d])); }));
+    return { keys, cols, A, b }; };
+  const solveTruss = m => { const sys = eqSystem(m); if (sys.A.length !== sys.cols.length) return null; const x = gauss(sys.A, sys.b); if (!x) return null;
+    const S = m.bars.map((_, i) => x[i]), R = {}; sys.cols.forEach((c, j) => { if (c.t === 'R') { R[c.k] = R[c.k] || [0, 0]; R[c.k][c.d] = x[j]; } }); return { S, R }; };
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  // Zahl als p/q·√r erkennen (Buchform), sonst Dezimalzahl
+  const nice = (x, d = 3) => { if (Math.abs(x) < 1e-9) return '0';
+    for (const r of [1, 3, 2, 5, 6, 15]) for (let q = 1; q <= 36; q++) { const p = x * q / Math.sqrt(r), pr = Math.round(p);
+      if (pr !== 0 && Math.abs(p - pr) < 1e-7 && Math.abs(pr) <= 300) { const g = gcd(Math.abs(pr), q), P = Math.abs(pr) / g, Q = q / g;
+        return (x < 0 ? '−' : '') + (r > 1 ? (P === 1 ? '' : P) + '√' + r : P) + (Q > 1 ? '/' + Q : ''); } }
+    return fmt(x, d); };
+  const niceF = x => { const s = nice(x); return s === '0' ? '0' : s === '1' ? 'F' : s === '−1' ? '−F' : s + '·F'; };
+  // Zeichnen: Stäbe, Knoten, Lager, Lasten
+  const drawSup = (v, p, type, C) => { const s = 0.13; v.poly([p, [p[0] - s, p[1] - 1.5 * s], [p[0] + s, p[1] - 1.5 * s]], C.fg, 1.6, null, true);
+    const y0 = p[1] - 1.5 * s - (type === 'y' ? 0.07 : 0); if (type === 'y') { v.line([p[0] - 1.4 * s, y0], [p[0] + 1.4 * s, y0], C.fg, 1.6); }
+    for (let i = -1; i <= 1; i += 0.5) v.line([p[0] + i * s * 1.2, y0], [p[0] + i * s * 1.2 - 0.06, y0 - 0.07], C.muted, 1); };
+  const drawLoads = (v, m, C, k = 0.42) => Object.entries(m.loads).forEach(([n, f]) => { const d = V.mul(f, k), p = m.N[n];
+    v.arrow(V.sub(p, d), d, C.c4, 3, 11); v.text(V.sub(p, d), m.lbl[n], C.c4, 4, -6, 13); });
+  const labelAt = (v, m, i, txt, col, bold) => { const [a, b] = m.bars[i], p = m.N[a], q = m.N[b], d = V.sub(q, p);
+    if (Math.abs(d[0]) < 1e-6) v.text(V.add(p, V.mul(d, 0.3)), txt, col, 5, 0, 10.5, bold);
+    else if (Math.abs(d[1]) < 1e-6) v.text(V.add(p, V.mul(d, 0.5)), txt, col, 0, -6, 10.5, bold, 'center');
+    else v.text(V.add(p, V.mul(d, 0.64)), txt, col, 0, 4, 10.5, bold, 'center'); };
+  const cx = (x, u) => { const c = nice(x); return c === '0' ? '0' : c === '1' ? u : c === '−1' ? '−' + u : c + '·' + u; };
+  const barCol = (C, s) => Math.abs(s) < 1e-7 ? C.muted : s > 0 ? C.c2 : C.c1;
+
+  let A = [-1.6, -0.4], Cp = [1.5, 0.6], S = 1, quer = false;
+  const view = MW.View2D(cv, { xmin: -3.4, xmax: 3.4, ymin: -1.9, ymax: 1.9 }, v => {
+    const C = v.C, e = V.unit(V.sub(Cp, A)), n = [-e[1], e[0]], L = V.norm(V.sub(Cp, A)), col = barCol(C, S), k = 0.7;
+    v.line(A, Cp, C.fg, 7); v.dot(A, C.bg, 6, true); v.dot(Cp, C.bg, 6, true); v.text(A, 'A', C.fg, -18, 18, 14); v.text(Cp, "A′", C.fg, 8, 18, 14);
+    // Endkräfte auf den Stab: Zug zeigt nach aussen (äussere Normale e_N)
+    const fA = V.mul(e, -S * k), fC = V.mul(e, S * k);
+    if (!quer) { v.arrow(A, fA, col, 3.4, 12); v.arrow(Cp, fC, col, 3.4, 12); v.text(V.add(A, fA), 'S', col, -14, -6, 14); v.text(V.add(Cp, fC), "S′ = −S", col, 6, -6, 14);
+      // Kräfte des Stabs auf die Knoten (Reaktionsprinzip): entgegengesetzt
+      const off = V.mul(n, -0.55); const a2 = V.add(A, off), c2 = V.add(Cp, off);
+      v.dot(a2, C.c5, 5); v.dot(c2, C.c5, 5); v.arrow(a2, V.mul(fA, -0.8), C.c5, 2.4, 10); v.arrow(c2, V.mul(fC, -0.8), C.c5, 2.4, 10);
+      v.text(a2, 'Knoten A', C.c5, -30, 22, 12, false); v.text(c2, "Knoten A′", C.c5, -30, 22, 12, false); }
+    else { const M = V.mul(V.add(A, Cp), 0.5), Fq = V.mul(n, -0.9); v.arrow(V.sub(M, Fq), Fq, C.c4, 3.4, 12); v.text(V.sub(M, Fq), 'F', C.c4, 6, 0, 14);
+      const fA2 = V.add(fA, V.mul(n, 0.45)), fC2 = V.add(fC, V.mul(n, 0.45));
+      v.arrow(A, fA2, C.c5, 3.2, 12); v.arrow(Cp, fC2, C.c5, 3.2, 12); v.text(V.add(A, fA2), 'Endkraft', C.c5, -40, -8, 12, false); v.text(V.add(Cp, fC2), 'Endkraft', C.c5, 4, -8, 12, false);
+      v.line(A, V.add(A, V.mul(e, -1.2)), C.muted, 1, [4, 4]); v.line(Cp, V.add(Cp, V.mul(e, 1.2)), C.muted, 1, [4, 4]); }
+    const rows = quer ? [['Querlast F in der Mitte', 'Querkomponenten F/2 an jedem Ende'], ['Endkräfte', 'nicht mehr auf der Stabachse']] :
+      [['Stabkraft S', fmt(S, 2) + ' F'], ['Beanspruchung', Math.abs(S) < 1e-9 ? 'Nullstab' : S > 0 ? 'Zug (Pfeile zeigen vom Stab weg)' : 'Druck (Pfeile zeigen zum Stab hin)'], ['Stablänge', fmt(L, 2)]];
+    MW.info(infoEl, quer ? 'Keine Pendelstütze: Querlast zwischen den Knoten' : 'Pendelstütze: S = S e_N, S′ = −S', rows,
+      quer ? 'Mit einer Last zwischen den Enden braucht das Momentengleichgewicht Querkräfte an den Enden (Übungsheft Abb. 6.3). Beim Zerlegen müssen dann Kräfte quer zum Stab eingeführt werden.'
+        : 'Die Knoten spüren die Gegenkräfte. Bei Zug ziehen die Stäbe an den Knoten, bei Druck drücken sie. Im Knotengleichgewicht führt man deshalb jede Stabkraft als Zug ein (Pfeil vom Knoten weg in den Stab).', quer);
+  });
+  view.handle(() => Cp, p => { Cp = p; }); view.handle(() => A, p => { A = p; });
+  MW.slider(ctl, { label: 'S', min: -1.5, max: 1.5, step: 0.05, value: S, unit: ' F', onInput: x => { S = x; view.redraw(); } });
+  MW.check(ctl, 'Querlast in Stabmitte', false, x => { quer = x; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

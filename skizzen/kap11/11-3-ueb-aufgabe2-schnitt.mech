@@ -1,0 +1,7 @@
+titel "Übungsheft Abb. 6.16 – Dreikräfteschnitt: rechter Teil des Fachwerks"
+param a=1  h=0.866
+knoten E(0,h) C(a,h) D(a/2,0) B(1.5a,0)
+fachwerk E-C E-D C-D D-B C-B
+kraft F/2 bei E richtung -y zu länge 0.45a ; moment M bei C
+kraft S_3 bei E richtung 180° länge 0.45a ; kraft S_2 bei E richtung 240° länge 0.4a ; kraft S_1 bei D richtung 180° länge 0.45a
+kraft B_x bei B richtung +x länge 0.45a ; kraft B_y bei B richtung +y zu länge 0.45a

@@ -1,0 +1,8 @@
+titel "Buch Fig. 11.6 – Ideales ebenes Fachwerk aus 10 Stäben der Länge L (Dreigelenkbogen, Gelenk C)"
+param L=1  h=0.866
+knoten A(0,0) E(L,0) D(L/2,h) C(1.5L,h) H(2L,0) G(2.5L,h) B(3L,0)
+fachwerk A-E A-D D-E D-C E-C C-H C-G G-H G-B H-B nummeriert
+festlager A ; festlager B
+kraft F bei D richtung -y zu länge 0.5L
+kraft "F√3" bei G richtung 180° zu länge 0.6L
+kante A-E "L" unten

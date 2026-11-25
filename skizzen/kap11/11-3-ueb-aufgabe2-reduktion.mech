@@ -1,0 +1,5 @@
+titel "Übungsheft Abb. 6.15 – Reduktion der Einzelkraft F auf die Knoten G und E (statisch äquivalent)"
+massstab 0.5
+punkte _G(0,0) _E(1.2,0)
+stab _G-_E knoten ; stab _G-(-0.25,-0.4) ; stab _G-(0.2,-0.4) ; stab _E-(1.0,-0.4) ; stab _E-(1.4,-0.4)
+kraft F/2 bei _G richtung -y zu länge 0.45 ; kraft F/2 bei _E richtung -y zu länge 0.45

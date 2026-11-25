@@ -1,0 +1,7 @@
+titel "Übungsheft Abb. 6.1 – Ideales ebenes Fachwerk"
+param a=1  h=0.866
+knoten A(0,0) _C(a,0) _E(2a,0) B(3a,0) _G(0.5a,h) _D(1.5a,h) _H(2.5a,h)
+fachwerk A-_G A-_C _G-_C _G-_D _C-_D _C-_E _D-_E _D-_H _E-_H _E-B _H-B nummeriert
+festlager A ; loslager B
+kraft F bei _C richtung -y länge 0.5a
+kraft "2F" bei _D richtung (-0.88,-0.47) zu länge 0.8a

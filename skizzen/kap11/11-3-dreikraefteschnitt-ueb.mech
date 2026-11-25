@@ -1,0 +1,14 @@
+titel "Übungsheft Abb. 6.5 – Dreikräfteschnitt (Ritterschnitt) am Fachwerk von Abb. 6.1"
+param a=1  h=0.866
+teilbild "links"
+knoten A(0,0) C(a,0) _G(0.5a,h)
+fachwerk A-_G A-C _G-C
+kraft A_x bei A richtung +x zu länge 0.4 ; kraft A_y bei A richtung +y zu länge 0.4
+kraft S_4 bei _G richtung 0° länge 0.4 ; kraft S_5 bei C richtung 60° länge 0.35 ; kraft S_6 bei C richtung 0° länge 0.4
+kraft F bei C richtung -y länge 0.35
+teilbild "rechts"
+knoten D(0,h) _E(0.5a,0) _H(a,h) B(1.5a,0)
+fachwerk D-_E D-_H _E-_H _E-B _H-B
+kraft S_4 bei D richtung 180° länge 0.4 ; kraft S_5 bei D richtung 240° länge 0.35 ; kraft S_6 bei _E richtung 180° länge 0.4
+kraft "2F" bei D richtung (-0.88,-0.47) zu länge 0.55
+kraft B_y bei B richtung +y zu länge 0.4

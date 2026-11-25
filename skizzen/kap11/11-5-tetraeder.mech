@@ -1,0 +1,7 @@
+titel "Mitschrift S. 81 – Räumliches Fachwerk: regelmässiges Tetraeder mit Last F in der Spitze D"
+3d
+param L=1
+punkte A(0,0,0) B(L,0,0) C(L/2,0.866L,0) D(L/2,0.289L,0.816L)
+fachwerk A-B B-C C-A A-D B-D C-D
+kraft F bei D richtung -z zu länge 0.5L
+kraft "F/3" bei A richtung +z zu länge 0.35L ; kraft "F/3" bei B richtung +z zu länge 0.35L ; kraft "F/3" bei C richtung +z zu länge 0.35L

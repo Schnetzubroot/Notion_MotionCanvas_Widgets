@@ -1,0 +1,5 @@
+titel "Übungsheft Abb. 6.19 (richtig) – Knotengleichgewicht im Punkt B mit Querkraft 3F"
+massstab 0.5
+punkte _B(0,0)
+marke _B
+kraft S_{BC} bei _B richtung 128° ; kraft S_{BD} bei _B richtung 180° ; kraft B_x bei _B richtung 0° ; kraft B_y bei _B richtung +y zu ; kraft "3F" bei _B richtung 37°
