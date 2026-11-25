@@ -1,0 +1,9 @@
+titel "Übungsheft Abb. 5.7 (rechts) – Teilsystem II (Stab DB)"
+param a=1
+punkte _B(3a,0)  _D(0,1.45a)  _C(1.1a,1.45a)  _K(2a,1.45a)
+stab _D-_K ; stab _K-_B
+last von _D nach _C q (1,0) seite oben höhe 0.6a "q_0"
+kraft P bei _D richtung -y länge 0.55a
+kraft C_y bei _C richtung -y zu länge 0.5a ; moment M_C bei _C
+kraft B_x bei _B richtung +x länge 0.45a ; kraft B_y bei _B richtung +y zu länge 0.45a
+text (2.4a,1.0a) "II" normal

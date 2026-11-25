@@ -1,0 +1,6 @@
+titel "Übungsheft Abb. 5.2 (links) – Dreigelenkbogen"
+param R=1.5
+punkte A(0,0)  B(2R,0)  C(R,R)
+bogen (R,0) radius R von 0 bis 180 dick
+festlager A ; festlager B ; marke A B C
+text (-0.1,1.1R) "I" normal ; text (2.1R,1.1R) "II" normal

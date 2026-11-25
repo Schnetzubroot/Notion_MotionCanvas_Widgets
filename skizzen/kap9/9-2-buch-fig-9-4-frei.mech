@@ -1,0 +1,8 @@
+titel "Buch Fig. 9.4 – Freigeschnitten: Auflagerkräfte A_y ≥ 0, B_y ≥ 0"
+param L=2
+punkte _A(0,0)  _B(L,0)  _E(1.5L,0)  _F1(0.5L,0)
+balken _A _E ; marke _A _B
+beschrifte _A "A" lage ul ; beschrifte _B "B" lage ur
+kraft F_1 bei _F1 richtung -y zu länge 0.6
+kraft F_2 bei _E richtung -y zu länge 0.6
+kraft A_y bei _A richtung +y zu länge 0.6 ; kraft B_y bei _B richtung +y zu länge 0.6

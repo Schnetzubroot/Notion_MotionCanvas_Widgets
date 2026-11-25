@@ -1,0 +1,10 @@
+titel "Übungsheft Abb. 5.6 – Gesamtsystem mit Lagerreaktionen"
+param a=1
+punkte _A(0,0)  _B(3a,0)  _D(0,1.45a)  _C(1.1a,1.45a)  _K(2a,1.45a)
+stab _A-_C ; stab _D-_K ; stab _K-_B
+schiebehülse _C richtung 0°
+last von _D nach _C q (1,0) seite oben höhe 0.6a "q_0"
+kraft P bei _D richtung -y länge 0.55a ; moment M bei (0.75a,0.75a)
+kraft A_x bei _A richtung +x länge 0.45a ; kraft A_y bei _A richtung +y zu länge 0.45a
+kraft B_x bei _B richtung +x länge 0.45a ; kraft B_y bei _B richtung +y zu länge 0.45a
+pfeil von (3.8a,1.0a) nach (4.6a,1.0a) "x" ; pfeil von (3.8a,1.0a) nach (3.8a,1.8a) "y" ; moment bei (3.8a,1.0a)

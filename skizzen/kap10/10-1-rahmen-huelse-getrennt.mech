@@ -1,0 +1,15 @@
+titel "Übungsheft Abb. 5.4 – Systemtrennung mit sichtbar gemachten Verbindungsreaktionen"
+teilbild "Teil I"
+punkte _B(0,0) _C(1.1,0)
+stab _B-_C ; linie _C+(-0.08,-0.12) _C+(-0.08,0.12) dick ; linie _C+(-0.02,-0.12) _C+(-0.02,0.12) dick
+kraft B_x bei _B richtung +x zu länge 0.4 ; kraft B_y bei _B richtung +y zu länge 0.4
+moment M_0 bei (0.5,0) ; moment M_C bei _C+(-0.05,0) uhrzeiger ; kraft C bei _C richtung +x länge 0.25
+text (0.6,-0.15) "I" normal
+text (0.2,-0.85) "m + v = 4 + 2 = 3 · n = 3 · 2" normal ; text (0.2,-1.05) "Statisch bestimmt!" normal
+teilbild "Teil II"
+punkte _T(0,0.35) _A(0,-0.95)
+stab _T-_A
+kraft C bei (0,0) richtung 180° länge 0.3 ; moment M_C bei (0,0)
+kraft A_x bei _A+(0,0.05) richtung +x zu länge 0.45 ; kraft A_y bei _A richtung +y zu länge 0.4
+text (0.1,-0.2) "II" normal
+ohne namen

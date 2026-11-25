@@ -1,0 +1,13 @@
+titel "Übungsheft Abb. 4.6 – L-förmiger Träger mit zwei Seilen und Linienlast (Aufgabe 2)"
+3d achsen (0.9,-0.28) (0.62,0.42) (0,1)
+param L=1  P=1
+punkte A(0,0,0)  B(2L,0,0)  C(2L,L,0)  D(0,0,L)  _E(0,L,0)
+fläche (0,-0.3L,-0.3L) (0,0.3L,-0.2L) (0,0.3L,0.35L) (0,-0.3L,0.25L) schraffiert
+kugelgelenk A
+balken A B ; balken B C
+seil D B ; seil D C ; marke D
+text teil(D,B,0.5) "1" lage o ; text teil(D,C,0.45) "2" lage o
+linie A _E gestrichelt ; linie _E C gestrichelt ; linie A D dünn
+last von B nach C q (1,1) richtung -z höhe 0.6L "P"
+vektor ~e_x bei B richtung +x länge 0.35L ; vektor ~e_y bei A richtung +y länge 0.35L ; vektor ~e_z bei D richtung +z länge 0.35L
+kante A-B "2L" unten  B-C "L" unten  A-D "L" links

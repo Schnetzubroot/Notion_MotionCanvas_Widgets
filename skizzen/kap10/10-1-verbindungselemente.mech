@@ -1,0 +1,17 @@
+titel "Übungsheft S. 61 – Verbindungselemente: Gelenk und Pendelstab"
+massstab 0.6
+teilbild "Gelenk"
+punkte _L(-0.9,0) _G(0,0) _R(0.9,0)
+stab _L-_G _G-_R ; marke _G
+teilbild "Gelenk freigeschnitten"
+punkte _L(-1.3,0) _G1(-0.35,0) _G2(0.35,0) _R(1.3,0)
+stab _L-_G1 _G2-_R
+kraft G_H bei _G1 richtung +x länge 0.4 ; kraft G_V bei _G1 richtung -y länge 0.3
+kraft G_H bei _G2 richtung 180° länge 0.4 ; kraft G_V bei _G2 richtung +y länge 0.3
+teilbild "Pendelstab"
+punkte _A(0,0) _B(1.2,0.35)
+stab _A-_B knoten
+teilbild "Pendelstab freigeschnitten"
+punkte _A(0,0) _B(1.2,0.35)
+kraft S bei _A richtung _B länge 0.45 ; kraft S bei _B richtung _A länge 0.45
+ohne namen

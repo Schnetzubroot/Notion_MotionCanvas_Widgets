@@ -1,0 +1,9 @@
+titel "Übungsheft Abb. 5.1 – Zweigelenkbogen (statisch unbestimmt: Verformung grau)"
+param R=1.5
+punkte A(0,0)  B(2R,0)  C(R,R)
+bogen (R,0) radius R von 0 bis 180 dick
+festlager A ; loslager B ; marke A B
+kraft F bei C richtung -y zu länge 0.7
+linie (0,0) (0,R) gestrichelt ; linie (0,R) (2R,R) gestrichelt ; linie (2R,R) (2R,0) gestrichelt
+bogen (1.3R,-0.35R) radius 1.3R von 15 bis 165 grau
+pfeil von (1.45R,1.2R) nach (1.45R,0.88R) "F" grau

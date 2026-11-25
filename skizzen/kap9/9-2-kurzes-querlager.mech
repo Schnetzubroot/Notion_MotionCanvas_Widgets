@@ -1,0 +1,7 @@
+titel "Übungsheft S. 52 – Kurzes Querlager: Lagerreaktionen (3D: A_y, A_z)"
+massstab 0.45
+punkte _L(-0.8,0) _R(0.8,0) _A(0,0)
+linie _L _R dick ; bruch _L richtung 0° ; bruch _R richtung 0°
+kraft A_y bei _A richtung +y länge 0.5
+aus _A+(0,-0.18) "A_z" lage ur
+ohne namen

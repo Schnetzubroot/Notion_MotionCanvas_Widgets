@@ -1,0 +1,9 @@
+titel "Buch Fig. 9.15 – Schiefer Balken: Gelenk A, Auflager B normal zum Balken, Gewicht G im Schwerpunkt S"
+param L=3  al=30  s=1.3
+punkte A(0,0)  B(L*cos(al),L*sin(al))  S(s*cos(al),s*sin(al))
+balken A B ; festlager A ; loslager B richtung al+90 ; marke A B S
+kraft G bei S richtung -y länge 0.7
+kraft A_x bei A richtung al länge 0.6 ; kraft A_y bei A richtung al+90 länge 0.6
+kraft B_y bei B richtung al+90 länge 0.6
+winkel A zwischen (1,0) und B "α" radius 30
+mass A-S "s" versatz 0.35 seite unten

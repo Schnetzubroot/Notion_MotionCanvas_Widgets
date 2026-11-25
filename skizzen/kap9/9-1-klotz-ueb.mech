@@ -1,0 +1,11 @@
+titel "Übungsheft S. 51 – Standfestigkeit: Klotz mit Kräften"
+param a=1
+punkte _A(0,0) _B(a,0) _C(a,a) _D(0,a)
+boden (-0.45a,0) (1.4a,0) schraffur unten
+körper Klotz = polygon _A _B _C _D "Gewicht G"
+schwerpunkt mitte(Klotz)
+kraft G bei mitte(Klotz) richtung -y länge 0.5a
+kraft F bei mitte(_D,_C) richtung -y zu länge 0.4a
+kraft "2F" bei _C richtung 180° zu länge 0.75a
+kraft "2F" bei (0,0.5a) richtung 0° zu länge 0.75a
+ohne namen

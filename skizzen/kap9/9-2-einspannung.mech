@@ -1,0 +1,14 @@
+titel "Übungsheft S. 53 – Einspannung: Lagerreaktionen 2D (A_x, A_y, M_Az) und 3D (A_x, A_y, A_z, M_x, M_y, M_z)"
+massstab 0.45
+teilbild "2D" 2d
+punkte _A(0,0)
+linie _A (1.2,0) dick ; bruch (1.2,0) richtung 0°
+kraft A_y bei _A richtung +y länge 0.6 ; kraft A_x bei _A+(0,-0.08) richtung +x länge 0.6
+moment M_{Az} bei _A+(-0.25,-0.05) lage ul
+teilbild "3D"
+3d
+punkte _A(0,0,0)
+linie _A (0,1.0,0) dick ; bruch (0,1.0,0) richtung +y
+kraft A_x bei _A richtung +y länge 0.7 ; kraft A_y bei _A richtung +z länge 0.6 ; kraft A_z bei _A richtung +x länge 0.6
+moment M_x bei _A+(0,0.1,0.1) achse +y länge 0.5 ; moment M_y bei _A+(0,-0.1,0.1) achse +z länge 0.5 ; moment M_z bei _A+(0.1,0.1,0) achse +x länge 0.5
+ohne namen
