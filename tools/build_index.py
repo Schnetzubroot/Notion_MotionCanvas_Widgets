@@ -60,8 +60,12 @@ ANA = {
     ('analysis-w7', 'A-5'): 'Analysis Anhang A: Polynome und Nullstellen', ('analysis-w7', 'A-6'): 'Analysis Anhang A: Lineare DGL mit Ansatz e^(αx)',
     ('analysis-w7', '5-1'): 'Analysis II.5 Exponentialfunktion und e', ('analysis-w7', '5-2'): 'Analysis II.5 Logarithmus und Basis a',
     ('analysis-w7', '5-3'): 'Analysis II.5 Hyperbolische Funktionen', ('analysis-w7', '6-1'): 'Analysis II.6 Grössenordnungen',
+    ('analysis-w11', '1-1'): 'Analysis VIII.1 Konvergenz und Divergenz von Reihen', ('analysis-w11', '2-1'): 'Analysis VIII.2 Potenzreihen',
+    ('analysis-w11', '3-1'): 'Analysis VIII.3 Taylorpolynom', ('analysis-w11', '4-1'): 'Analysis VIII.4 Taylorreihe und Binomialreihe',
+    ('analysis-w11', '4-2'): 'Analysis VIII.4 Koeffizientenvergleich', ('analysis-w11', '5-1'): 'Analysis VIII.5 Anwendungen: nicht elementare Integrale',
+    ('analysis-w11', '5-2'): 'Analysis VIII.5 Anwendungen: Potenzreihenansatz bei DGL',
 }
-parts.append('<h1 style="margin-top:32px">Analysis I</h1><p class="sub">Begleitmaterial zu U. Stammbach: Analysis I/II, Teil A (ETH Zürich).</p>')
+parts.append('<h1 style="margin-top:32px">Analysis I</h1><p class="sub">Begleitmaterial zu U. Stammbach: Analysis I/II, Teil A und C (ETH Zürich).</p>')
 for (folder, key), name in ANA.items():
     files = sorted((ROOT / folder).glob(f'{key}-*.html'))
     items = ''.join(f'<li><a href="{folder}/{f.name}">{title(f)}</a></li>' for f in files)

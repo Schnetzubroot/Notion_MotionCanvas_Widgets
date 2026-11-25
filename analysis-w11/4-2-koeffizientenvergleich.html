@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Koeffizientenvergleich: Reihe eines Quotienten f = g/h</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Koeffizientenvergleich: Reihe eines Quotienten f = g/h</h1>
+  <p class="sub">Ansatz f = c₀ + c₁x + c₂x² + …, dann h · f = g Glied für Glied vergleichen. Das Gleichungssystem lässt sich von oben nach unten auflösen. Die Tabelle zeigt die Koeffizienten, der Graph die Partialsumme.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>f</div><div><span class="sw" style="background:var(--c1)"></span>Partialsumme vom Grad n</div></div>
+    <div class="hint">Beispiel wählen und den Grad n erhöhen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  function dplot(v, A, f, color, w = 1.3, N = 300, a = A.x0, b = A.x1) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w, [5, 4]); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || !A.inY(y)) { fl(); continue; } seg.push(A.P(x, y)); } fl(); }
+  const fac = k => { let s = 1; for (let i = 2; i <= k; i++) s *= i; return s; };
+  const poly = (c, x, x0 = 0) => { let s = 0; for (let k = c.length - 1; k >= 0; k--) s = s * (x - x0) + c[k]; return s; };
+  const sci = x => !isFinite(x) ? '–' : (x !== 0 && (Math.abs(x) >= 1e6 || Math.abs(x) < 1e-4)) ? x.toExponential(2).replace('.', ',').replace(/e\+?(-?)(\d+)/, (m, s, d) => ' · 10^' + (s ? '−' : '') + d) : fmt(x, 5);
+  const simpson = (f, a, b, n = 400) => { const h = (b - a) / n; let s = f(a) + f(b); for (let i = 1; i < n; i++) s += f(a + i * h) * (i % 2 ? 4 : 2); return s * h / 3; };
+  // Intervall-Band für den Konvergenzbereich auf der x-Achse
+  function band(v, A, a, b, inA, inB, color) {
+    const y = A.y0, lo = Math.max(a, A.x0), hi = Math.min(b, A.x1);
+    if (hi > lo) { v.poly([A.P(lo, A.y0), A.P(hi, A.y0), A.P(hi, A.y1), A.P(lo, A.y1)], color, 0, null, true, v.C.fill); v.line(A.P(lo, y), A.P(hi, y), color, 5); }
+    if (isFinite(a) && a >= A.x0) v.dot(A.P(a, y), color, 6, !inA);
+    if (isFinite(b) && b <= A.x1) v.dot(A.P(b, y), color, 6, !inB);
+  }
+
+  const sinC = k => k % 2 ? ((k - 1) / 2 % 2 ? -1 : 1) / fac(k) : 0, cosC = k => k % 2 ? 0 : (k / 2 % 2 ? -1 : 1) / fac(k), shC = k => k % 2 ? 1 / fac(k) : 0;
+  const E = {
+    tan: { name: 'tan x = sin x / cos x (Skript S. 20–21)', g: sinC, h: cosC, f: Math.tan, ax: [-2.2, 2.2, -4, 4], lim: Math.PI / 2,
+      note: 'Skript S. 20–21: cos x · tan x = sin x, Koeffizientenvergleich gibt c₁ = 1, c₃ = 1/3, c₅ = 2/15. Die Reihe konvergiert für |x| < π/2 (gestrichelt). Die geraden Koeffizienten verschwinden, weil tan ungerade ist (Skript S. 21).' },
+    sinh: { name: 'x / sinh x (Prüfung Herbst 1990)', g: k => k === 1 ? 1 : 0, h: shC, f: x => Math.abs(x) < 1e-9 ? 1 : x / Math.sinh(x), ax: [-5, 5, -0.5, 1.5], lim: null,
+      note: 'Alte Prüfung Herbst 1990 (zweistündig), Aufgabe 6, Lösung S. 198–199: x = (c₀ + c₁x + …)(x + x³/3! + …). Ergebnis 1 − x²/6 + 7x⁴/360 + …. Hier ist g = x, also verschiebt sich der Vergleich um eine Potenz.' },
+    cos1: { name: '1 / (1 + cos x) (Prüfung Frühling 1989)', g: k => k ? 0 : 1, h: k => (k ? 0 : 1) + cosC(k), f: x => 1 / (1 + Math.cos(x)), ax: [-4, 4, -0.5, 4], lim: null,
+      note: 'Alte Prüfung Frühling 1989 (zweistündig), Aufgabe 4, Lösung S. 206–207: 1 = (2 − x²/2 + x⁴/24 − …)(c₀ + c₁x + …). Ergebnis 1/2 + x²/8 + x⁴/48 + …. f ist gerade, also nur gerade Potenzen.' },
+  };
+  let key = 'tan', n = 5;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, e = E[key], A = mkAx(...e.ax); axes(v, A, 'x', 'y');
+    // h·c = g rekursiv: c_k = (g_k − Σ_{j=1..k} h_j c_{k−j}) / h_0; bei sinh: h_0 = 0, also über x-Verschiebung
+    const c = [];
+    if (e.h(0) === 0) { for (let k = 0; k <= n; k++) { let s = e.g(k + 1); for (let j = 1; j <= k; j++) s -= e.h(j + 1) * c[k - j]; c.push(s / e.h(1)); } }
+    else { for (let k = 0; k <= n; k++) { let s = e.g(k); for (let j = 1; j <= k; j++) s -= e.h(j) * c[k - j]; c.push(s / e.h(0)); } }
+    if (e.lim) { [-e.lim, e.lim].forEach(x => v.line(A.P(x, A.y0), A.P(x, A.y1), C.muted, 1.2, [5, 4])); }
+    fplot(v, A, e.f, C.c2, 2.6, 900); fplot(v, A, x => poly(c, x), C.c1, 2.2, 900);
+    const fr = x => { if (Math.abs(x) < 1e-12) return '0'; for (let d = 1; d <= 200000; d++) { const m = x * d; if (Math.abs(m - Math.round(m)) < 1e-9) return (Math.round(m) < 0 ? '−' : '') + Math.abs(Math.round(m)) + (d > 1 ? '/' + d : ''); } return fmt(x, 6); };
+    MW.info(infoEl, e.name, c.map((ck, k) => ['c' + '₀₁₂₃₄₅₆₇₈₉'[k % 10] + (k >= 10 ? '(' + k + ')' : ''), fr(ck)]).slice(0, 10), e.note);
+  });
+  MW.slider(ctl, { label: 'Grad n', min: 0, max: 15, step: 1, value: n, fmt: u => fmt(u, 0), onInput: u => { n = u; view.redraw(); } });
+  MW.select(ctl, 'Beispiel', Object.entries(E).map(([k, e]) => [k, e.name]), u => { key = u; view.redraw(); }).set(key);
+
+})();
+</script>
+</body>
+</html>
