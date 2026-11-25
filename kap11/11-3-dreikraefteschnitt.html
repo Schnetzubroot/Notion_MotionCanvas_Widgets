@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dreikräfteschnitt (Ritterschnitt): eine Gleichung, eine Unbekannte</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Dreikräfteschnitt (Ritterschnitt): eine Gleichung, eine Unbekannte</h1>
+  <p class="sub">Man schneidet drei Stäbe, die nicht alle vom gleichen Knoten ausgehen, und betrachtet einen Teil. Die Momentenbedingung um den Schnittpunkt P der Achsen zweier geschnittener Stäbe enthält nur noch die dritte Stabkraft. Sind die beiden anderen Stäbe parallel, nimmt man die Komponentenbedingung senkrecht zu ihnen.</p>
+  <div class="stage">
+    <canvas id="cv" class="tall"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c3)"></span>gesuchte Stabkraft</div><div><span class="sw" style="background:var(--c2)"></span>andere geschnittene Stäbe (Zug angesetzt)</div><div><span class="sw" style="background:var(--c4)"></span>Lasten</div><div><span class="sw" style="background:var(--c5)"></span>Lagerkräfte</div><div><span class="sw" style="background:var(--c1)"></span>Momentenpunkt P</div></div>
+    <div class="hint">Schnitt und gesuchte Stabkraft wählen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const h3 = Math.sqrt(3) / 2;
+  const MODELS = {
+    buch: { name: 'Buch Fig. 11.6', N: { A: [0, 0], E: [1, 0], D: [0.5, h3], C: [1.5, h3], H: [2, 0], G: [2.5, h3], B: [3, 0] },
+      bars: [['A', 'E'], ['A', 'D'], ['D', 'E'], ['D', 'C'], ['E', 'C'], ['C', 'H'], ['C', 'G'], ['G', 'H'], ['G', 'B'], ['H', 'B']], num: true,
+      sup: { A: 'xy', B: 'xy' }, loads: { D: [0, -1], G: [-Math.sqrt(3), 0] }, lbl: { D: 'F', G: 'F√3' },
+      order: ['A', 'D', 'E', 'C', 'H', 'G', 'B'], box: { xmin: -0.6, xmax: 3.6, ymin: -0.55, ymax: 1.75 } },
+    ueb1: { name: 'Übungsheft Abb. 6.7 (Aufgabe 1)', N: { A: [0, 0], B: [0.5, 0], C: [1, 0], D: [1.5, 0], E: [2, 0], F: [2.5, 0], G: [0, 1], H: [0.5, 1], I: [1, 1], J: [1.5, 1], K: [2, 1], L: [2.5, 1] },
+      bars: 'G-H H-I I-J J-K K-L A-B B-C C-D D-E E-F G-A G-B H-B B-I I-C I-D J-D D-K K-E K-F L-F'.split(' ').map(s => s.split('-')), num: false,
+      sup: { A: 'xy', E: 'y' }, loads: { G: [1, 0], L: [1, 0], C: [0, -1] }, lbl: { G: 'F', L: 'F', C: 'F' },
+      box: { xmin: -0.6, xmax: 3.4, ymin: -0.6, ymax: 1.9 } },
+  };
+  const barName = (m, i) => m.num ? String(i + 1) : m.bars[i][0] + m.bars[i][1];
+  const sName = (m, i) => 'S' + (m.num ? sub(i + 1) : '_' + m.bars[i][0] + m.bars[i][1]);
+  const sub = n => String(n).split('').map(c => '₀₁₂₃₄₅₆₇₈₉'[+c]).join('');
+  const unit = (m, i, from) => { const [a, b] = m.bars[i]; const p = from === a ? m.N[a] : m.N[b], q = from === a ? m.N[b] : m.N[a]; return V.unit(V.sub(q, p)); };
+  // Gauss mit Spaltenpivot; liefert x oder null (singulär)
+  const gauss = (A, b) => { const n = A.length, M = A.map((r, i) => [...r, b[i]]);
+    for (let c = 0; c < n; c++) { let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-10) return null; [M[c], M[p]] = [M[p], M[c]];
+      for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; } }
+    return M.map((r, i) => r[n] / r[i]); };
+  // reduzierte Zeilenstufenform: Rang und Basis des Nullraums
+  const rref = A => { const M = A.map(r => [...r]), m = M.length, n = m ? M[0].length : 0, piv = []; let row = 0;
+    for (let c = 0; c < n && row < m; c++) { let p = row; for (let r = row + 1; r < m; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-9) continue; [M[row], M[p]] = [M[p], M[row]]; const d = M[row][c]; for (let k = 0; k < n; k++) M[row][k] /= d;
+      for (let r = 0; r < m; r++) if (r !== row) { const f = M[r][c]; if (f) for (let k = 0; k < n; k++) M[r][k] -= f * M[row][k]; }
+      piv.push(c); row++; }
+    const free = []; for (let c = 0; c < n; c++) if (!piv.includes(c)) free.push(c);
+    const null_ = free.map(f => { const x = new Array(n).fill(0); x[f] = 1; piv.forEach((c, r) => { x[c] = -M[r][f]; }); return x; });
+    return { rank: piv.length, null: null_ }; };
+  // Gleichgewichtsmatrix: Unbekannte = Stabkräfte (Zug positiv) + Lagerkomponenten
+  const eqSystem = m => { const keys = Object.keys(m.N), cols = m.bars.map((_, i) => ({ t: 'S', i }));
+    keys.forEach(k => { const s = m.sup[k] || ''; if (s.includes('x')) cols.push({ t: 'R', k, d: 0 }); if (s.includes('y')) cols.push({ t: 'R', k, d: 1 }); });
+    const A = [], b = [];
+    keys.forEach(k => [0, 1].forEach(d => { const row = cols.map(c => c.t === 'S' ? (m.bars[c.i].includes(k) ? unit(m, c.i, k)[d] : 0) : (c.k === k && c.d === d ? 1 : 0));
+      A.push(row); b.push(-((m.loads[k] || [0, 0])[d])); }));
+    return { keys, cols, A, b }; };
+  const solveTruss = m => { const sys = eqSystem(m); if (sys.A.length !== sys.cols.length) return null; const x = gauss(sys.A, sys.b); if (!x) return null;
+    const S = m.bars.map((_, i) => x[i]), R = {}; sys.cols.forEach((c, j) => { if (c.t === 'R') { R[c.k] = R[c.k] || [0, 0]; R[c.k][c.d] = x[j]; } }); return { S, R }; };
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  // Zahl als p/q·√r erkennen (Buchform), sonst Dezimalzahl
+  const nice = (x, d = 3) => { if (Math.abs(x) < 1e-9) return '0';
+    for (const r of [1, 3, 2, 5, 6, 15]) for (let q = 1; q <= 36; q++) { const p = x * q / Math.sqrt(r), pr = Math.round(p);
+      if (pr !== 0 && Math.abs(p - pr) < 1e-7 && Math.abs(pr) <= 300) { const g = gcd(Math.abs(pr), q), P = Math.abs(pr) / g, Q = q / g;
+        return (x < 0 ? '−' : '') + (r > 1 ? (P === 1 ? '' : P) + '√' + r : P) + (Q > 1 ? '/' + Q : ''); } }
+    return fmt(x, d); };
+  const niceF = x => { const s = nice(x); return s === '0' ? '0' : s === '1' ? 'F' : s === '−1' ? '−F' : s + '·F'; };
+  // Zeichnen: Stäbe, Knoten, Lager, Lasten
+  const drawSup = (v, p, type, C) => { const s = 0.13; v.poly([p, [p[0] - s, p[1] - 1.5 * s], [p[0] + s, p[1] - 1.5 * s]], C.fg, 1.6, null, true);
+    const y0 = p[1] - 1.5 * s - (type === 'y' ? 0.07 : 0); if (type === 'y') { v.line([p[0] - 1.4 * s, y0], [p[0] + 1.4 * s, y0], C.fg, 1.6); }
+    for (let i = -1; i <= 1; i += 0.5) v.line([p[0] + i * s * 1.2, y0], [p[0] + i * s * 1.2 - 0.06, y0 - 0.07], C.muted, 1); };
+  const drawLoads = (v, m, C, k = 0.42) => Object.entries(m.loads).forEach(([n, f]) => { const d = V.mul(f, k), p = m.N[n];
+    v.arrow(V.sub(p, d), d, C.c4, 3, 11); v.text(V.sub(p, d), m.lbl[n], C.c4, 4, -6, 13); });
+  const labelAt = (v, m, i, txt, col, bold) => { const [a, b] = m.bars[i], p = m.N[a], q = m.N[b], d = V.sub(q, p);
+    if (Math.abs(d[0]) < 1e-6) v.text(V.add(p, V.mul(d, 0.3)), txt, col, 5, 0, 10.5, bold);
+    else if (Math.abs(d[1]) < 1e-6) v.text(V.add(p, V.mul(d, 0.5)), txt, col, 0, -6, 10.5, bold, 'center');
+    else v.text(V.add(p, V.mul(d, 0.64)), txt, col, 0, 4, 10.5, bold, 'center'); };
+  const cx = (x, u) => { const c = nice(x); return c === '0' ? '0' : c === '1' ? u : c === '−1' ? '−' + u : c + '·' + u; };
+  const barCol = (C, s) => Math.abs(s) < 1e-7 ? C.muted : s > 0 ? C.c2 : C.c1;
+
+  const CUTS = {
+    'b451': { m: 'buch', bars: [3, 4, 0], side: ['A', 'D', 'E'], t: 'Buch: Stäbe 4, 5, 1, linker Teil' },
+    'b134': { m: 'buch', bars: [0, 2, 3], side: ['A', 'D'], t: 'Buch: Stäbe 1, 3, 4, linker Teil' },
+    'b7810': { m: 'buch', bars: [6, 7, 9], side: ['G', 'B'], t: 'Buch Fig. 11.11: Stäbe 7, 8, 10, rechter Teil' },
+    'b6710': { m: 'buch', bars: [5, 6, 9], side: ['G', 'H', 'B'], t: 'Buch: Stäbe 6, 7, 10, rechter Teil' },
+    'u1': { m: 'ueb1', bars: [4, 17, 8], side: ['E', 'F', 'K', 'L'], t: 'Übungsheft Abb. 6.9: JK, DK, DE, rechter Teil' },
+  };
+  let ck = 'b7810', want = 0;
+  const inter = (p1, d1, p2, d2) => { const det = d1[0] * (-d2[1]) - d1[1] * (-d2[0]); if (Math.abs(det) < 1e-9) return null;
+    const r = V.sub(p2, p1), t = (r[0] * (-d2[1]) - r[1] * (-d2[0])) / det; return V.add(p1, V.mul(d1, t)); };
+  const cr = (a, b) => a[0] * b[1] - a[1] * b[0];
+  const view = MW.View2D(cv, { xmin: -0.6, xmax: 3.6, ymin: -0.7, ymax: 1.6 }, v => {
+    const C = v.C, cut = CUTS[ck], m = MODELS[cut.m], sol = solveTruss(m), side = new Set(cut.side);
+    // Teil zeichnen
+    m.bars.forEach((b, i) => { const inS = side.has(b[0]) && side.has(b[1]), isCut = cut.bars.includes(i);
+      if (isCut) { const sn = side.has(b[0]) ? b[0] : b[1], on = sn === b[0] ? b[1] : b[0]; v.line(m.N[sn], V.add(m.N[sn], V.mul(V.sub(m.N[on], m.N[sn]), 0.45)), C.fg, 3);
+        v.line(V.add(m.N[sn], V.mul(V.sub(m.N[on], m.N[sn]), 0.55)), m.N[on], C.grid, 2, [4, 4]); }
+      else v.line(m.N[b[0]], m.N[b[1]], inS ? C.fg : C.grid, inS ? 3 : 2, inS ? null : [4, 4]);
+      const mid = V.mul(V.add(m.N[b[0]], m.N[b[1]]), 0.5); if (m.num) v.text(mid, barName(m, i), inS || isCut ? C.muted : C.grid, -12, -4, 11, false); });
+    Object.keys(m.N).forEach(n => { v.dot(m.N[n], side.has(n) ? C.fg : C.grid, 4); v.text(m.N[n], n, side.has(n) ? C.fg : C.grid, 6, 16, 13); });
+    Object.entries(m.sup).forEach(([n, t]) => { if (side.has(n)) { const R = sol.R[n], p = m.N[n]; v.arrow(V.sub(p, V.mul(R, 0.3)), V.mul(R, 0.3), C.c5, 2.6, 10); } });
+    Object.entries(m.loads).forEach(([n, f]) => { if (!side.has(n)) return; const d = V.mul(f, 0.42), p = m.N[n]; v.arrow(V.sub(p, d), d, C.c4, 3, 11); v.text(V.sub(p, d), m.lbl[n], C.c4, 4, -6, 13); });
+    // Geschnittene Stäbe: Kraft am Teil als Zug (vom Knoten in Richtung des abgeschnittenen Knotens)
+    const info = cut.bars.map(i => { const b = m.bars[i], sn = side.has(b[0]) ? b[0] : b[1]; return { i, p: m.N[sn], e: unit(m, i, sn) }; });
+    info.forEach((c, j) => { v.arrow(c.p, V.mul(c.e, 0.4), j === want ? C.c3 : C.c2, j === want ? 3.6 : 2.4, 11); v.text(V.add(c.p, V.mul(c.e, 0.4)), sName(m, c.i), j === want ? C.c3 : C.c2, 4, -4, 13); });
+    const k = info[want], o = info.filter((_, j) => j !== want), P = inter(o[0].p, o[0].e, o[1].p, o[1].e);
+    // Bekannte äussere Kräfte am Teil
+    const ext = []; cut.side.forEach(n => { if (m.loads[n]) ext.push([m.N[n], m.loads[n], m.lbl[n]]); if (sol.R[n]) ext.push([m.N[n], sol.R[n], n]); });
+    let rows, head, note, res;
+    if (P) { v.dot(P, C.c1, 6); v.text(P, 'P', C.c1, 8, -8, 15);
+      v.line(o[0].p, P, C.c2, 1, [2, 4]); v.line(o[1].p, P, C.c2, 1, [2, 4]);
+      const arm = cr(V.sub(k.p, P), k.e), Mext = ext.reduce((s, [p, f]) => s + cr(V.sub(p, P), f), 0); res = -Mext / arm;
+      const foot = V.add(k.p, V.mul(k.e, V.dot(V.sub(P, k.p), k.e))); v.line(P, foot, C.c3, 1.4, [5, 3]); v.line(k.p, foot, C.c3, 1, [2, 3]);
+      head = 'Momentenbedingung um P (Schnittpunkt von ' + o.map(c => sName(m, c.i)).join(' und ') + ')';
+      rows = [['Hebelarm von ' + sName(m, k.i) + ' um P', nice(Math.abs(arm)) + ' L'], ['Moment der Lasten und Lagerkräfte um P', niceF(Mext) + 'L'], ['Gleichung', nice(arm) + 'L·' + sName(m, k.i) + ' + (' + niceF(Mext) + 'L) = 0']];
+      note = 'Die Kräfte ' + o.map(c => sName(m, c.i)).join(', ') + ' gehen durch P und liefern kein Moment. P darf ausserhalb des Teils liegen.'; }
+    else { const n = [-o[0].e[1], o[0].e[0]], comp = V.dot(k.e, n), Fext = ext.reduce((s, [, f]) => s + V.dot(f, n), 0); res = -Fext / comp;
+      v.arrow(k.p, V.mul(n, 0.5), C.c1, 1.8, 9); v.text(V.add(k.p, V.mul(n, 0.5)), 'n', C.c1, 4, -4, 13);
+      head = o.map(c => sName(m, c.i)).join(' und ') + ' sind parallel: Komponentenbedingung senkrecht dazu';
+      rows = [['Richtung n', fv(n.map(x => +x.toFixed(3)))], ['Komponente von ' + sName(m, k.i), nice(comp) + '·' + sName(m, k.i)], ['Lasten und Lagerkräfte in n', niceF(Fext)]];
+      note = 'Bei parallelen Stäben gibt es keinen Schnittpunkt. Die Komponente senkrecht zu ihnen enthält nur die gesuchte Stabkraft (Buch S. 168, Stab 8).'; }
+    rows.push([sName(m, k.i), niceF(res) + (Math.abs(res) < 1e-7 ? ' (Nullstab)' : res > 0 ? ' (Zug)' : ' (Druck)')], ['Kontrolle Knotengleichgewicht', niceF(sol.S[k.i])]);
+    MW.info(infoEl, head, rows, note);
+  });
+  const sel = MW.select(ctl, 'Schnitt', Object.entries(CUTS).map(([k, c]) => [k, c.t]), x => { ck = x; want = 0; wsel.set(0); view.redraw(); });
+  sel.set(ck);
+  const wsel = MW.select(ctl, 'Gesucht', [[0, '1. geschnittener Stab'], [1, '2. geschnittener Stab'], [2, '3. geschnittener Stab']], x => { want = +x; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+titel "Übungsheft Abb. 6.13 – Ebenes Fachwerk (Aufgabe 2)"
+param a=1  h=0.866
+knoten A(0,0) I(-a/2,h) J(a/2,h) H(0,2h) F(a,2h) G(a/2,3h) E(1.5a,3h) C(2.5a,3h) D(2a,2h) B(3a,2h)
+fachwerk A-I A-J I-J I-H H-J J-F H-F H-G G-F G-E E-F F-D E-D E-C C-D D-B C-B
+loslager A ; festlager B
+text mitte(F,D) "1" lage o ; text mitte(E,F) "2" lage r
+kraft F bei (0.85a,3h) richtung -y zu länge 0.5a
+kraft F bei H richtung +x zu länge 0.5a
+moment M bei C
+kante I-J "a" oben  A-I "a" links  A-J "a" rechts

@@ -1,0 +1,7 @@
+titel "Übungsheft Abb. 6.3 – Stab mit Kraft in der Mitte (kein ideales Fachwerk)"
+param L=2
+punkte _A(0,0)  _C(L,0)
+stab _A-_C
+kraft F bei (0.95,0) richtung -y zu länge 0.6
+kraft A_x bei _A richtung 180° länge 0.6 ; kraft A_y bei _A richtung -y länge 0.5
+kraft C_x bei _C richtung +x länge 0.6 ; kraft C_y bei _C richtung +y länge 0.5

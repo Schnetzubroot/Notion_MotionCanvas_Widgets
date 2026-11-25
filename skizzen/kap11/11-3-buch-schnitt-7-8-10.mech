@@ -1,0 +1,12 @@
+titel "Buch Fig. 11.11 – Dreikräfteschnitt durch die Stäbe 7, 8, 10 am Fachwerk von Fig. 11.6 (rechter Teil)"
+param L=1  h=0.866
+knoten G(2.5L,h) B(3L,0)
+punkte _H(2L,0) _C(1.5L,h)
+fachwerk G-B
+linie G teil(G,_C,0.35) gestrichelt grau ; linie G teil(G,_H,0.35) gestrichelt grau ; linie B teil(B,_H,0.35) gestrichelt grau
+marke _H ; beschrifte _H "P = H" lage u
+kraft S_7 bei G richtung 180° länge 0.45L lage o
+kraft S_8 bei G richtung (-0.5,-0.866) länge 0.45L lage l
+kraft S_{10} bei B richtung 180° länge 0.45L lage u
+kraft "F√3" bei G richtung 180° zu länge 0.5L lage o
+kraft B_x bei B richtung +x länge 0.45L ; kraft B_y bei B richtung +y zu länge 0.45L

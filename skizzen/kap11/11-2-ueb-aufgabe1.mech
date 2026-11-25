@@ -1,0 +1,12 @@
+titel "Übungsheft Abb. 6.7 – Ideales ebenes Fachwerk (Aufgabe 1)"
+param a=1
+knoten A(0,0) B(a/2,0) C(a,0) D(3a/2,0) E(2a,0) F(5a/2,0)
+knoten G(0,a) H(a/2,a) I(a,a) J(3a/2,a) K(2a,a) L(5a/2,a)
+fachwerk G-H H-I I-J J-K K-L  A-B B-C C-D D-E E-F
+fachwerk G-A G-B H-B B-I I-C I-D J-D D-K K-E K-F L-F
+festlager A
+loslager E
+kraft F bei G richtung +x zu
+kraft F bei L richtung +x
+kraft F bei C richtung -y
+kante G-A "a" links  G-H "a/2" unten

@@ -1,0 +1,6 @@
+titel "Übungsheft S. 79 – Stab BC ist keine Pendelstütze: Schnittkräfte inkl. Querkraft 3F und Moment 3Fa"
+massstab 0.6
+punkte C(0,0) B(0.8,-0.95)
+stab C-B knoten
+kraft S_{BC} bei C richtung 130° länge 0.35 ; kraft "3F" bei C richtung 40° länge 0.4 ; moment "3Fa" bei C
+kraft S_{BC} bei B richtung -50° länge 0.35 ; kraft "3F" bei B richtung 220° länge 0.4
