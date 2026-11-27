@@ -125,15 +125,15 @@ W.append(dict(file='8-1-darstellungsformen.html', title='Ebene Kurven: Parameter
   const ch = Math.cosh, sh = Math.sinh;
   const K = {
     kreis: { name: 'Kreis', r: t => [Math.cos(t), Math.sin(t)], t: [0, 2 * Math.PI], ax: [0, 0, 2.2], I: '(cos t, sin t), 0 ≤ t < 2π', II: 'x² + y² − 1 = 0', III: 'f₁,₂(x) = ±√(1 − x²), −1 ≤ x ≤ 1',
-      f1: x => Math.sqrt(1 - x * x), f2: x => -Math.sqrt(1 - x * x), src: 'Notizen Kap. II S. 36–37, Skript S. 65–66' },
+      f1: x => Math.sqrt(1 - x * x), f2: x => -Math.sqrt(1 - x * x), src: 'Notizen Kap. II S. 36–39, Skript S. 65–66' },
     ellipse: { name: 'Ellipse (a = 2, b = 1)', r: t => [2 * Math.cos(t), Math.sin(t)], t: [0, 2 * Math.PI], ax: [0, 0, 3], I: '(a cos t, b sin t)', II: 'x²/a² + y²/b² − 1 = 0', III: 'f₁,₂(x) = ±b √(1 − x²/a²)',
-      f1: x => Math.sqrt(1 - x * x / 4), f2: x => -Math.sqrt(1 - x * x / 4), src: 'Notizen Kap. II S. 38, Skript S. 66–67' },
+      f1: x => Math.sqrt(1 - x * x / 4), f2: x => -Math.sqrt(1 - x * x / 4), src: 'Notizen Kap. II S. 39, Skript S. 66–67' },
     hyp: { name: 'Hyperbel, rechter Ast (a = b = 1)', r: t => [ch(t), sh(t)], t: [-2, 2], ax: [1.8, 0, 3], I: '(a cosh t, b sinh t), t ∈ ℝ', II: 'x²/a² − y²/b² − 1 = 0, x > 0', III: 'f₁,₂(x) = ±b √(x²/a² − 1), x ≥ a',
-      f1: x => Math.sqrt(x * x - 1), f2: x => -Math.sqrt(x * x - 1), src: 'Notizen Kap. II S. 38, Skript S. 67–68 (cosh² − sinh² = 1)' },
+      f1: x => Math.sqrt(x * x - 1), f2: x => -Math.sqrt(x * x - 1), src: 'Notizen Kap. II S. 39–40, Skript S. 67–68 (cosh² − sinh² = 1)' },
     neil: { name: 'Neil’sche Parabel', r: t => [t * t, t ** 3], t: [-1.6, 1.6], ax: [1.2, 0, 2.6], I: '(t², t³)', II: 'x³ − y² = 0', III: 'f₁,₂(x) = ±x^(3/2), x ≥ 0',
-      f1: x => x ** 1.5, f2: x => -(x ** 1.5), src: 'Notizen Kap. II S. 37: t eliminieren, x = t² und y = t³ ergibt x³ = t⁶ = y². In (0, 0) hat die Kurve eine Spitze.' },
+      f1: x => x ** 1.5, f2: x => -(x ** 1.5), src: 'Notizen Kap. II S. 38: t eliminieren, x = t² und y = t³ ergibt x³ = t⁶ = y². In (0, 0) hat die Kurve eine Spitze.' },
     par: { name: 'Parabel x + y² = 0', r: t => [-t * t, t], t: [-2, 2], ax: [-1.6, 0, 2.6], I: '(−t², t)', II: 'x + y² = 0', III: 'f₁,₂(x) = ±√(−x), x ≤ 0 (oder einfacher: x = −y² als Funktion von y)',
-      f1: x => Math.sqrt(-x), f2: x => -Math.sqrt(-x), src: 'Notizen Kap. II S. 38–39' },
+      f1: x => Math.sqrt(-x), f2: x => -Math.sqrt(-x), src: 'Notizen Kap. II S. 40' },
   };
   let key = 'ellipse', t = 0.8;
   const view = MW.View2D(cv, ''' + BOX + r''', v => {
