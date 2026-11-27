@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extremum oder Sattelpunkt? Die erste nicht verschwindende Ableitung entscheidet</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Extremum oder Sattelpunkt? Die erste nicht verschwindende Ableitung entscheidet</h1>
+  <p class="sub">Sind f′(x₀) = … = f⁽ⁿ⁻¹⁾(x₀) = 0, aber f⁽ⁿ⁾(x₀) ≠ 0, dann gilt: n gerade ergibt ein lokales Extremum, n ungerade einen Sattelpunkt (Vorlesung 18, Notizen S. 33).</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>f</div><div><span class="sw" style="background:var(--c1)"></span>x₀</div></div>
+    <div class="hint">Funktion wählen und den Exponenten n ändern.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  function dplot(v, A, f, color, w = 1.3, N = 300, a = A.x0, b = A.x1) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w, [5, 4]); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || !A.inY(y)) { fl(); continue; } seg.push(A.P(x, y)); } fl(); }
+  const KX = 'rgba(15, 157, 88, 0.11)', KV = 'rgba(209, 69, 59, 0.10)';
+  // gleiche Skalierung in x und y (Zeichenfläche 6 × 3.4)
+  const eqAx = (xc, yc, hw) => mkAx(xc - hw, xc + hw, yc - hw * 3.4 / 6, yc + hw * 3.4 / 6);
+  const range = (f, a, b, N = 400) => { let lo = Infinity, hi = -Infinity; for (let i = 0; i <= N; i++) { const y = f(a + (b - a) * i / N); if (isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); } } const p = 0.08 * (hi - lo || 1); return [lo - p, hi + p]; };
+  const roots = (g, a, b, N = 2000) => { const r = []; let px = a, pg = g(a);
+    for (let i = 1; i <= N; i++) { const x = a + (b - a) * i / N, y = g(x); if (isFinite(y) && isFinite(pg) && pg * y < 0) { let l = px, h = x; for (let k = 0; k < 60; k++) { const m = (l + h) / 2; (g(l) * g(m) <= 0) ? h = m : l = m; } r.push((l + h) / 2); } px = x; pg = y; } return r; };
+  const cplot = (v, A, r, t0, t1, color, w = 2.2, N = 600) => { let seg = []; const fl = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const p = r(t0 + (t1 - t0) * i / N); if (!isFinite(p[0]) || !isFinite(p[1]) || !A.inY(p[1]) || p[0] < A.x0 || p[0] > A.x1) { fl(); continue; } seg.push(A.P(p[0], p[1])); } fl(); };
+
+  const fac = k => { let s = 1; for (let i = 2; i <= k; i++) s *= i; return s; };
+  const F = {
+    pow: { name: 'xⁿ in x₀ = 0', f: (x, n) => x ** n, ders: n => Array.from({ length: n + 1 }, (_, k) => k === n ? fac(n) : 0) },
+    neg: { name: '−xⁿ in x₀ = 0', f: (x, n) => -(x ** n), ders: n => Array.from({ length: n + 1 }, (_, k) => k === n ? -fac(n) : 0) },
+    cos: { name: 'cos x − 1 + x²/2 in x₀ = 0 (n fest = 4)', f: x => Math.cos(x) - 1 + x * x / 2, ders: () => [0, 0, 0, 0, 1], fixed: true },
+    sin: { name: 'sin x − x in x₀ = 0 (n fest = 3)', f: x => Math.sin(x) - x, ders: () => [0, 0, 0, -1], fixed: true },
+  };
+  let key = 'pow', n = 3;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, c = F[key], d = c.ders(n), m = d.length - 1, f = x => c.f(x, n);
+    const A = c.fixed ? mkAx(-2.5, 2.5, ...range(f, -2.5, 2.5)) : mkAx(-1.6, 1.6, -1.6, 1.6); axes(v, A, 'x', 'y');
+    fplot(v, A, f, C.c2, 2.6, 600); v.dot(A.P(0, f(0)), C.c1, 6);
+    const ext = m % 2 === 0, sgn = d[m] > 0;
+    const res = ext ? (sgn ? 'lokales Minimum (f⁽ⁿ⁾ > 0)' : 'lokales Maximum (f⁽ⁿ⁾ < 0)') : 'Sattelpunkt (n ungerade)';
+    MW.info(infoEl, c.name, d.slice(1).map((y, k) => ['f' + ['′', '″', '‴', '⁽⁴⁾', '⁽⁵⁾', '⁽⁶⁾', '⁽⁷⁾', '⁽⁸⁾'][k] + '(0)', fmt(y, 4)]).concat([['erste Ableitung ≠ 0', 'Ordnung ' + m + (ext ? ' (gerade)' : ' (ungerade)')], ['Ergebnis', res]]),
+      'Notizen Kap. II S. 33: Für xⁿ ist f⁽ⁿ⁾(0) = n! und alle früheren Ableitungen sind 0. n gerade: Minimum, n ungerade: Sattelpunkt. Die Beispiele cos x − 1 + x²/2 und sin x − x sind eigene Beispiele zum selben Satz.');
+  });
+  const sn = MW.slider(ctl, { label: 'n', min: 2, max: 8, step: 1, value: n, fmt: u => fmt(u, 0), onInput: u => { n = u; view.redraw(); } });
+  MW.select(ctl, 'Funktion', Object.entries(F).map(([k, c]) => [k, c.name]), u => { key = u; sn.el.style.display = F[u].fixed ? 'none' : ''; view.redraw(); }).set(key);
+
+})();
+</script>
+</body>
+</html>

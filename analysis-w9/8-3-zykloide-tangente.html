@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zykloide, Tangenten- und Normalenvektor</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Zykloide, Tangenten- und Normalenvektor</h1>
+  <p class="sub">Ein Rad mit Radius a = 1 rollt auf der x-Achse. Ein Punkt im Abstand b vom Mittelpunkt beschreibt r(t) = (t − b sin t, 1 − b cos t). Der Tangentenvektor ṙ(t) = (ẋ, ẏ) zeigt in Laufrichtung, der Normalenvektor n = (−ẏ, ẋ) steht senkrecht darauf.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>Bahnkurve</div><div><span class="sw" style="background:var(--c1)"></span>Tangentenvektor ṙ</div><div><span class="sw" style="background:var(--c3)"></span>Normalenvektor n</div><div><span class="sw" style="background:var(--c4)"></span>Rad</div></div>
+    <div class="hint">t abspielen oder ziehen, b verändern. Bei b = 1 ist ṙ(0) = 0: Spitze.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  function dplot(v, A, f, color, w = 1.3, N = 300, a = A.x0, b = A.x1) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w, [5, 4]); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || !A.inY(y)) { fl(); continue; } seg.push(A.P(x, y)); } fl(); }
+  const KX = 'rgba(15, 157, 88, 0.11)', KV = 'rgba(209, 69, 59, 0.10)';
+  // gleiche Skalierung in x und y (Zeichenfläche 6 × 3.4)
+  const eqAx = (xc, yc, hw) => mkAx(xc - hw, xc + hw, yc - hw * 3.4 / 6, yc + hw * 3.4 / 6);
+  const range = (f, a, b, N = 400) => { let lo = Infinity, hi = -Infinity; for (let i = 0; i <= N; i++) { const y = f(a + (b - a) * i / N); if (isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); } } const p = 0.08 * (hi - lo || 1); return [lo - p, hi + p]; };
+  const roots = (g, a, b, N = 2000) => { const r = []; let px = a, pg = g(a);
+    for (let i = 1; i <= N; i++) { const x = a + (b - a) * i / N, y = g(x); if (isFinite(y) && isFinite(pg) && pg * y < 0) { let l = px, h = x; for (let k = 0; k < 60; k++) { const m = (l + h) / 2; (g(l) * g(m) <= 0) ? h = m : l = m; } r.push((l + h) / 2); } px = x; pg = y; } return r; };
+  const cplot = (v, A, r, t0, t1, color, w = 2.2, N = 600) => { let seg = []; const fl = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const p = r(t0 + (t1 - t0) * i / N); if (!isFinite(p[0]) || !isFinite(p[1]) || !A.inY(p[1]) || p[0] < A.x0 || p[0] > A.x1) { fl(); continue; } seg.push(A.P(p[0], p[1])); } fl(); };
+
+  const simpson = (f, a, b, n = 400) => { if (a === b) return 0; const h = (b - a) / n; let s = f(a) + f(b); for (let i = 1; i < n; i++) s += f(a + i * h) * (i % 2 ? 4 : 2); return s * h / 3; };
+  const POS = 'rgba(47, 111, 219, 0.22)', NEG = 'rgba(209, 69, 59, 0.22)';
+  // Fläche zwischen Graph und x-Achse von a bis b, oberhalb blau, unterhalb rot
+  function area(v, A, f, a, b, N = 300) { if (a === b) return; const lo = Math.min(a, b), hi = Math.max(a, b), dx = (hi - lo) / N;
+    for (let i = 0; i < N; i++) { const x0 = lo + i * dx, x1 = x0 + dx, y0 = f(x0), y1 = f(x1), cy = A.y0 <= 0 && A.y1 >= 0 ? 0 : A.y0;
+      const cl = y => Math.max(A.y0, Math.min(A.y1, y));
+      v.poly([A.P(x0, cy), A.P(x0, cl(y0)), A.P(x1, cl(y1)), A.P(x1, cy)], null, 0, null, true, (y0 + y1) >= 0 ? POS : NEG); } }
+
+  let key = 'zyk', b = 1, t = 2;
+  const K = {
+    zyk: { name: 'Zykloide', r: t => [t - b * Math.sin(t), 1 - b * Math.cos(t)], d: t => [1 - b * Math.cos(t), b * Math.sin(t)], T: [0, 4 * Math.PI], ax: [2 * Math.PI, 1.3, 7] },
+    zw: { name: 'Zwiebelkurve (cos t, sin 2t)', r: t => [Math.cos(t), Math.sin(2 * t)], d: t => [-Math.sin(t), 2 * Math.cos(2 * t)], T: [0, 2 * Math.PI], ax: [0, 0, 2.1] },
+  };
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, c = K[key], A = eqAx(...c.ax); axes(v, A, 'x', 'y', key === 'zyk' ? Math.PI : 0.5, key === 'zyk' ? 1 : 0.5);
+    cplot(v, A, c.r, c.T[0], c.T[1], C.c2, 2.2, 1200);
+    const tt = Math.min(c.T[1], t), p = c.r(tt), d = c.d(tt), L = Math.hypot(...d), n = [-d[1], d[0]];
+    if (key === 'zyk') { v.circle(A.P(tt, 1), A.X(1) - A.X(0), C.c4, 1.5); v.line(A.P(tt, 1), A.P(...p), C.c4, 1.5); v.dot(A.P(tt, 1), C.c4, 3); }
+    else { [Math.PI / 4, 3 * Math.PI / 4, 5 * Math.PI / 4, 7 * Math.PI / 4].forEach(s => v.dot(A.P(...c.r(s)), C.c5, 5, true)); [0, Math.PI].forEach(s => v.dot(A.P(...c.r(s)), C.c4, 5, true)); }
+    const sc = key === 'zyk' ? 1 : 0.4;
+    v.arrow(A.P(...p), [(A.X(d[0] * sc) - A.X(0)), (A.Y(d[1] * sc) - A.Y(0))], C.c1, 2.5);
+    v.arrow(A.P(...p), [(A.X(n[0] * sc) - A.X(0)), (A.Y(n[1] * sc) - A.Y(0))], C.c3, 2);
+    v.dot(A.P(...p), C.fg, 5);
+    const slope = Math.abs(d[0]) < 1e-9 ? (Math.abs(d[1]) < 1e-9 ? 'nicht definiert (ṙ = 0)' : 'vertikal') : fmt(d[1] / d[0], 4);
+    const note = key === 'zyk' ? 'Notizen Kap. II S. 42–44 und Skript S. 70: b = a gewöhnliche, b > a verlängerte, b < a verkürzte Zykloide. Für b = a ist ṙ(2kπ) = 0: Die Kurve hat dort eine Spitze, obwohl x(t) und y(t) beliebig oft differenzierbar sind (singulärer Punkt).'
+      : 'Notizen Kap. II S. 45 und Skript S. 70–71: ẏ = 2 cos 2t = 0 für t = π/4 + kπ/2 (horizontale Tangenten in (±1/√2, ±1), violett), ẋ = −sin t = 0 für t = 0, π (vertikale Tangenten, gelb). Im Ursprung (t = π/2, 3π/2) kreuzt sich die Kurve mit den Steigungen ±2.';
+    MW.info(infoEl, c.name + ',  t = ' + fmt(tt, 3), [['r(t)', fv(p, 4)], ['ṙ(t) = (ẋ, ẏ)', fv(d, 4)], ['|ṙ(t)|', fmt(L, 4)], ['Steigung ẏ/ẋ', slope], ['Normale n = (−ẏ, ẋ)', fv(n, 4)], ['Tangente', 'R(s) = r(t) + s · ṙ(t)']], note);
+  });
+  const pl = MW.player(ctl, { label: 't', t0: 0, t1: 4 * Math.PI, value: t, onTime: u => { t = u; view.redraw(); } });
+  const sb = MW.slider(ctl, { label: 'b', min: 0, max: 2, step: 0.01, value: b, onInput: u => { b = u; view.redraw(); } });
+  MW.select(ctl, 'Kurve', [['zyk', 'Zykloide'], ['zw', 'Zwiebelkurve (cos t, sin 2t)']], u => { key = u; sb.el.style.display = u === 'zyk' ? '' : 'none'; view.redraw(); }).set(key);
+
+})();
+</script>
+</body>
+</html>
