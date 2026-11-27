@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Partielle Integration: ∫ u′v dx = uv − ∫ uv′ dx</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Partielle Integration: ∫ u′v dx = uv − ∫ uv′ dx</h1>
+  <p class="sub">Die Produktregel rückwärts gelesen. Man wählt u′ (wird integriert) und v (wird abgeleitet) so, dass das neue Integral ∫ uv′ dx einfacher wird. Unten wird das Ergebnis F durch Ableiten kontrolliert.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>Integrand f</div><div><span class="sw" style="background:var(--c3)"></span>Stammfunktion F (mit F(0) = 0 bzw. F(1) = 0)</div></div>
+    <div class="hint">Beispiel und Wahl von u′, v umschalten.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  function dplot(v, A, f, color, w = 1.3, N = 300, a = A.x0, b = A.x1) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w, [5, 4]); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || !A.inY(y)) { fl(); continue; } seg.push(A.P(x, y)); } fl(); }
+  const KX = 'rgba(15, 157, 88, 0.11)', KV = 'rgba(209, 69, 59, 0.10)';
+  // gleiche Skalierung in x und y (Zeichenfläche 6 × 3.4)
+  const eqAx = (xc, yc, hw) => mkAx(xc - hw, xc + hw, yc - hw * 3.4 / 6, yc + hw * 3.4 / 6);
+  const range = (f, a, b, N = 400) => { let lo = Infinity, hi = -Infinity; for (let i = 0; i <= N; i++) { const y = f(a + (b - a) * i / N); if (isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); } } const p = 0.08 * (hi - lo || 1); return [lo - p, hi + p]; };
+  const roots = (g, a, b, N = 2000) => { const r = []; let px = a, pg = g(a);
+    for (let i = 1; i <= N; i++) { const x = a + (b - a) * i / N, y = g(x); if (isFinite(y) && isFinite(pg) && pg * y < 0) { let l = px, h = x; for (let k = 0; k < 60; k++) { const m = (l + h) / 2; (g(l) * g(m) <= 0) ? h = m : l = m; } r.push((l + h) / 2); } px = x; pg = y; } return r; };
+  const cplot = (v, A, r, t0, t1, color, w = 2.2, N = 600) => { let seg = []; const fl = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const p = r(t0 + (t1 - t0) * i / N); if (!isFinite(p[0]) || !isFinite(p[1]) || !A.inY(p[1]) || p[0] < A.x0 || p[0] > A.x1) { fl(); continue; } seg.push(A.P(p[0], p[1])); } fl(); };
+
+  const simpson = (f, a, b, n = 400) => { if (a === b) return 0; const h = (b - a) / n; let s = f(a) + f(b); for (let i = 1; i < n; i++) s += f(a + i * h) * (i % 2 ? 4 : 2); return s * h / 3; };
+  const POS = 'rgba(47, 111, 219, 0.22)', NEG = 'rgba(209, 69, 59, 0.22)';
+  // Fläche zwischen Graph und x-Achse von a bis b, oberhalb blau, unterhalb rot
+  function area(v, A, f, a, b, N = 300) { if (a === b) return; const lo = Math.min(a, b), hi = Math.max(a, b), dx = (hi - lo) / N;
+    for (let i = 0; i < N; i++) { const x0 = lo + i * dx, x1 = x0 + dx, y0 = f(x0), y1 = f(x1), cy = A.y0 <= 0 && A.y1 >= 0 ? 0 : A.y0;
+      const cl = y => Math.max(A.y0, Math.min(A.y1, y));
+      v.poly([A.P(x0, cy), A.P(x0, cl(y0)), A.P(x1, cl(y1)), A.P(x1, cy)], null, 0, null, true, (y0 + y1) >= 0 ? POS : NEG); } }
+
+  const E = Math.exp, s = Math.sin, c = Math.cos;
+  const X = {
+    xe: { name: '∫ x eˣ dx', f: x => x * E(x), F: x => (x - 1) * E(x) + 1, r: [-3, 1.6],
+      good: ['u′ = eˣ,  u = eˣ', 'v = x,  v′ = 1', '∫ x eˣ dx = x eˣ − ∫ eˣ dx = (x − 1) eˣ + C', 'Skript S. 15'],
+      bad: ['u′ = x,  u = x²/2', 'v = eˣ,  v′ = eˣ', '∫ x eˣ dx = (x²/2) eˣ − ∫ (x²/2) eˣ dx: schwieriger!', 'Skript S. 16. Rückwärts gelesen liefert die Gleichung immerhin ∫ x² eˣ dx = (x² − 2x + 2) eˣ + C.'] },
+    s2: { name: '∫ sin² x dx', f: x => s(x) ** 2, F: x => 0.5 * (x - s(x) * c(x)), r: [-3.5, 3.5],
+      good: ['u′ = sin x,  u = −cos x', 'v = sin x,  v′ = cos x', '∫ sin² x dx = −sin x cos x + x − ∫ sin² x dx  ⇒  ∫ sin² x dx = ½(x − sin x cos x) + C', 'Skript S. 16–17: Das Ausgangsintegral tritt wieder auf. Man löst die Gleichung danach auf.'] },
+    ecos: { name: '∫ eˣ cos 2x dx (a = 1, b = 2)', f: x => E(x) * c(2 * x), F: x => E(x) * (c(2 * x) + 2 * s(2 * x)) / 5 - 0.2, r: [-3, 2],
+      good: ['u′ = e^(ax),  u = e^(ax)/a  (zweimal)', 'v = cos bx, dann v = sin bx', '∫ e^(ax) cos bx dx = e^(ax)(a cos bx + b sin bx)/(a² + b²) + C', 'Skript S. 17–18: Zweimal partiell integrieren, dann nach dem Ausgangsintegral auflösen.'] },
+    log: { name: '∫ log x dx', f: Math.log, F: x => x * (Math.log(x) - 1) + 1, r: [0.02, 4],
+      good: ['u′ = 1,  u = x', 'v = log x,  v′ = 1/x', '∫ log x dx = x log x − ∫ 1 dx = x(log x − 1) + C', 'Skript S. 18: Trick mit dem Faktor 1.'] },
+    at: { name: '∫ arctan x dx', f: Math.atan, F: x => x * Math.atan(x) - 0.5 * Math.log(1 + x * x), r: [-4, 4],
+      good: ['u′ = 1,  u = x', 'v = arctan x,  v′ = 1/(1 + x²)', '∫ arctan x dx = x arctan x − ½ log(1 + x²) + C', 'Skript S. 18: Im Restintegral mit 2 erweitern, damit im Zähler die Ableitung des Nenners steht.'] },
+  };
+  let key = 'xe', bad = false, x = 1;
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, e = X[key], [a, b] = e.r; let lo = Infinity, hi = -Infinity;
+    [e.f, e.F].forEach(g => { const [l, h] = range(g, a, b); lo = Math.min(lo, l); hi = Math.max(hi, h); });
+    const A = mkAx(a, b, Math.min(lo, -0.2), Math.max(hi, 0.2)); axes(v, A, 'x', 'y');
+    fplot(v, A, e.F, C.c3, 2.6, 600); fplot(v, A, e.f, C.c2, 2.2, 600);
+    v.dot(A.P(x, e.F(x)), C.c3, 5); v.dot(A.P(x, e.f(x)), C.c2, 5);
+    const h = 1e-5, dF = (e.F(x + h) - e.F(x - h)) / (2 * h), st = bad && e.bad ? e.bad : e.good;
+    MW.info(infoEl, e.name + (bad && e.bad ? ' (ungünstige Wahl)' : ''), [['u′, u', st[0]], ['v, v′', st[1]], ['Rechnung', st[2]], ['Kontrolle bei x = ' + fmt(x, 2), 'F′(x) ≈ ' + fmt(dF, 5) + ',  f(x) = ' + fmt(e.f(x), 5)]], st[3] + ' Die Kontrolle durch Ableiten sollte man immer machen (Skript S. 21).');
+  });
+  const sx = MW.slider(ctl, { label: 'x', min: -3, max: 1.6, step: 0.01, value: x, onInput: u => { x = u; view.redraw(); } });
+  MW.check(ctl, 'andere Wahl von u′, v', bad, u => { bad = u; view.redraw(); }); const cb = ctl.lastChild;
+  MW.select(ctl, 'Beispiel', Object.entries(X).map(([k, e]) => [k, e.name]), u => { key = u; const e = X[u], i = sx.el.querySelector('input'); i.min = e.r[0]; i.max = e.r[1]; x = Math.min(e.r[1], 1); sx.set(x); cb.style.display = e.bad ? '' : 'none'; view.redraw(); }).set(key);
+
+})();
+</script>
+</body>
+</html>

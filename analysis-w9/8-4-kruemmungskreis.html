@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Krümmung, Krümmungskreis und Evolute</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Krümmung, Krümmungskreis und Evolute</h1>
+  <p class="sub">k = (ẋÿ − ẏẍ)/(ẋ² + ẏ²)^(3/2). k > 0: Linkskurve, k < 0: Rechtskurve. Der Krümmungskreis hat Radius 1/|k| und schmiegt sich der Kurve an. Seine Mittelpunkte bilden die Evolute.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>Kurve</div><div><span class="sw" style="background:var(--c1)"></span>Krümmungskreis</div><div><span class="sw" style="background:var(--c5)"></span>Evolute</div><div><span class="sw" style="background:var(--c3)"></span>Normale m</div></div>
+    <div class="hint">Kurve wählen und t verschieben. Die Evolute lässt sich einblenden.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  function dplot(v, A, f, color, w = 1.3, N = 300, a = A.x0, b = A.x1) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w, [5, 4]); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || !A.inY(y)) { fl(); continue; } seg.push(A.P(x, y)); } fl(); }
+  const KX = 'rgba(15, 157, 88, 0.11)', KV = 'rgba(209, 69, 59, 0.10)';
+  // gleiche Skalierung in x und y (Zeichenfläche 6 × 3.4)
+  const eqAx = (xc, yc, hw) => mkAx(xc - hw, xc + hw, yc - hw * 3.4 / 6, yc + hw * 3.4 / 6);
+  const range = (f, a, b, N = 400) => { let lo = Infinity, hi = -Infinity; for (let i = 0; i <= N; i++) { const y = f(a + (b - a) * i / N); if (isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); } } const p = 0.08 * (hi - lo || 1); return [lo - p, hi + p]; };
+  const roots = (g, a, b, N = 2000) => { const r = []; let px = a, pg = g(a);
+    for (let i = 1; i <= N; i++) { const x = a + (b - a) * i / N, y = g(x); if (isFinite(y) && isFinite(pg) && pg * y < 0) { let l = px, h = x; for (let k = 0; k < 60; k++) { const m = (l + h) / 2; (g(l) * g(m) <= 0) ? h = m : l = m; } r.push((l + h) / 2); } px = x; pg = y; } return r; };
+  const cplot = (v, A, r, t0, t1, color, w = 2.2, N = 600) => { let seg = []; const fl = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const p = r(t0 + (t1 - t0) * i / N); if (!isFinite(p[0]) || !isFinite(p[1]) || !A.inY(p[1]) || p[0] < A.x0 || p[0] > A.x1) { fl(); continue; } seg.push(A.P(p[0], p[1])); } fl(); };
+
+  const simpson = (f, a, b, n = 400) => { if (a === b) return 0; const h = (b - a) / n; let s = f(a) + f(b); for (let i = 1; i < n; i++) s += f(a + i * h) * (i % 2 ? 4 : 2); return s * h / 3; };
+  const POS = 'rgba(47, 111, 219, 0.22)', NEG = 'rgba(209, 69, 59, 0.22)';
+  // Fläche zwischen Graph und x-Achse von a bis b, oberhalb blau, unterhalb rot
+  function area(v, A, f, a, b, N = 300) { if (a === b) return; const lo = Math.min(a, b), hi = Math.max(a, b), dx = (hi - lo) / N;
+    for (let i = 0; i < N; i++) { const x0 = lo + i * dx, x1 = x0 + dx, y0 = f(x0), y1 = f(x1), cy = A.y0 <= 0 && A.y1 >= 0 ? 0 : A.y0;
+      const cl = y => Math.max(A.y0, Math.min(A.y1, y));
+      v.poly([A.P(x0, cy), A.P(x0, cl(y0)), A.P(x1, cl(y1)), A.P(x1, cy)], null, 0, null, true, (y0 + y1) >= 0 ? POS : NEG); } }
+
+  const s = Math.sin, c = Math.cos;
+  const K = {
+    ell: { name: 'Ellipse (2 cos t, sin t)', r: t => [2 * c(t), s(t)], d: t => [-2 * s(t), c(t)], dd: t => [-2 * c(t), -s(t)], T: [0, 2 * Math.PI], ax: [0, 0, 3.2],
+      note: 'Skript S. 73: k(t) = ab/(a² sin² t + b² cos² t)^(3/2). Scheitel: k(0) = a/b² = 2, k(π/2) = b/a² = 1/4. Die Evolute hat vier Spitzen, jeweils gegenüber einem Scheitel (eigene Beobachtung).' },
+    par: { name: 'Parabel (t, t²)', r: t => [t, t * t], d: t => [1, 2 * t], dd: t => [0, 2], T: [-2, 2], ax: [0, 1.4, 2.6],
+      note: 'Skript S. 75–76: k(t) = 2/(1 + 4t²)^(3/2), Evolute (−4t³, 1/2 + 3t²), explizit y = 1/2 + 3 (x/4)^(2/3) (Neil’sche Parabel).' },
+    sin: { name: 'Sinuskurve (t, sin t)', r: t => [t, s(t)], d: t => [1, c(t)], dd: t => [0, -s(t)], T: [-1, 7.3], ax: [3.14, 0, 4.4],
+      note: 'k = −sin t/(1 + cos² t)^(3/2) (eigene Rechnung mit der Formel aus Skript S. 73). k wechselt bei t = kπ das Vorzeichen: dort liegen die Wendepunkte (Notizen Kap. II S. 47).' },
+    zyk: { name: 'Zykloide (t − sin t, 1 − cos t)', r: t => [t - s(t), 1 - c(t)], d: t => [1 - c(t), s(t)], dd: t => [s(t), c(t)], T: [0.05, 2 * Math.PI - 0.05], ax: [Math.PI, 0, 4.2],
+      note: 'Skript S. 74–75: k(t) = −1/(2a √(2(1 − cos t))) mit a = 1, also überall Rechtskurve. Die Evolute (at + a sin t, −a + a cos t) ist wieder eine Zykloide, um (aπ, −2a) verschoben.' },
+    evo: { name: 'Kreisevolvente (Prüfung HS23)', r: t => [c(t) + t * s(t), s(t) - t * c(t)], d: t => [t * c(t), t * s(t)], dd: t => [c(t) - t * s(t), s(t) + t * c(t)], T: [0.05, 3 * Math.PI], ax: [0, 0, 10],
+      note: 'Übung 9, Folie 8 (Prüfung HS23, A1): r(t) = (cos t, sin t) + t (sin t, −cos t). Eigene Rechnung: ṙ = (t cos t, t sin t), ẋÿ − ẏẍ = t², also k(t) = 1/t. Die Evolute ist der Einheitskreis (der Faden wird von ihm abgewickelt).' },
+  };
+  let key = 'ell', u = 0.3, ev = true;
+  const kr = (cc, t) => { const d = cc.d(t), e = cc.dd(t), L = Math.hypot(...d); return { k: (d[0] * e[1] - d[1] * e[0]) / L ** 3, m: [-d[1] / L, d[0] / L], d, L }; };
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, cc = K[key], A = eqAx(...cc.ax); axes(v, A, 'x', 'y', cc.ax[2] > 6 ? 2 : cc.ax[2] > 3.5 ? 1 : 0.5, cc.ax[2] > 6 ? 2 : cc.ax[2] > 3.5 ? 1 : 0.5);
+    if (ev) cplot(v, A, t => { const q = kr(cc, t), p = cc.r(t); return Math.abs(q.k) < 1e-3 ? [NaN, NaN] : [p[0] + q.m[0] / q.k, p[1] + q.m[1] / q.k]; }, cc.T[0], cc.T[1], C.c5, 1.6, 1500);
+    cplot(v, A, cc.r, cc.T[0], cc.T[1], C.c2, 2.6, 1200);
+    const t = cc.T[0] + (cc.T[1] - cc.T[0]) * u, p = cc.r(t), q = kr(cc, t);
+    v.arrow(A.P(...p), [A.X(q.m[0]) - A.X(0), A.Y(q.m[1]) - A.Y(0)], C.c3, 2);
+    let rows = [['t', fmt(t, 3)], ['r(t)', fv(p, 4)], ['k(t)', fmt(q.k, 5) + (q.k > 1e-9 ? '  (Linkskurve)' : q.k < -1e-9 ? '  (Rechtskurve)' : '  (k = 0)')]];
+    if (Math.abs(q.k) > 1e-6) { const R = 1 / Math.abs(q.k), M = [p[0] + q.m[0] / q.k, p[1] + q.m[1] / q.k];
+      v.circle(A.P(...M), (A.X(R) - A.X(0)), C.c1, 1.8); v.line(A.P(...p), A.P(...M), C.c1, 1, [4, 4]); v.dot(A.P(...M), C.c1, 4.5);
+      rows = rows.concat([['Krümmungsradius 1/|k|', fmt(R, 4)], ['Mittelpunkt M = r + (1/k) m', fv(M, 4)]]); }
+    else rows.push(['Krümmungskreis', 'entartet (k = 0, Gerade)']);
+    v.dot(A.P(...p), C.fg, 5.5);
+    MW.info(infoEl, cc.name, rows, 'Skript S. 72–74: m = (−ẏ, ẋ)/√(ẋ² + ẏ²) ist der Normaleneinheitsvektor nach links. Für k < 0 liegt M auf der rechten Seite. ' + cc.note);
+  });
+  MW.slider(ctl, { label: 't (Anteil)', min: 0, max: 1, step: 0.001, value: u, fmt: z => fmt(z * 100, 1) + ' %', onInput: z => { u = z; view.redraw(); } });
+  MW.select(ctl, 'Kurve', Object.entries(K).map(([q, cc]) => [q, cc.name]), z => { key = z; view.redraw(); }).set(key);
+  MW.check(ctl, 'Evolute zeigen', ev, z => { ev = z; view.redraw(); });
+
+})();
+</script>
+</body>
+</html>

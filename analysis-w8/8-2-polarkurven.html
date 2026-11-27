@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kurven in Polarkoordinaten ρ = ρ(φ)</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Kurven in Polarkoordinaten ρ = ρ(φ)</h1>
+  <p class="sub">Eine Polarkurve ist die Parameterkurve r(φ) = (ρ(φ) cos φ, ρ(φ) sin φ). Den Tangentenvektor erhält man durch Ableiten nach φ. Der Winkel ω zwischen Ortsvektor und Tangente ist bei der logarithmischen Spirale konstant.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>Kurve</div><div><span class="sw" style="background:var(--c4)"></span>Ortsvektor</div><div><span class="sw" style="background:var(--c1)"></span>Tangente</div></div>
+    <div class="hint">Kurve wählen und φ verschieben.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  function dplot(v, A, f, color, w = 1.3, N = 300, a = A.x0, b = A.x1) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w, [5, 4]); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || !A.inY(y)) { fl(); continue; } seg.push(A.P(x, y)); } fl(); }
+  const KX = 'rgba(15, 157, 88, 0.11)', KV = 'rgba(209, 69, 59, 0.10)';
+  // gleiche Skalierung in x und y (Zeichenfläche 6 × 3.4)
+  const eqAx = (xc, yc, hw) => mkAx(xc - hw, xc + hw, yc - hw * 3.4 / 6, yc + hw * 3.4 / 6);
+  const range = (f, a, b, N = 400) => { let lo = Infinity, hi = -Infinity; for (let i = 0; i <= N; i++) { const y = f(a + (b - a) * i / N); if (isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); } } const p = 0.08 * (hi - lo || 1); return [lo - p, hi + p]; };
+  const roots = (g, a, b, N = 2000) => { const r = []; let px = a, pg = g(a);
+    for (let i = 1; i <= N; i++) { const x = a + (b - a) * i / N, y = g(x); if (isFinite(y) && isFinite(pg) && pg * y < 0) { let l = px, h = x; for (let k = 0; k < 60; k++) { const m = (l + h) / 2; (g(l) * g(m) <= 0) ? h = m : l = m; } r.push((l + h) / 2); } px = x; pg = y; } return r; };
+  const cplot = (v, A, r, t0, t1, color, w = 2.2, N = 600) => { let seg = []; const fl = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const p = r(t0 + (t1 - t0) * i / N); if (!isFinite(p[0]) || !isFinite(p[1]) || !A.inY(p[1]) || p[0] < A.x0 || p[0] > A.x1) { fl(); continue; } seg.push(A.P(p[0], p[1])); } fl(); };
+
+  let k = 0.2, phi = 1.2, key = 'spir';
+  const K = {
+    spir: { name: 'log. Spirale ρ = e^(kφ)', rho: p => Math.exp(k * p), drho: p => k * Math.exp(k * p), ph: [-12, 9], ax: [0, 0, 6],
+      note: () => 'Notizen Kap. II S. 41 und Skript S. 76–79: ρ = C e^(kφ). cos ω = k/√(k² + 1) = ' + fmt(k / Math.hypot(k, 1), 4) + ', unabhängig von φ. Vertikale Tangente wo tan φ = k, horizontale wo tan φ = −1/k (Skript S. 77–78).' },
+    inv: { name: 'ρ = 1/φ (Prüfung Herbst 1996)', rho: p => 1 / p, drho: p => -1 / (p * p), ph: [0.25, 14], ax: [0.2, 0.6, 1.4],
+      note: () => 'Prüfung Herbst 1996, zweistündig, Aufg. 4 (Aufgabensammlung S. 47, Lösung S. 151): Tangente in φ = π/2 ist 2x − πy + 2 = 0, sie schneidet die x-Achse in (−1, 0). Für φ → ∞ läuft die Kurve in den Ursprung, für φ → 0 nähert sie sich der Geraden y = 1 (eigene Beobachtung).' },
+    lim: { name: 'ρ = 1 + (√2/2) cos φ (Prüfung Herbst 1990)', rho: p => 1 + Math.SQRT1_2 * Math.cos(p), drho: p => -Math.SQRT1_2 * Math.sin(p), ph: [0, 2 * Math.PI], ax: [0.2, 0, 2.1],
+      note: () => 'Prüfung Herbst 1990, zweistündig, Aufg. 5 (Aufgabensammlung S. 71, Lösung S. 198): Die Tangente in P = (0, 1), also φ = π/2, schneidet die x-Achse in (−√2, 0). Die Aufgabe betrachtet nur 0 ≤ φ ≤ π.' },
+    astro: { name: 'Astroide in Polarform (Serie 8)', rho: p => (Math.abs(Math.cos(p)) ** (2 / 3) + Math.abs(Math.sin(p)) ** (2 / 3)) ** -1.5, drho: null, ph: [0, 2 * Math.PI], ax: [0, 0, 1.8],
+      note: () => 'Übung 9 (Lino Wenger), Folien S. 4–6: x^(2/3) + y^(2/3) = 1 wird zu ρ(φ) = (cos^(2/3) φ + sin^(2/3) φ)^(−3/2). Minimaler Radius 1/2 bei φ = π/4 + kπ/2, maximaler Radius 1 bei den Spitzen.' },
+  };
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, c = K[key], A = eqAx(...c.ax); axes(v, A, 'x', 'y', c.ax[2] > 3 ? 1 : 0.5, c.ax[2] > 3 ? 1 : 0.5);
+    const r = p => { const q = c.rho(p); return [q * Math.cos(p), q * Math.sin(p)]; };
+    cplot(v, A, r, c.ph[0], c.ph[1], C.c2, 2.4, 2000);
+    const p = Math.min(c.ph[1], Math.max(c.ph[0], phi)), q = c.rho(p), P = r(p);
+    const dq = c.drho ? c.drho(p) : (c.rho(p + 1e-5) - c.rho(p - 1e-5)) / 2e-5;
+    const T = [dq * Math.cos(p) - q * Math.sin(p), dq * Math.sin(p) + q * Math.cos(p)], L = Math.hypot(...T);
+    v.line(A.P(0, 0), A.P(...P), C.c4, 2);
+    const s = 3 * c.ax[2]; v.line(A.P(P[0] - s * T[0] / L, P[1] - s * T[1] / L), A.P(P[0] + s * T[0] / L, P[1] + s * T[1] / L), C.c1, 1.6);
+    v.dot(A.P(...P), C.c1, 6);
+    const cosw = (P[0] * T[0] + P[1] * T[1]) / (Math.hypot(...P) * L);
+    const slope = Math.abs(T[0]) < 1e-9 ? 'vertikal' : fmt(T[1] / T[0], 4);
+    MW.info(infoEl, c.name + ',  φ = ' + fmt(p, 3), [['ρ(φ)', fmt(q, 4)], ['r(φ)', fv(P, 4)], ['ṙ(φ) = (ρ̇ cos φ − ρ sin φ, ρ̇ sin φ + ρ cos φ)', fv(T, 4)], ['Steigung ẏ/ẋ', slope], ['Winkel ω (Ortsvektor, Tangente)', fmt(Math.acos(Math.max(-1, Math.min(1, cosw))) * 180 / Math.PI, 2) + '°']], c.note());
+  });
+  const sp = MW.slider(ctl, { label: 'φ', min: -12, max: 14, step: 0.01, value: phi, onInput: u => { phi = u; view.redraw(); } });
+  const sk = MW.slider(ctl, { label: 'k', min: -0.5, max: 0.5, step: 0.01, value: k, onInput: u => { k = u; view.redraw(); } });
+  MW.select(ctl, 'Kurve', Object.entries(K).map(([q, c]) => [q, c.name]), u => { key = u; const c = K[u], i = sp.el.querySelector('input'); i.min = c.ph[0]; i.max = c.ph[1]; phi = u === 'inv' || u === 'lim' ? Math.PI / 2 : 1.2; sp.set(phi); sk.el.style.display = u === 'spir' ? '' : 'none'; view.redraw(); }).set(key);
+
+})();
+</script>
+</body>
+</html>

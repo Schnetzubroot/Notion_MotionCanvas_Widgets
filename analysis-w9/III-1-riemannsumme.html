@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riemann’sche Summe und bestimmtes Integral</title>
+<link rel="stylesheet" href="../lib/core.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Riemann’sche Summe und bestimmtes Integral</h1>
+  <p class="sub">Teile [a, b] in n Stücke, wähle in jedem einen Zwischenpunkt ξₖ und addiere f(ξₖ)·Δxₖ. Wird die Einteilung feiner, strebt die Summe gegen das Integral. Flächen unterhalb der x-Achse zählen negativ.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend"><div><span class="sw" style="background:var(--c2)"></span>f</div><div><span class="sw" style="background:var(--c1)"></span>Zwischenpunkte (ξₖ, f(ξₖ))</div></div>
+    <div class="hint">Funktion, n und die Lage der Zwischenpunkte ξₖ wählen.</div>
+  </div>
+  <div class="ctl" id="ctl"></div>
+  <div class="info" id="info"></div>
+</div>
+<script src="../lib/core.js"></script>
+<script>
+(() => {
+  const { V, fmt, fv } = MW;
+  const ctl = document.getElementById('ctl'), infoEl = document.getElementById('info'), cv = document.getElementById('cv');
+
+  const mkAx = (x0, x1, y0, y1, W = 6, H = 3.4, ox = 0, oy = 0) => {
+    const X = x => ox + (x - x0) / (x1 - x0) * W, Y = y => oy + (y - y0) / (y1 - y0) * H;
+    return { x0, x1, y0, y1, W, H, ox, oy, X, Y, P: (x, y) => [X(x), Y(y)], inY: y => y >= y0 && y <= y1 };
+  };
+  const nice = r => { const raw = r / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+  function axes(v, A, xl, yl, xs, ys) {
+    const C = v.C; xs = xs || nice(A.x1 - A.x0); ys = ys || nice(A.y1 - A.y0);
+    for (let x = Math.ceil(A.x0 / xs - 1e-9) * xs; x <= A.x1 + 1e-9; x += xs) { v.line(A.P(x, A.y0), A.P(x, A.y1), C.grid, 1); v.text(A.P(x, A.y0), fmt(x, 3), C.muted, 0, 15, 11, false, 'center'); }
+    for (let y = Math.ceil(A.y0 / ys - 1e-9) * ys; y <= A.y1 + 1e-9; y += ys) { v.line(A.P(A.x0, y), A.P(A.x1, y), C.grid, 1); v.text(A.P(A.x0, y), fmt(y, 3), C.muted, -5, 4, 11, false, 'right'); }
+    if (A.y0 <= 0 && A.y1 >= 0) v.line(A.P(A.x0, 0), A.P(A.x1, 0), C.muted, 1.3);
+    if (A.x0 <= 0 && A.x1 >= 0) v.line(A.P(0, A.y0), A.P(0, A.y1), C.muted, 1.3);
+    if (xl) v.text(A.P(A.x1, A.y0), xl, C.muted, -2, -6, 12, false, 'right');
+    if (yl) v.text(A.P(A.x0, A.y1), yl, C.muted, 6, 14, 12, false);
+  }
+  // Graph einer Funktion, unterbrochen bei Sprüngen und ausserhalb des Fensters
+  function fplot(v, A, f, color, w = 2, N = 600, a = A.x0, b = A.x1) {
+    const H = A.y1 - A.y0, inside = y => y >= A.y0 && y <= A.y1, cl = y => Math.max(A.y0, Math.min(A.y1, y));
+    let seg = [], px = null, py = null;
+    const flush = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x);
+      if (!isFinite(y)) { flush(); px = null; continue; }
+      if (px !== null && Math.abs(y - py) > 2 * H && !(inside(y) && inside(py))) { flush(); px = x; py = y; if (inside(y)) seg.push(A.P(x, y)); continue; }
+      if (px !== null && inside(y) !== inside(py)) { // Rand schneiden
+        const yb = inside(py) ? (y > A.y1 ? A.y1 : A.y0) : (py > A.y1 ? A.y1 : A.y0), xb = px + (x - px) * (yb - py) / (y - py);
+        if (inside(py)) { seg.push(A.P(xb, yb)); flush(); } else { flush(); seg.push(A.P(xb, yb)); }
+      } else if (px !== null && !inside(y) && !inside(py) && (y - A.y1) * (py - A.y1) < 0 && (y - A.y0) * (py - A.y0) < 0) { flush(); }
+      if (inside(y)) seg.push(A.P(x, y));
+      px = x; py = y; }
+    flush();
+  }
+
+  function dplot(v, A, f, color, w = 1.3, N = 300, a = A.x0, b = A.x1) { let seg = [];
+    const fl = () => { if (seg.length > 1) v.poly(seg, color, w, [5, 4]); seg = []; };
+    for (let i = 0; i <= N; i++) { const x = a + (b - a) * i / N, y = f(x); if (!isFinite(y) || !A.inY(y)) { fl(); continue; } seg.push(A.P(x, y)); } fl(); }
+  const KX = 'rgba(15, 157, 88, 0.11)', KV = 'rgba(209, 69, 59, 0.10)';
+  // gleiche Skalierung in x und y (Zeichenfläche 6 × 3.4)
+  const eqAx = (xc, yc, hw) => mkAx(xc - hw, xc + hw, yc - hw * 3.4 / 6, yc + hw * 3.4 / 6);
+  const range = (f, a, b, N = 400) => { let lo = Infinity, hi = -Infinity; for (let i = 0; i <= N; i++) { const y = f(a + (b - a) * i / N); if (isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); } } const p = 0.08 * (hi - lo || 1); return [lo - p, hi + p]; };
+  const roots = (g, a, b, N = 2000) => { const r = []; let px = a, pg = g(a);
+    for (let i = 1; i <= N; i++) { const x = a + (b - a) * i / N, y = g(x); if (isFinite(y) && isFinite(pg) && pg * y < 0) { let l = px, h = x; for (let k = 0; k < 60; k++) { const m = (l + h) / 2; (g(l) * g(m) <= 0) ? h = m : l = m; } r.push((l + h) / 2); } px = x; pg = y; } return r; };
+  const cplot = (v, A, r, t0, t1, color, w = 2.2, N = 600) => { let seg = []; const fl = () => { if (seg.length > 1) v.poly(seg, color, w); seg = []; };
+    for (let i = 0; i <= N; i++) { const p = r(t0 + (t1 - t0) * i / N); if (!isFinite(p[0]) || !isFinite(p[1]) || !A.inY(p[1]) || p[0] < A.x0 || p[0] > A.x1) { fl(); continue; } seg.push(A.P(p[0], p[1])); } fl(); };
+
+  const simpson = (f, a, b, n = 400) => { if (a === b) return 0; const h = (b - a) / n; let s = f(a) + f(b); for (let i = 1; i < n; i++) s += f(a + i * h) * (i % 2 ? 4 : 2); return s * h / 3; };
+  const POS = 'rgba(47, 111, 219, 0.22)', NEG = 'rgba(209, 69, 59, 0.22)';
+  // Fläche zwischen Graph und x-Achse von a bis b, oberhalb blau, unterhalb rot
+  function area(v, A, f, a, b, N = 300) { if (a === b) return; const lo = Math.min(a, b), hi = Math.max(a, b), dx = (hi - lo) / N;
+    for (let i = 0; i < N; i++) { const x0 = lo + i * dx, x1 = x0 + dx, y0 = f(x0), y1 = f(x1), cy = A.y0 <= 0 && A.y1 >= 0 ? 0 : A.y0;
+      const cl = y => Math.max(A.y0, Math.min(A.y1, y));
+      v.poly([A.P(x0, cy), A.P(x0, cl(y0)), A.P(x1, cl(y1)), A.P(x1, cy)], null, 0, null, true, (y0 + y1) >= 0 ? POS : NEG); } }
+
+  const F = {
+    x2: { name: 'x² auf [0, 2]', f: x => x * x, a: 0, b: 2, I: 8 / 3, Is: 'b³/3 = 8/3', note: 'Skript S. 4–5: Mit ξₖ = xₖ (rechte Endpunkte) und 1² + … + n² = n(n + 1)(2n + 1)/6 ergibt sich ∫₀ᵇ x² dx = b³/3.' },
+    sin: { name: 'sin x auf [0, 3π/2]', f: Math.sin, a: 0, b: 1.5 * Math.PI, I: 1, Is: '[−cos x] = 0 + 1 = 1', note: 'Der Teil unter der x-Achse (π bis 3π/2) zählt negativ (Skript S. 4). Ergebnis mit dem Hauptsatz (Skript S. 11).' },
+    cub: { name: 'x³ − 3x auf [−2, 2.5]', f: x => x ** 3 - 3 * x, a: -2, b: 2.5, I: (2.5 ** 4 / 4 - 1.5 * 2.5 ** 2) - (16 / 4 - 6), Is: '[x⁴/4 − 3x²/2] von −2 bis 2.5', note: 'Eigenes Beispiel. Die positiven und negativen Anteile heben sich teilweise auf.' },
+    exp: { name: 'eˣ auf [0, 1]', f: Math.exp, a: 0, b: 1, I: Math.E - 1, Is: 'e − 1', note: 'Eigenes Beispiel; Stammfunktion eˣ (Skript S. 12).' },
+  };
+  let key = 'x2', n = 6, mode = 'r', seed = 1;
+  const rnd = i => { const x = Math.sin((i + 1) * 12.9898 * seed) * 43758.5453; return x - Math.floor(x); };
+  const view = MW.View2D(cv, { xmin: -0.75, xmax: 6.25, ymin: -0.45, ymax: 3.55 }, v => {
+    const C = v.C, c = F[key], [y0, y1] = range(c.f, c.a, c.b), A = mkAx(c.a - 0.05 * (c.b - c.a), c.b + 0.05 * (c.b - c.a), Math.min(y0, -0.1), Math.max(y1, 0.1)); axes(v, A, 'x', 'y');
+    const dx = (c.b - c.a) / n; let S = 0;
+    for (let k = 0; k < n; k++) { const xl = c.a + k * dx, t = mode === 'l' ? 0 : mode === 'm' ? 0.5 : mode === 'r' ? 1 : rnd(k), xi = xl + t * dx, y = c.f(xi); S += y * dx;
+      v.poly([A.P(xl, 0), A.P(xl, y), A.P(xl + dx, y), A.P(xl + dx, 0)], C.muted, 1, null, true, y >= 0 ? POS : NEG);
+      if (n <= 80) v.dot(A.P(xi, y), C.c1, n > 30 ? 2.5 : 4); }
+    fplot(v, A, c.f, C.c2, 2.6, 600);
+    MW.info(infoEl, c.name + ',  n = ' + n, [['Feinheit Δx', fmt(dx, 5)], ['Riemann’sche Summe Σ f(ξₖ) Δxₖ', fmt(S, 6)], ['Integral', fmt(c.I, 6) + '  (' + c.Is + ')'], ['Fehler', fmt(S - c.I, 6)]],
+      'Skript S. 3–4 (Definition nach Riemann): Für stetiges f existiert der Grenzwert und hängt weder von der Einteilung noch von den Zwischenpunkten ab. ' + c.note);
+  });
+  MW.slider(ctl, { label: 'n', min: 1, max: 200, step: 1, value: n, fmt: u => fmt(u, 0), onInput: u => { n = u; view.redraw(); } });
+  MW.select(ctl, 'ξₖ', [['l', 'linker Rand'], ['m', 'Mitte'], ['r', 'rechter Rand'], ['z', 'zufällig']], u => { mode = u; seed = 1 + Math.random(); view.redraw(); }).set(mode);
+  MW.select(ctl, 'Funktion', Object.entries(F).map(([k, c]) => [k, c.name]), u => { key = u; view.redraw(); }).set(key);
+
+})();
+</script>
+</body>
+</html>
